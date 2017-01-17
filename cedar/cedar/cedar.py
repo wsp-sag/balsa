@@ -41,7 +41,7 @@ class ConfigValue(object):
 
     def __str__(self): return str(self.value)
 
-    def __repr__(self): return repr(self.value)
+    def __repr__(self): return "ConfigValue(%r)" % self.value
 
     @property
     def namespace(self):
@@ -64,7 +64,7 @@ class ConfigValue(object):
             return type_(self.value)
         except ValueError:
 
-            message = "Attribute <{}> = {} could not be converted to type {}".format(
+            message = "Attribute <{}> = '{}' could not be converted to {}".format(
                 self.namespace, self.value, type_
             )
             raise ConfigTypeError(message)
@@ -78,6 +78,16 @@ class ConfigValue(object):
     def as_str(self): return self.as_type(str)
 
     def as_list(self, sub_type=None):
+        """
+        Converts the value to a list.
+
+        Args:
+            sub_type (type): Optional. Specifies the expected contiguous (uniform) type of the list to convert to.
+
+        Returns:
+            list: The value, as a list
+
+        """
         if sub_type is None:
             return self.as_type(list)
 
@@ -87,6 +97,16 @@ class ConfigValue(object):
         ]
 
     def as_set(self, sub_type=None):
+        """
+        Converts the value to a set.
+
+        Args:
+            sub_type (type): Optional. Specifies the expected contiguous (uniform) type of the set to convert to.
+
+        Returns:
+            set: The value, as a set
+
+        """
         if sub_type is None: return self.as_type(set)
 
         return {
@@ -97,9 +117,18 @@ class ConfigValue(object):
 
 class Config(object):
     """
-    Represents a model configuration, usually stored in JSON format. The order of items is preserved.
+    Represents a model configuration, usually stored in JSON format with the order of items preserved and comments
+    (beginning with '//') stripped out. Keys in the JSON file which conform to Python variable names (e.g.
+    "my_attribute" but not "My Attribute") become *attributes* of the Config object (e.g. instance.my_attribute).
 
-    It can be constructed from three static methods:
+    Value attributes (e.g. `value` in `{"key": value}`) are stored as ConfigValue objects to facilitate type conversion
+    and checking. So to access the raw value, write "instance.my_attribute.value" or, to convert it to a specified type,
+    write "instance.my_attribute.as_bool()".
+
+    This all facilitates "pretty" error message generation, to provide the end-user with as much information about the
+    source of an error as these are common when specifying a model.
+
+    A Config can be constructed from three static methods:
         - from_file() to construct from a JSON file on-disk
         - from_string() to construct from a JSON-formatted string in-memory
         - from_dict() to construct from a dictionary in-memory
@@ -107,7 +136,7 @@ class Config(object):
     Notes:
         - Config implements __contains__ for testing if a name is 'in' the set of attributes.
         - To use __getitem__, __setitem__ (like a Dictionary), use the `as_dict()` method to convert to a dictionary
-            representation.
+            representation. This also exposes dictionary iteration methods.
 
     Attributes:
         name: Short name of each part of the config. For non-root Configs, this will be the name of the attribute used
