@@ -1,5 +1,5 @@
 # balsa
-Common modelling tools
+Collection of small utilities for travel demand models. Works with both Python 2.7 and Python 3.5.
 
 ## Contents:
 
