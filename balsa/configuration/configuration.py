@@ -7,7 +7,8 @@ try:
     from StringIO import StringIO  # Py 2.x
 except ImportError:
     from io import StringIO  # Py 3.x
-from .utils import name_is_pythonic
+from ..utils import name_is_pythonic
+
 
 class ConfigParseError(IOError):
     pass
