@@ -31,8 +31,6 @@ class ConfigValue(object):
 
     """
 
-    __slots__ = ['value', '_name', '_owner', 'namespace']
-
     def __init__(self, value, name, owner=None):
         self.value = value
         self._name = str(name)
