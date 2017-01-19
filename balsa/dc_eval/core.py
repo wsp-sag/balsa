@@ -228,7 +228,7 @@ def stochastic_nested_worker(utilities, instruction_set_1, instruction_set_2, ou
         out[i, :] = probabilities
 
 
-@nb.jit(nb.void(nb.float64[:, :]))
+@nb.jit(nb.void(nb.float64[:, :], nb.float64[:, :]))
 def stochastic_multinomial_worker(utilities, out):
     nrows = utilities.shape[0]
 
