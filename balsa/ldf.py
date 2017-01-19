@@ -5,33 +5,12 @@ import pandas as pd
 import numpy as np
 
 from collections import namedtuple
-import re
-
 from six import iteritems, itervalues
+from .utils import name_is_pythonic
 
 LinkageEntry = namedtuple("LinkageEntry", ['other_frame', 'self_indexer', 'other_indexer', 'fill_value',
                                            'self_names', 'self_index_flag', 'other_names', 'other_index_flag',
                                            'aggregation_required'])
-
-special_chars = set(r" .,<>/?;:'|[{]}=+-)(*&^%$#@!`~" + '"')
-regex_chars = set(r"]")
-
-pyspecchar = list(special_chars - regex_chars)
-escaped_chars = ["\%s" %c for c in regex_chars]
-insertion = ''.join(pyspecchar + escaped_chars)
-UNPYTHONIC_REGEX = re.compile(r"^\d|[%s\s]+" % insertion)
-
-
-def is_name_pythonic(name):
-    """
-    Tests if string is Pythonic (i.e. can be converted to a variable name)
-    Args:
-        name (basestring): The string to test
-
-    Returns: True if name is valid, False other
-
-    """
-    return not UNPYTHONIC_REGEX.match(name)
 
 
 class LinkageSpecificationError(ValueError):
@@ -49,7 +28,7 @@ class LinkageNode(object):
         self._root_index = root_index
 
     def __dir__(self):
-        return [col for col in self._df.columns if is_name_pythonic(col)] + self._df._links.keys()
+        return [col for col in self._df.columns if name_is_pythonic(col)] + self._df._links.keys()
 
     def __getitem__(self, item):
         return self.__getattr__(item)
@@ -493,7 +472,7 @@ class LinkedDataFrame(pd.DataFrame):
 
         self._links[alias] = link
 
-        if is_name_pythonic(alias):
+        if name_is_pythonic(alias):
             self._pythonic_links.add(alias)
 
         return aggregation_flag

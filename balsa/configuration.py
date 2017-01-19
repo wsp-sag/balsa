@@ -1,14 +1,13 @@
 import json
-import re
 import os
 from collections import OrderedDict
 from six import iteritems
-from keyword import kwlist
+import re
 try:
     from StringIO import StringIO  # Py 2.x
 except ImportError:
     from io import StringIO  # Py 3.x
-
+from .utils import name_is_pythonic
 
 class ConfigParseError(IOError):
     pass
@@ -166,7 +165,7 @@ class Config(object):
             else:
                 value = ConfigValue(value, key, owner=self)
 
-            if self.name_is_pythonic(key):
+            if name_is_pythonic(key):
                 setattr(self, key, value)
             self._contents[key] = value
 
@@ -286,28 +285,6 @@ class Config(object):
 
         """
         return Config(dict_, name=root_name, file_=file_name)
-
-    @staticmethod
-    def name_is_pythonic(name):
-        """
-        Tests that the name is a valid Python variable name and does not collide with reserved keywords
-
-        Args:
-            name (str): Name to test
-
-        Returns:
-            bool: If the name is 'Pythonic'
-
-        """
-
-        special_chars = set(r" .,<>/?;:'|[{]}=+-)(*&^%$#@!`~" + '"')
-        regex_chars = set(r"]")
-        pyspecchar = list(special_chars - regex_chars)
-        escaped_chars = ["\%s" % c for c in regex_chars]
-        insertion = ''.join(pyspecchar + escaped_chars)
-        unpythonic_regex = r"^\d|[%s\s]+" % insertion
-
-        return not re.match(unpythonic_regex, name) or name in kwlist
 
     @staticmethod
     def _parse_comments(reader):
