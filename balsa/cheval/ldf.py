@@ -12,6 +12,10 @@ LinkageEntry = namedtuple("LinkageEntry", ['other_frame', 'self_indexer', 'other
                                            'self_names', 'self_index_flag', 'other_names', 'other_index_flag',
                                            'aggregation_required'])
 
+SUPPORTED_AGGREGATIONS = {
+    'count', 'first', 'last', 'max', 'min', 'mean', 'median', 'prod', 'std', 'sum', 'var'
+}
+
 
 class LinkageSpecificationError(ValueError):
     pass

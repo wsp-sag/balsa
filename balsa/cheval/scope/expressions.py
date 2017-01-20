@@ -14,12 +14,4 @@ class ExpressionContainer(object):
     def __iter__(self):
         raise NotImplementedError()
 
-    def symbolize(self):
-        """
-        Analyzes the collection of expressions to extract the complete set of symbols.
 
-        Returns:
-            set: All the symbols referenced in the expression list
-
-        """
-        raise NotImplementedError()
