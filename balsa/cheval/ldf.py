@@ -6,7 +6,7 @@ import numpy as np
 
 from collections import namedtuple
 from six import iteritems, itervalues
-from ..utils import name_is_pythonic
+from balsa.utils import name_is_pythonic
 
 LinkageEntry = namedtuple("LinkageEntry", ['other_frame', 'self_indexer', 'other_indexer', 'fill_value',
                                            'self_names', 'self_index_flag', 'other_names', 'other_index_flag',
