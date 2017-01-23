@@ -1,5 +1,6 @@
 from collections import deque
 from .core import INSTRUCTION_TYPE_1, INSTRUCTION_TYPE_2
+from .scope import Scope, ExpressionContainer
 
 import pandas as pd
 import numpy as np
@@ -65,6 +66,9 @@ class LogitModel(object):
         self._cached_node_index = None
         self.use_single_precision = bool(use_single_precision)
 
+        self._expression_container = ExpressionContainer(self)
+        self._scope_container = Scope()
+
     def __getitem__(self, item):
         return self._all_nodes[item]
 
@@ -117,11 +121,11 @@ class LogitModel(object):
 
     @property
     def scope(self):
-        raise NotImplementedError()
+        return self._scope_container
 
     @property
     def expressions(self):
-        raise NotImplementedError()
+        return self._expression_container
 
     @property
     def node_index(self):

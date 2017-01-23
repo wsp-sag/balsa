@@ -9,10 +9,29 @@ from ..ldf import SUPPORTED_AGGREGATIONS
 NUMEXPR_FUNCTIONS = set(nee.functions.keys())
 MAX_ATTRIBUTE_CHAINS = 50  # To avoid infinite loop in __get_name_from_attribute()
 
-SimpleSymbol = namedtuple('SimpleSymbol', [])
-DictLiteral = namedtuple('DictLiteral', ['substitution', 'series'])
-AttributedSymbol = namedtuple('AttributedSymbol', ['substitution', 'attribute'])
-LinkedFrameSymbol = namedtuple('LinkedFrameSymbol', ['substitution', 'stack', 'func', 'func_expr'])
+
+class SimpleSymbol(object):
+    pass
+
+
+class DictLiteral(object):
+    def __init__(self, substitution, series):
+        self.substitution = substitution
+        self.series = series
+
+
+class AttributedSymbol(object):
+    def __init__(self, substitution, attribute):
+        self.substitution = substitution
+        self.attribute = attribute
+
+
+class LinkedFrameSymbol(object):
+    def __init__(self, substitution, stack, func, func_expr):
+        self.substitution = substitution
+        self.stack = stack
+        self.func = func
+        self.func_expr = func_expr
 
 
 class UnsupportedSyntaxError(SyntaxError):
@@ -119,6 +138,8 @@ class ExpressionProcessor(ast.NodeTransformer):
         current_node = node
         stack = deque()
         while not isinstance(current_node, ast.Name):
+            if not isinstance(current_node, ast.Attribute):
+                raise UnsupportedSyntaxError()
             if len(stack) > MAX_ATTRIBUTE_CHAINS:
                 raise RecursionError()
             stack.append(current_node.attr)
