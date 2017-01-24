@@ -13,19 +13,11 @@ matrix_balancing_2d    Doubly-constrained balancing using
 """
 from __future__ import division as _division
 
-import multiprocessing as _mp
-import numpy as _np
-
 import io
 
-
-_err_msg_sq_mat = "%s must be a two-dimensional square matrix"
-_err_msg_2d_mat = "%s must be a two-dimensional matrix"
-_err_msg_vector = "%s must be a one-dimensional array, whose size matches that of %s"
-_err_msg_totals_not_in_list = "%s must be one of %s"
-_err_msg_not_integer = "%s must be an integer"
-_err_msg_not_float = "%s must be a floating point number"
-_err_msg_incompatible_shapes = "axis %d of matrice %s and %s must be the same."
+import multiprocessing as _mp
+import numpy as _np
+import pandas as _pd
 
 
 def matrix_balancing_1d(m, a, axis):
@@ -40,21 +32,16 @@ def matrix_balancing_1d(m, a, axis):
         w :  Numpy ndarray(..., M, M)
     """
 
-    try:
-        axis = int(axis)
-        assert axis in [0, 1]
-    except:
-        raise RuntimeError("axis must be either 0 or 1")
-
-    assert m.ndim == 2, _err_msg_2d_mat % "m"
-    assert a.ndim == 1, _err_msg_vector % "a"
-    assert m.shape[axis] == a.shape[0], _err_msg_incompatible_shapes % (axis, "m", "a")
+    assert axis in [0, 1], "axis must be either 0 or 1"
+    assert m.ndim == 2, "m must be a two-dimensional matrix"
+    assert a.ndim == 1, "a must be a two-dimensional matrix"
+    assert m.shape[axis] == a.shape[0], "axis %d of matrice 'm' and 'a' must be the same." % axis
 
     return _balance(m, a, axis)
 
 
-def matrix_balancing_2d(m, a, b, totals_to_use='raise', max_iterations=10,
-                        rel_error=1.0e-5, n_procs=1):
+def matrix_balancing_2d(m, a, b, totals_to_use='raise', max_iterations=1000,
+                        rel_error=0.0001, n_procs=1):
     """ Balances a two-dimensional matrix using iterative proportional fitting.
 
     Args:
@@ -64,7 +51,11 @@ def matrix_balancing_2d(m, a, b, totals_to_use='raise', max_iterations=10,
         totals_to_use (str, optional):
             Describes how to scale the row and column totals if their sums do not match
             Must be one of ['rows', 'columns', 'average', 'raise']. Defaults to 'raise'
-        max_iterations (int, optional): Maximum number of iterations, defaults to 10
+              - rows: scales the columns totals so that their sums matches the row totals
+              - columns: scales the row totals so that their sums matches the colum totals
+              - average: scales both row and column totals to the average value of their sums
+              - raise: raises an Exception if the sums of the row and column totals do not match
+        max_iterations (int, optional): Maximum number of iterations, defaults to 1000
         rel_error (float, optional): Relative error stopping criteria, defaults to 10e-5
         n_procs (int, optional): Number of processors for parallel computation. Defaults to 1.
 
@@ -73,6 +64,20 @@ def matrix_balancing_2d(m, a, b, totals_to_use='raise', max_iterations=10,
         float: residual
         int: n_iterations
     """
+    max_iterations = int(max_iterations)
+    n_procs = int(n_procs)
+
+    # Test if matrix is Pandas DataFrame
+    data_type = ''
+    if isinstance(m, _pd.DataFrame):
+        data_type = 'pd'
+        m_pd = m
+        m = m_pd.values
+
+    if isinstance(a, _pd.Series) or isinstance(a, _pd.DataFrame):
+        a = a.values
+    if isinstance(b, _pd.Series) or isinstance(b, _pd.DataFrame):
+        b = b.values
 
     # ##################################################################################
     # Validations:
@@ -83,30 +88,18 @@ def matrix_balancing_2d(m, a, b, totals_to_use='raise', max_iterations=10,
     #   - the n_procs is a +'ve integer between 1 and the number of available processors
     # ##################################################################################
     valid_totals_to_use = ['rows', 'columns', 'average', 'raise']
-    assert m.ndim == 2 and m.shape[0] == m.shape[1], _err_msg_sq_mat % "m"
-    assert a.ndim == 1 and a.shape[0] == m.shape[0], _err_msg_vector % ("a", "m")
-    assert b.ndim == 1 and b.shape[0] == m.shape[0], _err_msg_vector % ("a", "m")
-    assert totals_to_use in valid_totals_to_use, _err_msg_totals_not_in_list % (
-        "totals_to_use", valid_totals_to_use)
-
-    try:
-        max_iterations = int(max_iterations)
-        assert max_iterations >= 1
-    except:
-        raise RuntimeError("max_iterations must be integer >= 1")
-
-    try:
-        rel_error = float(rel_error)
-        assert 0 < rel_error < 1.0
-    except:
-        raise RuntimeError("rel_error must be float between 0.0 and 1.0")
-
-    try:
-        n_procs = int(n_procs)
-        assert 1 <= n_procs <= _mp.cpu_count()
-    except:
-        raise RuntimeError("n_procs must be integer between 1 and "
-                           "the number of processors (%d) " % _mp.cpu_count())
+    assert m.ndim == 2 and m.shape[0] == m.shape[1], "m must be a two-dimensional square matrix"
+    assert a.ndim == 1 and a.shape[0] == m.shape[0], \
+        "'a' must be a one-dimensional array, whose size matches that of 'm'"
+    assert b.ndim == 1 and b.shape[0] == m.shape[0], \
+        "'a' must be a one-dimensional array, whose size matches that of 'm'"
+    assert totals_to_use in valid_totals_to_use, "totals_to_use must be one of %s" % valid_totals_to_use
+    assert max_iterations >= 1, "max_iterations must be integer >= 1"
+    assert 0 < rel_error < 1.0, "rel_error must be float between 0.0 and 1.0"
+    assert 1 <= n_procs <= _mp.cpu_count(), \
+        "n_procs must be integer between 1 and the number of processors (%d) " % _mp.cpu_count()
+    if n_procs > 1:
+        raise NotImplementedError("Multiprocessing capability is not implemented yet.")
 
     # Scale row and column totals, if required
     a_sum = a.sum()
@@ -131,7 +124,12 @@ def matrix_balancing_2d(m, a, b, totals_to_use='raise', max_iterations=10,
         m = _balance(m, b, 0)
         err = _calc_error(m, a, b) / initial_error
         i += 1
-    return m, err, i
+
+    if data_type == 'pd':
+        new_df = _pd.DataFrame(m, index=m_pd.index, columns=m_pd.columns)
+        return new_df, err, i
+    else:
+        return m, err, i
 
 
 def _balance(matrix, tot, axis):
@@ -146,6 +144,7 @@ def _balance(matrix, tot, axis):
         w :  Numpy ndarray(..., M, M)
     """
     sc = tot / matrix.sum(axis)
+    sc = _np.nan_to_num(sc)  # replace divide by 0 errors from the prev. line
     if axis:  # along rows
         matrix = _np.multiply(matrix.T, sc).T
     else:   # along columns
