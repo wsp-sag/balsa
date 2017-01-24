@@ -4,6 +4,7 @@ from .scope import Scope, ExpressionContainer
 
 import pandas as pd
 import numpy as np
+from six import iterkeys, itervalues
 
 
 class _LogitNode(object):
@@ -130,7 +131,7 @@ class LogitModel(object):
     @property
     def node_index(self):
         if self._cached_node_index is None:
-            idx = pd.Index(sorted(self._all_nodes.iterkeys()))
+            idx = pd.Index(sorted(iterkeys(self._all_nodes)))
             self._cached_node_index = idx
             return idx
         return self._cached_node_index
@@ -204,7 +205,7 @@ class LogitModel(object):
 
         # 1. Organize parent nodes by level
         levels = {}
-        for node in self._all_nodes.itervalues():
+        for node in itervalues(self._all_nodes):
             if not node.is_parent: continue
             level = node.level
 
