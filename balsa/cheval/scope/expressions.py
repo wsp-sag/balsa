@@ -1,5 +1,5 @@
 from typing import Union, Dict
-from .parsing import ExpressionProcessor, SimpleSymbol, DictLiteral, AttributedSymbol, LinkedFrameSymbol
+from .parsing import ExpressionProcessor, SimpleUsage, DictLiteral, AttributedUsage, LinkedFrameUsage
 from ..api import LogitModel
 from six import iteritems
 
@@ -56,7 +56,7 @@ class ExpressionContainer(object):
         self._modified = True
         self._model_ref.scope.clear()
 
-    def get_symbols(self) -> Dict[str, Union[SimpleSymbol, DictLiteral, AttributedSymbol, LinkedFrameSymbol]]:
+    def get_symbols(self) -> Dict[str, Union[SimpleUsage, DictLiteral, AttributedUsage, LinkedFrameUsage]]:
         if self._modified or self._cached_types is None:
             symbol_types = {}
             for alias, list_of_usages in self._all_symbols():
@@ -80,13 +80,13 @@ class ExpressionContainer(object):
             if inferred_type is None:
                 inferred_type = usage_type
             else:
-                usage_is_attributed = usage_type == AttributedSymbol
-                inferred_is_attributed = inferred_type == AttributedSymbol
-                usage_is_linked = usage_type == LinkedFrameSymbol
-                inferred_is_linked = inferred_type == LinkedFrameSymbol
+                usage_is_attributed = usage_type == AttributedUsage
+                inferred_is_attributed = inferred_type == AttributedUsage
+                usage_is_linked = usage_type == LinkedFrameUsage
+                inferred_is_linked = inferred_type == LinkedFrameUsage
 
                 if usage_is_linked and inferred_is_attributed:
-                    inferred_type = LinkedFrameSymbol
+                    inferred_type = LinkedFrameUsage
                 elif usage_is_attributed and inferred_is_linked:
                     pass
                 elif usage_type != inferred_type:

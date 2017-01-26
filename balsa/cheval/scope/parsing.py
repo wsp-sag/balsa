@@ -10,7 +10,7 @@ NUMEXPR_FUNCTIONS = set(nee.functions.keys())
 MAX_ATTRIBUTE_CHAINS = 50  # To avoid infinite loop in __get_name_from_attribute()
 
 
-class SimpleSymbol(object):
+class SimpleUsage(object):
     pass
 
 
@@ -20,13 +20,13 @@ class DictLiteral(object):
         self.series = series
 
 
-class AttributedSymbol(object):
+class AttributedUsage(object):
     def __init__(self, substitution, attribute):
         self.substitution = substitution
         self.attribute = attribute
 
 
-class LinkedFrameSymbol(object):
+class LinkedFrameUsage(object):
     def __init__(self, substitution, stack, func, func_expr):
         self.substitution = substitution
         self.stack = stack
@@ -46,7 +46,7 @@ class ExpressionProcessor(ast.NodeTransformer):
     )
 
     @staticmethod
-    def parse(expression):
+    def parse(expression: str):
         tree = ast.parse(expression, mode='eval').body
         transformer = ExpressionProcessor()
         new_tree = transformer.visit(tree)
@@ -110,7 +110,7 @@ class ExpressionProcessor(ast.NodeTransformer):
         arg_expression = astor.to_source(call_node.args)
         substitution = self.__generate_substitution(name)
 
-        usage = LinkedFrameSymbol(substitution, stack, func_name, arg_expression)
+        usage = LinkedFrameUsage(substitution, stack, func_name, arg_expression)
         self.__append_symbol(name, usage)
 
         new_node = ast.Name(substitution)
@@ -119,7 +119,7 @@ class ExpressionProcessor(ast.NodeTransformer):
     def visit_name(self, node: ast.Name):
         # Register the symbol but do not change it.
         symbol_name = node.id
-        self.__append_symbol(symbol_name, SimpleSymbol())
+        self.__append_symbol(symbol_name, SimpleUsage())
         return node
 
     def visit_attribute(self, node: ast.Attribute):
@@ -127,10 +127,10 @@ class ExpressionProcessor(ast.NodeTransformer):
         substitution = self.__generate_substitution(name)
         if len(stack) == 1:
             attribute = stack.pop()
-            usage = AttributedSymbol(substitution, attribute)
+            usage = AttributedUsage(substitution, attribute)
             self.__append_symbol(name, usage)
         else:
-            usage = LinkedFrameSymbol(substitution, stack, None, None)
+            usage = LinkedFrameUsage(substitution, stack, None, None)
             self.__append_symbol(name, usage)
 
     @staticmethod
