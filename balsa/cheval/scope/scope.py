@@ -1,6 +1,6 @@
 from enum import Enum
 import abc
-from typing import Any, Iterable, Union
+from typing import Any, Iterable, Dict
 
 import pandas as pd
 import numpy as np
@@ -79,7 +79,7 @@ class Scope(object):
         """
         self._initialize()
 
-        symbol_usage = self._empty_symbols[symbol_name]
+        symbol_usage = self._empty_symbols.pop(symbol_name)
 
         if isinstance(symbol_usage, LinkedFrameUsage):
             symbol_meta = self._fill_linked(data, orientation)
@@ -253,7 +253,13 @@ class Scope(object):
         if self._empty_symbols is None or self._filled_symbols is None:
             self._empty_symbols = self._root.expressions.get_symbols()
             self._filled_symbols = {}
-            self._alternatives = self._root.node_index
+            self._alternatives = self._root.tree.node_index
+
+    def _symbolize(self)-> Dict[str, AbstractSymbol]:
+        if self._empty_symbols:
+            raise AttributeError("Cannot evaluate expressions when there are still empty symbols that need to be "
+                                 "filled")
+        return self._filled_symbols
 
 
 class AbstractSymbol(metaclass=abc.ABCMeta):
