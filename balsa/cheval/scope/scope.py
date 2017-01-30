@@ -52,7 +52,7 @@ class Scope(object):
         """
         raise NotImplementedError()
 
-    def fill_symbol(self, symbol_name: str, data: Any, orientation: Orientation=None, strict=True):
+    def fill_symbol(self, symbol_name: str, data: Any, orientation: int=None, strict=True):
         """
         Associate an empty symbol with actual data, usually ararys, DataFrames, and/or Series. Symbol usages are
         collected from the list of model expressions already-loaded, so the type of `data` must conform to the rules of
@@ -73,15 +73,28 @@ class Scope(object):
 
         Raises:
             KeyError: If the symbol_name is not found used in any Expression.
-            TypeError: If `strict` is True, and the symbol being filled is a simple substitution, AND the type of `data`
-                is not a scalar.
+            TypeError: If the type of `data` was not understood or not supported by the scoping rules.
+            ScopeOrientationError: If the data do not conform to the rules for scoping.
 
         """
         self._initialize()
 
-        symbol_type = self._empty_symbols[symbol_name]
+        symbol_usage = self._empty_symbols[symbol_name]
 
-    def _fill_simple(self, symbol_usage: SimpleUsage, data, orientation: int=None, strict=True):
+        if isinstance(symbol_usage, LinkedFrameUsage):
+            symbol_meta = self._fill_linked(data, orientation)
+        elif isinstance(symbol_usage, AttributedUsage):
+            symbol_meta = self._fill_attributed(data, orientation)
+        elif isinstance(symbol_usage, DictLiteral):
+            symbol_meta = self._fill_simple(symbol_usage.series, orientation=1)
+        elif isinstance(symbol_usage, SimpleUsage):
+            symbol_meta = self._fill_simple(data, orientation, strict)
+        else:
+            raise NotImplementedError("Usage type '%s' not understood" % type(symbol_usage))
+
+        self._filled_symbols[symbol_name] = symbol_meta
+
+    def _fill_simple(self, data, orientation: int=None, strict=True):
         """"""
 
         '''
@@ -141,9 +154,7 @@ class Scope(object):
             # For a simple symbols, this is only permitted if BOTH axes align with the utilities table
             if self._records.equals(self._alternatives):
                 # Orientation is ambiguous
-                if orientation is None:
-                    raise ScopeOrientationError("Orientation must be provided when the record index exactly equals the"
-                                                " alternatives index.")
+                self._check_orientation(orientation)
                 if not data.index.equals(self._records) or not data.columns.equals(self._records):
                     raise ScopeOrientationError("Simple DataFrames must align with both the records and alternatives")
                 return Array2DSymbol(data.values, orientation)
@@ -159,9 +170,7 @@ class Scope(object):
 
             if self._records.equals(self._alternatives):
                 # Orientation is ambiguous
-                if orientation is None:
-                    raise ScopeOrientationError("Orientation must be provided when the record index exactly equals the"
-                                                " alternatives index.")
+                self._check_orientation(orientation)
                 if not data.index.equals(self._records):
                     raise ScopeOrientationError("Series must align with either the records or alternatives")
 
@@ -181,18 +190,58 @@ class Scope(object):
             # Permissive; let NumExpr figure out if the data is valid
             return ScalarSymbol(data)
 
+    @staticmethod
+    def _check_orientation(orientation):
+        if orientation is None:
+            raise ScopeOrientationError("Orientation must be provided when the record index exactly equals the"
+                                        " alternatives index.")
+
     def _check_records(self):
         assert self._records is not None, "This operation is not allowed if the records have not been set."
 
-    def _fill_attributed(self, symbol_usage, data, orientation: Orientation):
+    def _fill_attributed(self, data, orientation: int=None):
         self._check_records()
 
-        raise NotImplementedError()
+        if isinstance(data, pd.DataFrame):
+            if self._records.equals(self._alternatives):
+                self._check_orientation(orientation)
+                if not data.index.equals(self._records):
+                    raise ScopeOrientationError("Filling attributed usage with a DataFrame is permitted, but the index "
+                                                "must align with either the records or the alternatives")
+                return FrameSymbol(data, orientation)
+            elif data.index.equals(self._records):
+                return FrameSymbol(data, 0)
+            elif data.index.equals(self._alternatives):
+                return FrameSymbol(data, 1)
+            else:
+                raise ScopeOrientationError("Filling attributed usage with a DataFrame is permitted, but the index "
+                                            "must align with either the records or the alternatives")
 
-    def _fill_linked(self, symbol_usage, data, orientation: Orientation):
+        elif isinstance(data, (dict, pd.Panel)):
+            if isinstance(data, dict): data = pd.Panel(dict)
+            raise NotImplementedError()
+        else:
+            raise TypeError("Only DataFrames, dictionaries of DataFrames, or Panels can fill attributed symbols")
+
+    def _fill_linked(self, data, orientation: int):
         assert isinstance(data, LinkedDataFrame), "Only LinkedDataFrames can fill linked symbols."
         self._check_records()
-        raise NotImplementedError()
+
+        if self._records.equals(self._alternatives):
+            self._check_orientation(orientation)
+
+            if not data.index.equals(self._records):
+                raise ScopeOrientationError("Filling linked usage with a LinkedDataFrame is permitted, but the index "
+                                            "must align with either the records or alternatives")
+
+            return LinkedFrameSymbol(data, orientation)
+        elif data.index.equals(self._records):
+            return LinkedFrameSymbol(data, 0)
+        elif data.index.equals(self._alternatives):
+            return LinkedFrameSymbol(data, 1)
+        else:
+            raise ScopeOrientationError("Filling linked usage with a LinkedDataFrame is permitted, but the index must "
+                                        "align with either the records or alternatives")
 
     def clear(self):
         self._empty_symbols = None
@@ -244,7 +293,7 @@ class Array2DSymbol(AbstractSymbol):
     def __init__(self, array: np.ndarray, orientation: int):
         self._data = np.transpose(array) if orientation == 1 else array[...]
 
-    def get_value(self, usage):
+    def get_value(self, usage: SimpleUsage):
         return self._data
 
 
@@ -254,7 +303,16 @@ class FrameSymbol(AbstractSymbol):
         self._frame = frame
         self._orientation = orientation
 
-    def get_value(self, usage):
+    def get_value(self, usage: AttributedUsage):
+        raise NotImplementedError()
+
+
+class LinkedFrameSymbol(AbstractSymbol):
+    def __init__(self, frame: LinkedDataFrame, orientation: int):
+        self._frame = frame
+        self._orientation = orientation
+
+    def get_value(self, usage: LinkedFrameUsage):
         raise NotImplementedError()
 
 
@@ -263,5 +321,5 @@ class PanelSymbol(AbstractSymbol):
     def __init__(self):
         raise NotImplementedError()
 
-    def get_value(self, usage):
+    def get_value(self, usage: AttributedUsage):
         raise NotImplementedError()
