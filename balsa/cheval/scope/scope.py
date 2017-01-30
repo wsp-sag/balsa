@@ -15,6 +15,10 @@ class Orientation(Enum):
     ALTERNATIVES = 1
 
 
+class ScopeOrientationError(IndexError):
+    pass
+
+
 class Scope(object):
 
     def __init__(self, model: LogitModel):
@@ -36,7 +40,7 @@ class Scope(object):
 
         """
         self._initialize()
-        raise NotImplementedError()
+        self._records = pd.Index(index)
 
     def empty_symbols(self) -> Iterable[str]:
         """
@@ -59,10 +63,10 @@ class Scope(object):
             data: Numerical data to be associated with the filled symbol. Supported types include scalar numbers, 1-D
                 arrays, 2-D arrays, Series, DataFrames, and Dictionaries of DataFrames / Panels. Not all data types are
                 supported by all use cases, refer to usage rules for further details.
-            orientation (Orientation): Specifies which dimension of the utility table to which the FIRST dimension (axis)
-                of the data is oriented. This is useful in cases where the records index and alternatives index are the
-                same (the labels are therefore ambiguous), or to force the scope to use the first dimension of labelled
-                data as the records index.
+            orientation (int): Specifies which dimension of the utility table to which the FIRST dimension (axis)
+                of the data is oriented: 0: oriented to the records, 1: oriented to the alternatives. This is useful in
+                cases where the records index and alternatives index are the same (the labels are therefore ambiguous),
+                or the same length (for adding unlabelled data).
             strict (bool): In the case that Cheval is unable to recognize or support the type of `data`, turning off
                 `strict` will permit the data to be filled at this time, and checked by the NumExpr engine later. In
                 most cases, this should probably be left to True.
@@ -77,38 +81,117 @@ class Scope(object):
 
         symbol_type = self._empty_symbols[symbol_name]
 
-    def _fill_simple(self, symbol_meta: SimpleUsage, data, orientation: Orientation, strict=True):
+    def _fill_simple(self, symbol_usage: SimpleUsage, data, orientation: int=None, strict=True):
+        """"""
+
+        '''
+        This is a bit ugly and should probably be broken out into separate functions for different types
+        '''
+
         if isinstance(data, np.ndarray):
             # Unlabelled 1- or 2-D array
             self._check_records()
-            raise NotImplementedError()
+
+            if data.ndim == 1:
+                # 1-D array
+                n_rows = len(data)
+                n_rec = len(self._records)
+                n_alts = len(self._alternatives)
+                if n_rec == n_alts:
+                    # Orientation matters
+                    if n_rows != n_rec:
+                        raise ScopeOrientationError("1D data array shape incompatible with records or alternatives")
+                    if orientation is None:
+                        raise ScopeOrientationError("Orientation must be provided for arrays when length of records "
+                                                    "matches length of alternatives")
+                    return Array1DSymbol(data, orientation)
+                else:
+                    # Infer orientation from length of array
+                    if n_rows == n_rec:
+                        # Oriented to the records
+                        return Array1DSymbol(data, 0)
+                    elif n_rows == n_alts:
+                        return Array1DSymbol(data, 1)
+                    else:
+                        raise ScopeOrientationError("1D arrays must be as long as either the records or alternatives")
+            elif data.ndim == 2:
+                # 2-D array
+                n_rows, n_cols = data.shape
+                n_rec, n_alts = len(self._records), len(self._alternatives)
+
+                if n_rec == n_alts:
+                    # Orientation matters
+                    if n_rows != n_rec or n_cols != n_alts:
+                        raise ScopeOrientationError("2D data array shape incompatible with records and alternatives")
+                    if orientation is None:
+                        raise ScopeOrientationError("Orientation must be provided for arrays when length of records "
+                                                    "matches length of alternatives")
+                    return Array2DSymbol(data, orientation)
+                elif n_rows == n_rec and n_cols == n_alts:
+                    return Array2DSymbol(data, 0)
+                elif n_rows == n_alts and n_cols == n_rec:
+                    return Array2DSymbol(data, 1)
+                else:
+                    raise ScopeOrientationError("2D array shapes must align with both the records and alternatives")
+            else:
+                raise ScopeOrientationError("Numpy arrays are permitted, but only with 1 or 2 dimensions (found more)")
         elif isinstance(data, pd.DataFrame):
             # Labelled 2-D array
+            self._check_records()
             # For a simple symbols, this is only permitted if BOTH axes align with the utilities table
-            raise NotImplementedError()
+            if self._records.equals(self._alternatives):
+                # Orientation is ambiguous
+                if orientation is None:
+                    raise ScopeOrientationError("Orientation must be provided when the record index exactly equals the"
+                                                " alternatives index.")
+                if not data.index.equals(self._records) or not data.columns.equals(self._records):
+                    raise ScopeOrientationError("Simple DataFrames must align with both the records and alternatives")
+                return Array2DSymbol(data.values, orientation)
+            elif data.index.equals(self._records) and data.columns.equals(self._alternatives):
+                return Array2DSymbol(data.values, 0)
+            elif data.index.equals(self._alternatives) and data.columns.equals(self._records):
+                return Array2DSymbol(data.values, 1)
+            else:
+                raise ScopeOrientationError("Simple DataFrames must align with both the records and alternatives")
         elif isinstance(data, pd.Series):
             # Labelled 1-D array
-            raise NotImplementedError()
+            self._check_records()
+
+            if self._records.equals(self._alternatives):
+                # Orientation is ambiguous
+                if orientation is None:
+                    raise ScopeOrientationError("Orientation must be provided when the record index exactly equals the"
+                                                " alternatives index.")
+                if not data.index.equals(self._records):
+                    raise ScopeOrientationError("Series must align with either the records or alternatives")
+
+                return Array1DSymbol(data.values, orientation)
+            elif data.index.equals(self._records):
+                return Array1DSymbol(data.values, 0)
+            elif data.index.equals(self._alternatives):
+                return Array1DSymbol(data.values, 1)
+            else:
+                raise ScopeOrientationError("Series must align with either the records or the alternatives")
         elif strict:
             # Rigourous type-checking for scalars if strict is required
             if not isinstance(data, (int, float, np.int_, np.float_)):
                 raise TypeError("Unsupported simple symbol data type: %s" % type(data))
-            raise NotImplementedError()
+            return ScalarSymbol(data)
         else:
             # Permissive; let NumExpr figure out if the data is valid
-            raise NotImplementedError()
+            return ScalarSymbol(data)
 
     def _check_records(self):
         assert self._records is not None, "This operation is not allowed if the records have not been set."
 
-    def _fill_attributed(self, symbol_meta, data, orientation: Orientation):
-        assert isinstance(data, (pd.DataFrame, pd.Panel, dict)), "Only DataFrames, Panel, and Dictionaries can fill " \
-                                                                 "attributed symbols"
+    def _fill_attributed(self, symbol_usage, data, orientation: Orientation):
+        self._check_records()
 
         raise NotImplementedError()
 
-    def _fill_linked(self, symbol_meta, data, orientation: Orientation):
+    def _fill_linked(self, symbol_usage, data, orientation: Orientation):
         assert isinstance(data, LinkedDataFrame), "Only LinkedDataFrames can fill linked symbols."
+        self._check_records()
         raise NotImplementedError()
 
     def clear(self):
@@ -171,7 +254,7 @@ class FrameSymbol(AbstractSymbol):
         self._frame = frame
         self._orientation = orientation
 
-    def get_value(self, usage: Union[AttributedUsage, LinkedFrameUsage]):
+    def get_value(self, usage):
         raise NotImplementedError()
 
 
