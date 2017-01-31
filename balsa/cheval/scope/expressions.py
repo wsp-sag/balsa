@@ -1,4 +1,4 @@
-from typing import Union, Dict
+from typing import Union, Dict, Iterable
 from .parsing import ExpressionProcessor, SimpleUsage, DictLiteral, AttributedUsage, LinkedFrameUsage
 from ..api import ChoiceModel
 from six import iteritems
@@ -27,6 +27,9 @@ class ExpressionContainer(object):
         self._model_ref = model
         self._modified = True
         self._cached_types = None
+
+    def __iter__(self) -> Iterable[Expression]:
+        yield from self._expressions
 
     def append_expression(self, expression: str):
         expr_wrapper = Expression(expression)
