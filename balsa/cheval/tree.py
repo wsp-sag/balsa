@@ -1,4 +1,4 @@
-from . import LogitModel
+from . import ChoiceModel
 from .core import INSTRUCTION_TYPE_1, INSTRUCTION_TYPE_2
 from six import iterkeys, itervalues
 
@@ -60,7 +60,7 @@ class _ChoiceNode(object):
 
 class ChoiceTree(object):
 
-    def __init__(self, root: LogitModel, default_choice=None):
+    def __init__(self, root: ChoiceModel, default_choice=None):
         self._root = root
 
         self._all_nodes = {}

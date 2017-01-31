@@ -2,7 +2,7 @@ from .scope import Scope, ExpressionContainer
 from .tree import ChoiceTree
 
 
-class LogitModel(object):
+class ChoiceModel(object):
 
     def __init__(self):
         self._expression_container = ExpressionContainer(self)

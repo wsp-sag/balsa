@@ -1,6 +1,6 @@
 from typing import Union, Dict
 from .parsing import ExpressionProcessor, SimpleUsage, DictLiteral, AttributedUsage, LinkedFrameUsage
-from ..api import LogitModel
+from ..api import ChoiceModel
 from six import iteritems
 
 
@@ -22,7 +22,7 @@ class Expression(object):
 
 class ExpressionContainer(object):
 
-    def __init__(self, model: LogitModel):
+    def __init__(self, model: ChoiceModel):
         self._expressions = []
         self._model_ref = model
         self._modified = True

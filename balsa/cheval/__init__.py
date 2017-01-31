@@ -1,2 +1,2 @@
-from .api import LogitModel
+from .api import ChoiceModel
 from .ldf import LinkedDataFrame, LinkageSpecificationError

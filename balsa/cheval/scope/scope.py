@@ -5,7 +5,7 @@ from typing import Any, Iterable, Dict
 import pandas as pd
 import numpy as np
 
-from ..api import LogitModel
+from ..api import ChoiceModel
 from .expressions import SimpleUsage, DictLiteral, AttributedUsage, LinkedFrameUsage
 from ..ldf import LinkedDataFrame
 
@@ -21,7 +21,7 @@ class ScopeOrientationError(IndexError):
 
 class Scope(object):
 
-    def __init__(self, model: LogitModel):
+    def __init__(self, model: ChoiceModel):
         self._root = model
         self._empty_symbols = None
         self._filled_symbols = None
