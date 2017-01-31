@@ -175,47 +175,35 @@ def nested_probabilities(utilities, instruction_set_1, instruction_set_2):
 # region Mid-level functions
 
 
-@nb.jit(nb.void(nb.float64[:, :], nb.float64[:], _NB_INSTRUCTION_TYPE_1[:], _NB_INSTRUCTION_TYPE_2[:], nb.int64[:]),
+@nb.jit(nb.void(nb.float64[:, :], nb.float64[:, :], _NB_INSTRUCTION_TYPE_1[:], _NB_INSTRUCTION_TYPE_2[:], nb.int64[:, :]),
         nogil=True, nopython=True)
 def sample_nested_worker(utilities, random_numbers, instruction_set_1, instruction_set_2, out):
-    nrows = utilities.shape[0]
+    nrows , n_draws = random_numbers.shape
 
     for i in range(nrows):
         util_row = utilities[i, :]
         probabilities = nested_probabilities(util_row, instruction_set_1, instruction_set_2)
         probabilities = np.cumsum(probabilities)  # Convert to cumulative sum
 
-        r = random_numbers[i]
-        result = logarithmic_search(r, probabilities)
-        out[i] = result
+        for j in range(n_draws):
+            r = random_numbers[i, j]
+            result = logarithmic_search(r, probabilities)
+            out[i, j] = result
 
 
-@nb.jit(nb.void(nb.float64[:, :], nb.float64[:], nb.int64[:]))
+@nb.jit(nb.void(nb.float64[:, :], nb.float64[:, :], nb.int64[:, :]))
 def sample_multinomial_worker(utilities, random_numbers, out):
-    nrows = utilities.shape[0]
+    nrows, n_draws = random_numbers.shape
 
     for i in range(nrows):
         util_row = utilities[i, :]
         probabilities = multinomial_probabilities(util_row)
         probabilities = np.cumsum(probabilities)
 
-        r = random_numbers[i]
-        result = logarithmic_search(r, probabilities)
-        out[i] = result
-
-
-@nb.jit(nb.void(nb.float64[:, :], nb.float64[:], nb.int64[:]))
-def sample_binary_worker(utilities, random_numbers, out):
-    nrows = utilities.shape[0]
-
-    for i in range(nrows):
-        util_row = utilities[i, :]
-        probabilities = multinomial_probabilities(util_row)
-        probabilities = np.cumsum(probabilities)
-
-        r = random_numbers[i]
-        result = binary_sample(r, probabilities)
-        out[i] = result
+        for j in range(n_draws):
+            r = random_numbers[i, j]
+            result = logarithmic_search(r, probabilities)
+            out[i, j] = result
 
 
 @nb.jit(nb.void(nb.float64[:, :], _NB_INSTRUCTION_TYPE_1[:], _NB_INSTRUCTION_TYPE_2[:], nb.float64[:, :]))
