@@ -1,3 +1,6 @@
+import numpy as np
+import pandas as pd
+
 from .scope import Scope, ExpressionContainer
 from .tree import ChoiceTree
 
@@ -48,7 +51,23 @@ class ChoiceModel(object):
             Series or DataFrame, depending on squeeze and n_draws. The dtype of the returned object depends on astype.
 
         """
-        raise NotImplementedError()
+        self._check_model_is_ready()
+
+        if randomizer is None:
+            randomizer = np.random
+        elif isinstance(randomizer, (int, np.int_)):
+            randomizer = np.random.RandomState(randomizer)
+
+        assert n_draws >= 1
+
+        if override_utilities is None:
+            utilities = self._eval_utilities(n_threads)
+        else:
+            utilities = override_utilities
+
+        result_indices = self._eval_probabilities_and_sample(utilities, randomizer, n_draws, n_threads)
+
+        return self._convert_result(result_indices, n_draws, astype, squeeze)
 
     def run_stochastic(self, n_threads=1, override_utilities=None, logger=None):
         """
@@ -68,7 +87,16 @@ class ChoiceModel(object):
             DataFrame of probabilities of each record x each alternative.
 
         """
-        raise NotImplementedError()
+        self._check_model_is_ready()
+
+        if override_utilities is None:
+            utilities = self._eval_utilities(n_threads)
+        else:
+            utilities = override_utilities
+
+        results = self._eval_probabilities_only(utilities, n_threads)
+
+        return results
 
     def copy(self, expressions=False, scope=False):
         """
@@ -81,4 +109,19 @@ class ChoiceModel(object):
         Returns:
 
         """
+        raise NotImplementedError()
+
+    def _check_model_is_ready(self):
+        raise NotImplementedError()
+
+    def _eval_utilities(self, n_threads):
+        raise NotImplementedError()
+
+    def _eval_probabilities_and_sample(self, utilities, randomizer, n_draws, n_threads):
+        raise NotImplementedError()
+
+    def _eval_probabilities_only(self, utilities, n_threads):
+        raise NotImplementedError()
+
+    def _convert_result(self, results, n_draws, astype, squeeze):
         raise NotImplementedError()
