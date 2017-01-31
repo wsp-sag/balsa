@@ -6,7 +6,8 @@ setup(
         'pandas',
         'numpy',
         'numba',
-        'numexpr'
+        'numexpr',
+        'astor'
     ],
     packages=find_packages()
 )
