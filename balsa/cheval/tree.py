@@ -38,6 +38,14 @@ class _ChoiceNode(object):
     def is_parent(self):
         return len(self._children) > 0
 
+    def max_level(self):
+        max_level = self._level
+
+        for c in self.children():
+            max_level = max(max_level, c.max_level())
+
+        return max_level
+
     def children(self):
         for c in self._children:
             yield c
@@ -69,6 +77,14 @@ class ChoiceTree(object):
 
     def __getitem__(self, item):
         return self._all_nodes[item]
+
+    def max_level(self):
+        max_level = 1
+
+        for c in self.children():
+            max_level = max(max_level, c.max_level())
+
+        return max_level
 
     def children(self):
         for c in self._children:
