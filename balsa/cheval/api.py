@@ -1,8 +1,11 @@
 import numpy as np
 import pandas as pd
+import numexpr as ne
+from threading import Thread
 
-from .scope import Scope, ExpressionContainer
+from .scope import Scope, ExpressionContainer, SimpleUsage, DictLiteral, AttributedUsage, LinkedFrameUsage
 from .tree import ChoiceTree
+from .core import sample_multinomial_worker, sample_nested_worker, stochastic_multinomial_worker, stochastic_nested_worker
 
 
 class ChoiceModel(object):
@@ -67,7 +70,7 @@ class ChoiceModel(object):
 
         result_indices = self._eval_probabilities_and_sample(utilities, randomizer, n_draws, n_threads)
 
-        return self._convert_result(result_indices, n_draws, astype, squeeze)
+        return self._convert_result(result_indices, astype, squeeze)
 
     def run_stochastic(self, n_threads=1, override_utilities=None, logger=None):
         """
@@ -115,13 +118,106 @@ class ChoiceModel(object):
         raise NotImplementedError()
 
     def _eval_utilities(self, n_threads):
-        raise NotImplementedError()
 
-    def _eval_probabilities_and_sample(self, utilities, randomizer, n_draws, n_threads):
+        # Allocate an empty utility table
+        shape = len(self._scope_container._records), len(self._tree_container.node_index)
+        utility_table = np.zeros(shape, dtype=np.float64, order='C')
+
+        ne.set_num_threads(n_threads)
+
+        # Evaluate each expression
+        for expr in self._expression_container:
+
+            # Setup local dictionary of data
+            local_dict = {}
+            for symbol_name, usage in expr.symbols():
+                # Usage is one of SimpleUsage, DictLiteral, AttributedUsage, or LinkedFrameUsage
+
+                # Symbol meta is an instance of scope.AbstractSymbol
+                symbol_meta = self._scope_container._filled_symbols[symbol_name]
+                data = symbol_meta.get_value(usage)
+
+                if isinstance(usage, SimpleUsage):
+                    # In this case, no substitution was performed, so we can just use the symbol name
+                    local_dict[symbol_name] = data
+                else:
+                    # Otherwise, we need to set the data to another alias
+                    local_dict[usage.substitution] = data
+
+            # Run the expression.
+            # TODO: Figure out if it is worth it in RAM savings to use out= to in-place add the utilities
+            utility_table += ne.evaluate(expr._parsed_expr, local_dict=local_dict)
+
+        return utility_table
+
+    def _eval_probabilities_and_sample(self, utilities, randomizer: np.RandomState, n_draws, n_threads):
+
+        # TODO: Try out saving the results in the random draws array to save on memory.
+        result_shape = utilities.shape[0], n_draws
+        random_draws = randomizer.uniform(size=result_shape)
+        result = np.zeros(result_shape, dtype=np.int64)
+
+        utility_chunks = np.array_split(utilities, n_threads, axis=0)
+        random_chunks = np.array_split(random_draws, n_threads, axis=0)
+        result_chunks = np.array_split(result, n_threads, axis=0)
+
+        if self.tree.max_level() == 1:
+            # Multinomial model
+
+            threads = [
+                Thread(target=sample_multinomial_worker, args=[
+                    utility_chunks[i], random_chunks[i], result_chunks[i]
+                ])
+                for i in range(n_threads)
+            ]
+        else:
+            # Nested model
+
+            instructions1, instructions2 = self.tree.flatten()
+
+            threads = [
+                Thread(target=sample_nested_worker, args=[
+                    utility_chunks[i], random_chunks[i], instructions1, instructions2, result_chunks[i]
+                ])
+                for i in range(n_threads)
+            ]
+
+        for t in threads: t.start()
+        for t in threads: t.join()
+
+        return result
+
+    def _convert_result(self, results, astype, squeeze):
         raise NotImplementedError()
 
     def _eval_probabilities_only(self, utilities, n_threads):
-        raise NotImplementedError()
+        result = np.zeros(shape=utilities.shape, dtype=np.float64, order='C')
 
-    def _convert_result(self, results, n_draws, astype, squeeze):
-        raise NotImplementedError()
+        utility_chunks = np.array_split(utilities, n_threads, axis=0)
+        result_chunks = np.array_split(result, n_threads, axis=0)
+
+        if self.tree.max_level() == 1:
+            # Multinomial model
+
+            threads = [
+                Thread(target=stochastic_multinomial_worker, args=[
+                    utility_chunks[i], result_chunks[i]
+                ])
+                for i in range(n_threads)
+            ]
+        else:
+            # Nested model
+
+            instructions1, instructions2 = self.tree.flatten()
+
+            threads = [
+                Thread(target=stochastic_nested_worker, args=[
+                    utility_chunks[i], instructions1, instructions2, result_chunks[i]
+                ])
+                for i in range(n_threads)
+            ]
+
+        for t in threads: t.start()
+        for t in threads: t.join()
+
+        return result
