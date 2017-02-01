@@ -22,6 +22,8 @@ _NB_INSTRUCTION_TYPE_1 = nb.from_dtype(INSTRUCTION_TYPE_1)
 INSTRUCTION_TYPE_2 = np.dtype([('child_index', 'i8'), ('parent_index', 'i8')])
 _NB_INSTRUCTION_TYPE_2 = nb.from_dtype(INSTRUCTION_TYPE_2)
 
+MIN_RANDOM_VALUE = np.finfo(np.float64).tiny
+
 
 @nb.jit(nb.int64(nb.float64, nb.float64[:]), nogil=True, nopython=True)
 def logarithmic_search(r, cps):
@@ -35,6 +37,12 @@ def logarithmic_search(r, cps):
 
     Returns (int): The found index.
     """
+
+    # The check below is required to avoid a very specific edge case in which there is more than one 0-probability
+    # choice at the start of the probability array, e.g. [0, 0, 0, 0.1, 0.3, 0.7, 1.0]. The randomizer draws on the
+    # interval [0, 1), so it's a (very) small possibility, but nonetheless would yield potentially very wrong results
+    if r == 0:
+        r = MIN_RANDOM_VALUE
 
     ncols = len(cps)
 
