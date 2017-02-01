@@ -68,10 +68,10 @@ class ExpressionProcessor(ast.NodeTransformer):
             self.__symbols[name].append(usage)
 
     def __generate_substitution(self, name):
-        return name + (0 if name not in self.__symbols else len(self.__symbols[name]))
+        return name + ('0' if name not in self.__symbols else str(len(self.__symbols[name])))
 
     def visit(self, node):
-        return self.__get_visitor(node)
+        return self.__get_visitor(node)(node)
 
     def __get_visitor(self, node):
         if isinstance(node, ExpressionProcessor.UNSUPPORTED_NODES):
@@ -97,6 +97,10 @@ class ExpressionProcessor(ast.NodeTransformer):
             raise UnsupportedSyntaxError("Function '%s' not supported." % func_name)
 
         node.args = [self.__get_visitor(arg)(arg) for arg in node.args]
+        node.starargs = None
+        if not hasattr(node, 'kwargs'):
+            node.kwargs = None
+
         return node
 
     def __visit_method(self, call_node: ast.Call, func_node: ast.Attribute):
@@ -105,18 +109,21 @@ class ExpressionProcessor(ast.NodeTransformer):
         if func_name not in SUPPORTED_AGGREGATIONS:
             raise UnsupportedSyntaxError("Linked Data Frame aggregation '%s' is not supported." % func_name)
 
+        if not hasattr(call_node, 'starargs'): call_node.starargs = None
+        if not hasattr(call_node, 'kwargs'): call_node.kwargs = None
+
         if len(call_node.keywords) > 0:
             raise UnsupportedSyntaxError("Keyword args are not supported inside Linked Data Frame aggregations")
         if call_node.starargs is not None or call_node.kwargs is not None:
             raise UnsupportedSyntaxError("Star-args or star-kwargs are not supported inside Linked Data Frame "
                                          "aggregation")
-        arg_expression = astor.to_source(call_node.args)
+        arg_expression = astor.to_source(call_node.args[0])
         substitution = self.__generate_substitution(name)
 
         usage = LinkedFrameUsage(substitution, stack, func_name, arg_expression)
         self.__append_symbol(name, usage)
 
-        new_node = ast.Name(substitution)
+        new_node = ast.Name(substitution, ast.Load())
         return new_node
 
     def visit_name(self, node: ast.Name):
@@ -136,6 +143,8 @@ class ExpressionProcessor(ast.NodeTransformer):
             usage = LinkedFrameUsage(substitution, stack, None, None)
             self.__append_symbol(name, usage)
 
+        return ast.Name(substitution, ast.Load())
+
     @staticmethod
     def __get_name_from_attribute(node: ast.Attribute):
         current_node = node
@@ -153,7 +162,7 @@ class ExpressionProcessor(ast.NodeTransformer):
     def visit_dict(self, node: ast.Dict):
         substitution = '__dict%s' % self.__n_dicts
         self.__n_dicts += 1
-        new_node = ast.Name(substitution)
+        new_node = ast.Name(substitution, ast.Load())
 
         try:
             values = [np.float32(val.n) for val in node.values]
@@ -170,7 +179,7 @@ class ExpressionProcessor(ast.NodeTransformer):
     @staticmethod
     def __get_dict_key(node):
         if isinstance(node, ast.Name):
-                return node.id
+            return node.id
         if isinstance(node, ast.Str):
             return node.s
         raise UnsupportedSyntaxError("Dict key of type '%s' unsupported" % node)
