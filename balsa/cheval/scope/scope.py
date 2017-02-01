@@ -5,7 +5,6 @@ from typing import Any, Iterable, Dict
 import pandas as pd
 import numpy as np
 
-from ..api import ChoiceModel
 from .expressions import SimpleUsage, DictLiteral, AttributedUsage, LinkedFrameUsage
 from ..ldf import LinkedDataFrame
 
@@ -19,9 +18,78 @@ class ScopeOrientationError(IndexError):
     pass
 
 
+class AbstractSymbol(metaclass=abc.ABCMeta):
+
+    @abc.abstractmethod
+    def get_value(self, usage):
+        pass
+
+
+class ScalarSymbol(AbstractSymbol):
+
+    def __init__(self, value):
+        self._value = value
+
+    def get_value(self, usage):
+        return self._value
+
+
+class Array1DSymbol(AbstractSymbol):
+
+    def __init__(self, array: np.ndarray, orientation: int):
+        self._data = array
+        self._orientation = orientation
+
+    def get_value(self, usage):
+        length = len(self._data)
+        new_shape = [1, 1]
+        new_shape[self._orientation] = length
+
+        view = self._data[...]  # Make a shallow copy
+        view.shape = new_shape
+        return view
+
+
+class Array2DSymbol(AbstractSymbol):
+
+    def __init__(self, array: np.ndarray, orientation: int):
+        self._data = np.transpose(array) if orientation == 1 else array[...]
+
+    def get_value(self, usage: SimpleUsage):
+        return self._data
+
+
+class FrameSymbol(AbstractSymbol):
+
+    def __init__(self, frame: pd.DataFrame, orientation: int):
+        self._frame = frame
+        self._orientation = orientation
+
+    def get_value(self, usage: AttributedUsage):
+        raise NotImplementedError()
+
+
+class LinkedFrameSymbol(AbstractSymbol):
+    def __init__(self, frame: LinkedDataFrame, orientation: int):
+        self._frame = frame
+        self._orientation = orientation
+
+    def get_value(self, usage: LinkedFrameUsage):
+        raise NotImplementedError()
+
+
+class PanelSymbol(AbstractSymbol):
+
+    def __init__(self):
+        raise NotImplementedError()
+
+    def get_value(self, usage: AttributedUsage):
+        raise NotImplementedError()
+
+
 class Scope(object):
 
-    def __init__(self, model: ChoiceModel):
+    def __init__(self, model):
         self._root = model
         self._empty_symbols = None
         self._filled_symbols = None
@@ -260,72 +328,3 @@ class Scope(object):
             raise AttributeError("Cannot evaluate expressions when there are still empty symbols that need to be "
                                  "filled")
         return self._filled_symbols
-
-
-class AbstractSymbol(metaclass=abc.ABCMeta):
-
-    @abc.abstractmethod
-    def get_value(self, usage):
-        pass
-
-
-class ScalarSymbol(AbstractSymbol):
-
-    def __init__(self, value):
-        self._value = value
-
-    def get_value(self, usage):
-        return self._value
-
-
-class Array1DSymbol(AbstractSymbol):
-
-    def __init__(self, array: np.ndarray, orientation: int):
-        self._data = array
-        self._orientation = orientation
-
-    def get_value(self, usage):
-        length = len(self._data)
-        new_shape = [1, 1]
-        new_shape[self._orientation] = length
-
-        view = self._data[...]  # Make a shallow copy
-        view.shape = new_shape
-        return view
-
-
-class Array2DSymbol(AbstractSymbol):
-
-    def __init__(self, array: np.ndarray, orientation: int):
-        self._data = np.transpose(array) if orientation == 1 else array[...]
-
-    def get_value(self, usage: SimpleUsage):
-        return self._data
-
-
-class FrameSymbol(AbstractSymbol):
-
-    def __init__(self, frame: pd.DataFrame, orientation: int):
-        self._frame = frame
-        self._orientation = orientation
-
-    def get_value(self, usage: AttributedUsage):
-        raise NotImplementedError()
-
-
-class LinkedFrameSymbol(AbstractSymbol):
-    def __init__(self, frame: LinkedDataFrame, orientation: int):
-        self._frame = frame
-        self._orientation = orientation
-
-    def get_value(self, usage: LinkedFrameUsage):
-        raise NotImplementedError()
-
-
-class PanelSymbol(AbstractSymbol):
-
-    def __init__(self):
-        raise NotImplementedError()
-
-    def get_value(self, usage: AttributedUsage):
-        raise NotImplementedError()

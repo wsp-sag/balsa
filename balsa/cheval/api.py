@@ -3,7 +3,7 @@ import pandas as pd
 import numexpr as ne
 from threading import Thread
 
-from .scope import Scope, ExpressionContainer, SimpleUsage, DictLiteral, AttributedUsage, LinkedFrameUsage
+from .scope import Scope, ExpressionContainer, SimpleUsage
 from .tree import ChoiceTree
 from .core import sample_multinomial_worker, sample_nested_worker, stochastic_multinomial_worker, stochastic_nested_worker
 
@@ -150,7 +150,7 @@ class ChoiceModel(object):
 
         return utility_table
 
-    def _eval_probabilities_and_sample(self, utilities, randomizer: np.RandomState, n_draws, n_threads):
+    def _eval_probabilities_and_sample(self, utilities, randomizer: np.random.RandomState, n_draws, n_threads):
 
         # TODO: Try out saving the results in the random draws array to save on memory.
         result_shape = utilities.shape[0], n_draws

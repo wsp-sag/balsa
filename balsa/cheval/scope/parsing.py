@@ -4,6 +4,9 @@ import astor
 import numpy as np
 import pandas as pd
 from numexpr import expressions as nee
+
+from typing import Tuple, Dict, Any
+
 from ..ldf import SUPPORTED_AGGREGATIONS
 
 NUMEXPR_FUNCTIONS = set(nee.functions.keys())
@@ -46,7 +49,7 @@ class ExpressionProcessor(ast.NodeTransformer):
     )
 
     @staticmethod
-    def parse(expression: str):
+    def parse(expression: str) -> Tuple[str, Dict[str, Any]]:
         tree = ast.parse(expression, mode='eval').body
         transformer = ExpressionProcessor()
         new_tree = transformer.visit(tree)
