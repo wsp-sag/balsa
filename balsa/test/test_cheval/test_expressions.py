@@ -23,8 +23,6 @@ class TestExpressionParsing(unittest.TestCase):
     def test_attributed_usage(self):
         expr = Expression("a.b")
 
-        print(expr._parsed_expr)
-
         assert 'a' in expr._symbols
         assert len(expr._symbols['a']) == 1
         assert isinstance(expr._symbols['a'][0], AttributedUsage)
@@ -32,8 +30,6 @@ class TestExpressionParsing(unittest.TestCase):
 
     def test_dict_literal(self):
         expr = Expression("{a: 1, b: 2, c: 3}")
-
-        print(expr._parsed_expr)
 
         assert '__dict0' in expr._symbols
         assert isinstance(expr._symbols['__dict0'], DictLiteral)
