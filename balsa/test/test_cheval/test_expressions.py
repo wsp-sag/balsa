@@ -17,6 +17,9 @@ class TestExpressionParsing(unittest.TestCase):
         assert all(isinstance(use, SimpleUsage) for use in expr._symbols['a'])
         assert all(isinstance(use, SimpleUsage) for use in expr._symbols['b'])
 
+        expr = Expression("a")
+        assert 'a' in expr._symbols
+
     def test_attributed_usage(self):
         expr = Expression("a.b")
 
@@ -58,6 +61,18 @@ class TestExpressionParsing(unittest.TestCase):
         assert usage.func == 'sum'
         assert usage.func_expr == "(c > d)"
 
+    def test_rejected_syntax(self):
+
+        with self.assertRaises(UnsupportedSyntaxError) as context:
+            Expression("[a + 1 for a in range(1,6)]")  # List comprehension
+            Expression("{a: a + 1 for a in range(5)}")  # Dict comprehension
+            Expression("{1,2,3}")  # Set literal
+            Expression("q + a if 1 == 2 else b")  # Block If/Else
+            Expression("a = b")  # Store
+            Expression("del a")  # Del
+            Expression("a[1]")  # Subscript
+            Expression("a[0:5]")  # Subscript w slice
+            Expression("a + {")  # Malformed syntax
 
 if __name__ == '__main__':
     unittest.main()
