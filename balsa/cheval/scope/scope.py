@@ -80,8 +80,8 @@ class LinkedFrameSymbol(AbstractSymbol):
 
 class PanelSymbol(AbstractSymbol):
 
-    def __init__(self):
-        raise NotImplementedError()
+    def __init__(self, panel: pd.Panel):
+        self._data = panel
 
     def get_value(self, usage: AttributedUsage):
         raise NotImplementedError()
@@ -285,9 +285,17 @@ class Scope(object):
                 raise ScopeOrientationError("Filling attributed usage with a DataFrame is permitted, but the index "
                                             "must align with either the records or the alternatives")
 
-        elif isinstance(data, (dict, pd.Panel)):
-            if isinstance(data, dict): data = pd.Panel(dict)
-            raise NotImplementedError()
+        elif isinstance(data, (pd.Panel, dict)):
+            if isinstance(data, dict):
+                data = pd.Panel(dict)
+
+            if data.major_axis.equals(self._alternatives) and data.minor_axis.equals(self._records):
+                data = data.transpose('items', 'minor_axis', 'major_axis')
+            elif not (data.major_axis.equals(self._records) and data.minor_axis.equals(self._alternatives)):
+                raise ScopeOrientationError("Panel symbols major and minor axes must align with the records and "
+                                            "alternatives")
+            return PanelSymbol(data)
+
         else:
             raise TypeError("Only DataFrames, dictionaries of DataFrames, or Panels can fill attributed symbols")
 
