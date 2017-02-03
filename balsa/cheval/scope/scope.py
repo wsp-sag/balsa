@@ -149,16 +149,16 @@ class Scope(object):
 
         symbol_usage = self._empty_symbols.pop(symbol_name)
 
-        if isinstance(symbol_usage, LinkedFrameUsage):
+        if symbol_usage is LinkedFrameUsage:
             symbol_meta = self._fill_linked(data, orientation)
-        elif isinstance(symbol_usage, AttributedUsage):
+        elif symbol_usage is AttributedUsage:
             symbol_meta = self._fill_attributed(data, orientation)
-        elif isinstance(symbol_usage, DictLiteral):
+        elif symbol_usage is DictLiteral:
             symbol_meta = self._fill_simple(symbol_usage.series, orientation=1)
-        elif isinstance(symbol_usage, SimpleUsage):
+        elif symbol_usage is SimpleUsage:
             symbol_meta = self._fill_simple(data, orientation, strict)
         else:
-            raise NotImplementedError("Usage type '%s' not understood" % type(symbol_usage))
+            raise NotImplementedError("Usage type '%s' not understood" % symbol_usage)
 
         self._filled_symbols[symbol_name] = symbol_meta
 
