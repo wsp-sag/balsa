@@ -93,7 +93,7 @@ class ChoiceModel(object):
         self._check_model_is_ready()
 
         if override_utilities is None:
-            utilities = self._eval_utilities(n_threads)
+            utilities = self._scope_container._compute_utilities(n_threads)
         else:
             utilities = override_utilities
 
@@ -116,39 +116,6 @@ class ChoiceModel(object):
 
     def _check_model_is_ready(self):
         raise NotImplementedError()
-
-    def _eval_utilities(self, n_threads):
-
-        # Allocate an empty utility table
-        shape = len(self._scope_container._records), len(self._tree_container.node_index)
-        utility_table = np.zeros(shape, dtype=np.float64, order='C')
-
-        ne.set_num_threads(n_threads)
-
-        # Evaluate each expression
-        for expr in self._expression_container:
-
-            # Setup local dictionary of data
-            local_dict = {}
-            for symbol_name, usage in expr.symbols():
-                # Usage is one of SimpleUsage, DictLiteral, AttributedUsage, or LinkedFrameUsage
-
-                # Symbol meta is an instance of scope.AbstractSymbol
-                symbol_meta = self._scope_container._filled_symbols[symbol_name]
-                data = symbol_meta.get_value(usage)
-
-                if isinstance(usage, SimpleUsage):
-                    # In this case, no substitution was performed, so we can just use the symbol name
-                    local_dict[symbol_name] = data
-                else:
-                    # Otherwise, we need to set the data to another alias
-                    local_dict[usage.substitution] = data
-
-            # Run the expression.
-            # TODO: Figure out if it is worth it in RAM savings to use out= to in-place add the utilities
-            utility_table += ne.evaluate(expr._parsed_expr, local_dict=local_dict)
-
-        return utility_table
 
     def _eval_probabilities_and_sample(self, utilities, randomizer: np.random.RandomState, n_draws, n_threads):
 

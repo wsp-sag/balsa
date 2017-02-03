@@ -4,9 +4,11 @@ from typing import Any, Iterable, Dict
 
 import pandas as pd
 import numpy as np
+import numexpr as ne
 
 from .expressions import SimpleUsage, DictLiteral, AttributedUsage, LinkedFrameUsage
 from ..ldf import LinkedDataFrame
+from .. import ChoiceModel
 
 
 class Orientation(Enum):
@@ -89,7 +91,7 @@ class PanelSymbol(AbstractSymbol):
 
 class Scope(object):
 
-    def __init__(self, model):
+    def __init__(self, model: ChoiceModel):
         self._root = model
         self._empty_symbols = None
         self._filled_symbols = None
@@ -161,6 +163,43 @@ class Scope(object):
             raise NotImplementedError("Usage type '%s' not understood" % symbol_usage)
 
         self._filled_symbols[symbol_name] = symbol_meta
+
+    def _compute_utilities(self, n_threads):
+        assert len(self._empty_symbols) == 0
+
+        model = self._root
+
+        # Allocate an empty utility table
+        shape = len(self._records), len(model.tree.node_index)
+        utility_table = np.zeros(shape, dtype=np.float64, order='C')
+
+        ne.set_num_threads(n_threads)
+
+        # Evaluate each expression
+        for expr in model.expressions:
+
+            # Setup local dictionary of data
+            local_dict = {}
+            for symbol_name, usage in expr.symbols():
+                # Usage is one of SimpleUsage, DictLiteral, AttributedUsage, or LinkedFrameUsage
+
+                # Symbol meta is an instance of scope.AbstractSymbol
+                symbol_meta = self._filled_symbols[symbol_name]
+                data = symbol_meta.get_value(usage)
+
+                if isinstance(usage, SimpleUsage):
+                    # In this case, no substitution was performed, so we can just use the symbol name
+                    local_dict[symbol_name] = data
+                else:
+                    # Otherwise, we need to set the data to another alias
+                    local_dict[usage.substitution] = data
+
+            # Run the expression.
+            final_expression = '__out + (%s)' % expr._parsed_expr
+            local_dict['__out'] = utility_table
+            ne.evaluate(final_expression, local_dict=local_dict, out=final_expression)
+
+        return utility_table
 
     def _fill_simple(self, data, orientation: int=None, strict=True):
         """"""
