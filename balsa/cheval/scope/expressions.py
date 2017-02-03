@@ -61,7 +61,7 @@ class ExpressionContainer(object):
     def get_symbols(self) -> Dict[str, Union[SimpleUsage, DictLiteral, AttributedUsage, LinkedFrameUsage]]:
         if self._modified or self._cached_types is None:
             symbol_types = {}
-            for alias, list_of_usages in self._all_symbols():
+            for alias, list_of_usages in iteritems(self._all_symbols()):
                 symbol_type = self._check_symbol(alias, list_of_usages)
                 symbol_types[alias] = symbol_type
             self._modified = False
