@@ -83,8 +83,7 @@ class ChoiceModel(object):
             override_utilities (None or DataFrame): If not None, then the model will assume a pre-computed set of
                 utilities for each record x each alternative; otherwise the built-in utility computation framework will
                 be used. The columns of the given DataFrame MUST match the sorted list of node (alternative) names.
-            logger (None or Logger): Optionally provide a Logger to report on progress during the run. Progress will be
-                reported at the INFO level.
+            logger (None or Logger): Provide a Logger object to record errors during expression evaluation.
 
         Returns:
             DataFrame of probabilities of each record x each alternative.
@@ -93,7 +92,7 @@ class ChoiceModel(object):
         self._check_model_is_ready()
 
         if override_utilities is None:
-            utilities = self._scope_container._compute_utilities(n_threads)
+            utilities = self._scope_container._compute_utilities(n_threads, logger=logger)
         else:
             utilities = override_utilities
 
