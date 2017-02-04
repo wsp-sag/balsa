@@ -8,7 +8,6 @@ import numexpr as ne
 
 from .expressions import SimpleUsage, DictLiteral, AttributedUsage, LinkedFrameUsage
 from ..ldf import LinkedDataFrame
-from .. import ChoiceModel
 
 
 class Orientation(Enum):
@@ -43,6 +42,8 @@ class Array1DSymbol(AbstractSymbol):
         self._orientation = orientation
 
     def get_value(self, usage):
+        # TODO: Support Categorical series
+
         length = len(self._data)
         new_shape = [1, 1]
         new_shape[self._orientation] = length
@@ -68,7 +69,20 @@ class FrameSymbol(AbstractSymbol):
         self._orientation = orientation
 
     def get_value(self, usage: AttributedUsage):
-        raise NotImplementedError()
+        series = self._frame[usage.attribute]
+        if series.dtype.name == 'category':
+            # Categorical series. Need to convert to string type first
+            data = convert_categorical_series(series)
+        else:
+            data = series.values
+
+        length = len(self._frame)
+        shape_tuple = [1, 1]
+        shape_tuple[self._orientation] = length
+
+        data = data[...]  # Make a shallow copy
+        data.shape = shape_tuple
+        return data
 
 
 class LinkedFrameSymbol(AbstractSymbol):
@@ -91,7 +105,7 @@ class PanelSymbol(AbstractSymbol):
 
 class Scope(object):
 
-    def __init__(self, model: ChoiceModel):
+    def __init__(self, model):
         self._root = model
         self._empty_symbols = None
         self._filled_symbols = None
@@ -164,7 +178,7 @@ class Scope(object):
 
         self._filled_symbols[symbol_name] = symbol_meta
 
-    def _compute_utilities(self, n_threads):
+    def _compute_utilities(self, n_threads, logger=None):
         assert len(self._empty_symbols) == 0
 
         model = self._root
@@ -177,29 +191,36 @@ class Scope(object):
 
         # Evaluate each expression
         for expr in model.expressions:
-
-            # Setup local dictionary of data
-            local_dict = {}
-            for symbol_name, usage in expr.symbols():
-                # Usage is one of SimpleUsage, DictLiteral, AttributedUsage, or LinkedFrameUsage
-
-                # Symbol meta is an instance of scope.AbstractSymbol
-                symbol_meta = self._filled_symbols[symbol_name]
-                data = symbol_meta.get_value(usage)
-
-                if isinstance(usage, SimpleUsage):
-                    # In this case, no substitution was performed, so we can just use the symbol name
-                    local_dict[symbol_name] = data
-                else:
-                    # Otherwise, we need to set the data to another alias
-                    local_dict[usage.substitution] = data
-
-            # Run the expression.
-            final_expression = '__out + (%s)' % expr._parsed_expr
-            local_dict['__out'] = utility_table
-            ne.evaluate(final_expression, local_dict=local_dict, out=final_expression)
+            try:
+                self._evaluate_single_expression(expr, utility_table)
+            except Exception as e:
+                if logger is not None:
+                    logger.error("Error while evaluating '%s'" % expr._raw_expr)
+                raise e
 
         return utility_table
+
+    def _evaluate_single_expression(self, expr, utility_table):
+        # Setup local dictionary of data
+        local_dict = {}
+        for symbol_name, usage in expr.symbols():
+            # Usage is one of SimpleUsage, DictLiteral, AttributedUsage, or LinkedFrameUsage
+
+            # Symbol meta is an instance of scope.AbstractSymbol
+            symbol_meta = self._filled_symbols[symbol_name]
+            data = symbol_meta.get_value(usage)
+
+            if isinstance(usage, SimpleUsage):
+                # In this case, no substitution was performed, so we can just use the symbol name
+                local_dict[symbol_name] = data
+            else:
+                # Otherwise, we need to set the data to another alias
+                local_dict[usage.substitution] = data
+
+        # Run the expression.
+        final_expression = '__out + (%s)' % expr._parsed_expr
+        local_dict['__out'] = utility_table
+        ne.evaluate(final_expression, local_dict=local_dict, out=final_expression)
 
     def _fill_simple(self, data, orientation: int=None, strict=True):
         """"""
@@ -375,3 +396,13 @@ class Scope(object):
             raise AttributeError("Cannot evaluate expressions when there are still empty symbols that need to be "
                                  "filled")
         return self._filled_symbols
+
+
+def convert_categorical_series(s):
+    categorical = s.values #Get the pandas.Categorical
+
+    category_names = categorical.categories
+    max_len = category_names.str.len().max()
+    typename = 'a%s' % max_len
+
+    return categorical.astype(typename)
