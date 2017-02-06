@@ -6,7 +6,7 @@ import numpy as np
 
 from collections import namedtuple
 from six import iteritems, itervalues
-from balsa.utils import name_is_pythonic
+from balsa.utils import is_identifier
 
 LinkageEntry = namedtuple("LinkageEntry", ['other_frame', 'self_indexer', 'other_indexer', 'fill_value',
                                            'self_names', 'self_index_flag', 'other_names', 'other_index_flag',
@@ -32,7 +32,7 @@ class LinkageNode(object):
         self._root_index = root_index
 
     def __dir__(self):
-        return [col for col in self._df.columns if name_is_pythonic(col)] + list(self._df._links.keys())
+        return [col for col in self._df.columns if is_identifier(col)] + list(self._df._links.keys())
 
     def __getitem__(self, item):
         return self.__getattr__(item)
@@ -476,7 +476,7 @@ class LinkedDataFrame(pd.DataFrame):
 
         self._links[alias] = link
 
-        if name_is_pythonic(alias):
+        if is_identifier(alias):
             self._pythonic_links.add(alias)
 
         return aggregation_flag

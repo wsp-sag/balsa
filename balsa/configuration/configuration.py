@@ -7,7 +7,7 @@ try:
     from StringIO import StringIO  # Py 2.x
 except ImportError:
     from io import StringIO  # Py 3.x
-from ..utils import name_is_pythonic
+from ..utils import is_identifier
 
 
 class ConfigParseError(IOError):
@@ -164,7 +164,7 @@ class Config(object):
             else:
                 value = ConfigValue(value, key, owner=self)
 
-            if name_is_pythonic(key):
+            if is_identifier(key):
                 setattr(self, key, value)
             self._contents[key] = value
 

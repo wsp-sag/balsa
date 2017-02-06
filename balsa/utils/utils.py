@@ -1,19 +1,33 @@
+import six
 import re
+import tokenize
 from keyword import kwlist
 
+if six.PY3:
+    def is_identifier(name):
+        """
+        Tests that the name is a valid Python variable name and does not collide with reserved keywords
 
-def name_is_pythonic(name):
-    """
-    Tests that the name is a valid Python variable name and does not collide with reserved keywords
+        Args:
+            name (str): Name to test
 
-    Args:
-        name (str): Name to test
+        Returns:
+            bool: If the name is 'Pythonic'
 
-    Returns:
-        bool: If the name is 'Pythonic'
+        """
 
-    """
+        return name.isidentifier() and name not in kwlist
+else:
+    def is_identifier(name):
+        """
+        Tests that the name is a valid Python variable name and does not collide with reserved keywords
 
-    # TODO: Make this work somehow in Python 2
+        Args:
+            name (str): Name to test
 
-    return name.isidentifier() and name not in kwlist
+        Returns:
+            bool: If the name is 'Pythonic'
+
+        """
+
+        return bool(re.match(tokenize.Name + '$', name)) and name not in kwlist

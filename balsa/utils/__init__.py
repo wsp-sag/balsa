@@ -1,1 +1,1 @@
-from .utils import name_is_pythonic
+from .utils import is_identifier
