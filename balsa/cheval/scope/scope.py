@@ -429,7 +429,7 @@ class Scope(object):
             self._fill_dict_literals(dict_literals)
 
     def _fill_dict_literals(self, dict_literals: Dict[str, DictLiteral]):
-        for alias, usage in iteritems(dict_literals.items):
+        for alias, usage in iteritems(dict_literals):
             expanded_series = usage.series.reindex(self._alternatives, fill_value=0.0)
             symbol = Array1DSymbol(expanded_series.values, orientation=1)
             self._filled_symbols[alias] = symbol
