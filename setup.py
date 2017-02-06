@@ -7,7 +7,8 @@ setup(
         'numpy',
         'numba',
         'numexpr',
-        'astor'
+        'astor',
+        'six'
     ],
     packages=find_packages()
 )
