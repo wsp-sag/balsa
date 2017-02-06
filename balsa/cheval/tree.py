@@ -46,6 +46,13 @@ class _ChoiceNode(object):
         return max_level
 
     def children(self):
+        """
+        Iterates through child nodes
+
+        Yields:
+            _ChoiceNode: This node's children, if they exist
+
+        """
         for c in self._children:
             yield c
 
@@ -78,6 +85,14 @@ class ChoiceTree(object):
         return self._all_nodes[item]
 
     def max_level(self):
+        """
+        Gets the maximum depth of the tree, with 1 being the lowest valid level.
+
+        Returns:
+            int
+
+        """
+
         max_level = 1
 
         for c in self.children():
@@ -86,6 +101,13 @@ class ChoiceTree(object):
         return max_level
 
     def children(self):
+        """
+        Iterates through child nodes
+
+        Yields:
+            _ChoiceNode: Top-level child nodes
+
+        """
         for c in self._children:
             yield c
 
@@ -119,10 +141,36 @@ class ChoiceTree(object):
                 children. A value of 1.0 can be used if the estimated coefficients are already scaled.
 
         Returns:
-            The added node, which also has an 'add_node' method.
+            _ChoiceNode: The added node, which also has an 'add_node' method.
 
         """
         return self._root_add(self, name, logsum_scale, 1)
+
+    def add_nodes(self, names, logsum_scales=None):
+        """
+        Convenience function to "batch" add several alternatives at once (useful for Multinomial models with large
+        choice sets).
+
+        Args:
+            names (Iterable[str]): Iterable of names to add at once.
+            logsum_scales (Iterable[float] or None): Iterable of logsum scales to use for the new nodes. `names` and
+                `logsum_scales` are `zip()`ed together, so use an ordered collection (like a List) for both. For most
+                use cases, the default value of None is sufficient.
+
+        Returns:
+            dict[str, _ChoiceNode]: Dictionary whose keys are the names used, and whose values are the nodes that were
+                created.
+
+        """
+        if isinstance(names, str):
+            raise TypeError("To add a single node, use the singular `add_node` method")
+        if logsum_scales is None: logsum_scales = [1.0] * len(names)
+
+        nodes = {}
+        for name, scale in zip(names, logsum_scales):
+            node = self.add_node(name, logsum_scale=scale)
+            nodes[name] = node
+        return nodes
 
     def remove_node(self, name):
         """
