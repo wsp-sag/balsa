@@ -31,6 +31,9 @@ class ExpressionContainer(object):
     def __iter__(self) -> Iterable[Expression]:
         yield from self._expressions
 
+    def __len__(self):
+        return len(self._expressions)
+
     def append_expression(self, expression: str):
         expr_wrapper = Expression(expression)
         self._expressions.append(expr_wrapper)
