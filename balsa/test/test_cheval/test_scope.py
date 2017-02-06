@@ -156,11 +156,11 @@ class TestScope(unittest.TestCase):
         assert isinstance(symbol, LinkedFrameSymbol)
         assert symbol._orientation == 0
 
-        # for expr in model.expressions:
-        #     assert 'record' in expr._symbols
-        #     for usage in expr._symbols['record']:
-        #         value = symbol.get_value(usage)
-        #         assert value.shape == (10, 1)
+        for expr in model.expressions:
+            assert 'record' in expr._symbols
+            for usage in expr._symbols['record']:
+                value = symbol.get_value(usage)
+                assert value.shape == (10, 1)
 
     def test_panel_symbol(self):
         self.__prep_for_testing('e.f + 2')
