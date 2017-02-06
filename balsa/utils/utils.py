@@ -14,11 +14,6 @@ def name_is_pythonic(name):
 
     """
 
-    special_chars = set(r" .,<>/?;:'|[{]}=+-)(*&^%$#@!`~" + '"')
-    regex_chars = set(r"]")
-    pyspecchar = list(special_chars - regex_chars)
-    escaped_chars = ["\%s" % c for c in regex_chars]
-    insertion = ''.join(pyspecchar + escaped_chars)
-    unpythonic_regex = r"^\d|[%s\s]+" % insertion
+    # TODO: Make this work somehow in Python 2
 
-    return not re.match(unpythonic_regex, name) or name in kwlist
+    return name.isidentifier() and name not in kwlist
