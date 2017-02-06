@@ -90,8 +90,40 @@ class LinkedFrameSymbol(AbstractSymbol):
         self._frame = frame
         self._orientation = orientation
 
-    def get_value(self, usage: LinkedFrameUsage):
-        raise NotImplementedError()
+    def get_value(self, usage):
+        if isinstance(usage, AttributedUsage):
+            series = self.__get_attributed_value(usage)
+        elif isinstance(usage, LinkedFrameUsage):
+            series = self.__get_linked_usage(usage)
+        else:
+            raise NotImplementedError("This should never happen")
+
+        data = series.values[...]  # Make a shallow copy so we can change the shape
+        n = len(series)
+        new_shape = [1, 1]
+        new_shape[self._orientation] = n
+        data.shape = new_shape
+
+        return data
+
+    def __get_attributed_value(self, usage: AttributedUsage):
+        return self._frame[usage.attribute]
+
+    def __get_linked_usage(self, usage: LinkedFrameUsage):
+        item = self._frame
+        for attribute in reversed(usage.stack):
+            item = getattr(item, attribute)
+
+        if usage.func is not None:
+            method = getattr(item, usage.func)
+            func_expr = "1" if usage.func_expr is None else usage.func_expr
+            item = method(func_expr)
+
+        if not isinstance(item, pd.Series):
+            pretty_stack = '.'.join(str(c) for c in reversed(usage.stack))
+            raise AttributeError("Chained lookup '%s' does not point to a valid Series" % pretty_stack)
+
+        return item
 
 
 class PanelSymbol(AbstractSymbol):
