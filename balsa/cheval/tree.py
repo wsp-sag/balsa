@@ -67,7 +67,7 @@ class _ChoiceNode(object):
 
 class ChoiceTree(object):
 
-    def __init__(self, root, default_choice=None):
+    def __init__(self, root):
         self._root = root
 
         self._all_nodes = {}
