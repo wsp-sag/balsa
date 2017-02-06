@@ -171,5 +171,15 @@ class TestScope(unittest.TestCase):
         symbol_e = model.scope._filled_symbols['e']
         assert isinstance(symbol_e, PanelSymbol)
 
+    def test_dict_literal(self):
+        self.__prep_for_testing('{a: 1.2, c: 2.5, d: 0.5}')
+        model = self.__model
+
+        dict_symbol = model.scope._filled_symbols['__dict0']
+        assert isinstance(dict_symbol, Array1DSymbol)
+        value = dict_symbol.get_value(None)
+        assert value.shape == (1, 7)
+
+
 if __name__ == '__main__':
     unittest.main()

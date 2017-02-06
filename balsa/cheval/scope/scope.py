@@ -5,6 +5,7 @@ from typing import Any, Iterable, Dict
 import pandas as pd
 import numpy as np
 import numexpr as ne
+from six import iteritems
 
 from .expressions import SimpleUsage, DictLiteral, AttributedUsage, LinkedFrameUsage
 from ..ldf import LinkedDataFrame
@@ -421,9 +422,17 @@ class Scope(object):
 
     def _initialize(self):
         if self._empty_symbols is None or self._filled_symbols is None:
-            self._empty_symbols = self._root.expressions.get_symbols()
+            self._empty_symbols, dict_literals = self._root.expressions.get_symbols()
             self._filled_symbols = {}
             self._alternatives = self._root.tree.node_index
+
+            self._fill_dict_literals(dict_literals)
+
+    def _fill_dict_literals(self, dict_literals: Dict[str, DictLiteral]):
+        for alias, usage in iteritems(dict_literals.items):
+            expanded_series = usage.series.reindex(self._alternatives, fill_value=0.0)
+            symbol = Array1DSymbol(expanded_series.values, orientation=1)
+            self._filled_symbols[alias] = symbol
 
     def _symbolize(self)-> Dict[str, AbstractSymbol]:
         if self._empty_symbols:

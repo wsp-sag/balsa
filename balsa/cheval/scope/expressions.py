@@ -26,6 +26,7 @@ class ExpressionContainer(object):
         self._model_ref = model
         self._modified = True
         self._cached_types = None
+        self._cached_literals = None
 
     def __iter__(self) -> Iterable[Expression]:
         yield from self._expressions
@@ -59,16 +60,22 @@ class ExpressionContainer(object):
         self._model_ref.scope.clear()
 
     def get_symbols(self) -> Dict[str, Union[SimpleUsage, DictLiteral, AttributedUsage, LinkedFrameUsage]]:
-        if self._modified or self._cached_types is None:
+        if self._modified or self._cached_types is None or self._cached_literals is None:
             symbol_types = {}
+            dict_literals = {}
             for alias, list_of_usages in iteritems(self._all_symbols()):
                 symbol_type = self._check_symbol(alias, list_of_usages)
-                symbol_types[alias] = symbol_type
+
+                if symbol_type is DictLiteral:
+                    dict_literals[alias] = list_of_usages[0]  # Dict literals only have one use case
+                else:
+                    symbol_types[alias] = symbol_type
             self._modified = False
             self._cached_types = symbol_types
-            return symbol_types
+            self._cached_literals = dict_literals
+            return symbol_types, dict_literals
         else:
-            return self._cached_types
+            return self._cached_types, self._cached_literals
 
     @staticmethod
     def _check_symbol(alias, list_of_usages):
@@ -104,6 +111,8 @@ class ExpressionContainer(object):
         all_symbols = {}
         for expression in self._expressions:
             for alias, usages in expression.symbols():
+                if isinstance(usages, DictLiteral):
+                    usages = [usages]
                 if alias not in all_symbols:
                     all_symbols[alias] = list(usages)  # Make a copy
                 else:
