@@ -355,6 +355,8 @@ class Scope(object):
         if orientation is None:
             raise ScopeOrientationError("Orientation must be provided when the record index exactly equals the"
                                         " alternatives index.")
+        if orientation != 0 and orientation != 1:
+            raise ValueError("Orientation must be either 0 or 1")
 
     def _check_records(self):
         assert self._records is not None, "This operation is not allowed if the records have not been set."
