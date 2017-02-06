@@ -1,9 +1,8 @@
 import numpy as np
 import pandas as pd
-import numexpr as ne
 from threading import Thread
 
-from .scope import Scope, ExpressionContainer, SimpleUsage
+from .scope import Scope, ExpressionContainer
 from .tree import ChoiceTree
 from .core import sample_multinomial_worker, sample_nested_worker, stochastic_multinomial_worker, stochastic_nested_worker
 
@@ -54,7 +53,7 @@ class ChoiceModel(object):
             Series or DataFrame, depending on squeeze and n_draws. The dtype of the returned object depends on astype.
 
         """
-        self._check_model_is_ready()
+        self._check_model_is_ready(compute_utilities=override_utilities is None)
 
         if randomizer is None:
             randomizer = np.random
@@ -64,7 +63,7 @@ class ChoiceModel(object):
         assert n_draws >= 1
 
         if override_utilities is None:
-            utilities = self._eval_utilities(n_threads)
+            utilities = self._scope_container._compute_utilities(n_threads, logger=logger)
         else:
             utilities = override_utilities
 
@@ -89,7 +88,7 @@ class ChoiceModel(object):
             DataFrame of probabilities of each record x each alternative.
 
         """
-        self._check_model_is_ready()
+        self._check_model_is_ready(compute_utilities=override_utilities is None)
 
         if override_utilities is None:
             utilities = self._scope_container._compute_utilities(n_threads, logger=logger)
@@ -113,8 +112,13 @@ class ChoiceModel(object):
         """
         raise NotImplementedError()
 
-    def _check_model_is_ready(self):
-        raise NotImplementedError()
+    def _check_model_is_ready(self, compute_utilities=True):
+
+        assert len(self._tree_container.node_index) > 1, "At least two choices are required for a model to be valid"
+
+        if compute_utilities:
+            assert len(self._expression_container) > 0, "Must define at least one utility expression"
+            assert len(self._scope_container._empty_symbols) == 0, "Not all scope symbols have been filled with data"
 
     def _eval_probabilities_and_sample(self, utilities, randomizer: np.random.RandomState, n_draws, n_threads):
 
@@ -154,7 +158,31 @@ class ChoiceModel(object):
         return result
 
     def _convert_result(self, results, astype, squeeze):
-        raise NotImplementedError()
+        """
+        Takes the discrete outcomes as an ndarray and converts it to a Series or DataFrame of the user-specified type.
+        """
+
+        n_draws = results.shape[1]
+        record_index = self._scope_container._records
+        column_index = pd.Index(range(n_draws))
+
+        if astype == 'index':
+            if squeeze and n_draws == 1:
+                return pd.Series(results[:, 0], index=record_index)
+            return pd.DataFrame(results, index=record_index, columns=column_index)
+        elif astype == 'category':
+            lookup_table = pd.Categorical(self._tree_container.node_index)
+        else:
+            lookup_table = self._tree_container.node_index.values.astype(astype)
+
+        retval = []
+        for col in range(n_draws):
+            indices = results[:, col]
+            retval.append(pd.Series(lookup_table.take(indices), index=record_index))
+        retval = pd.concat(retval)
+        retval.columns = column_index
+
+        return retval
 
     def _eval_probabilities_only(self, utilities, n_threads):
         result = np.zeros(shape=utilities.shape, dtype=np.float64, order='C')
