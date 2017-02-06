@@ -32,7 +32,7 @@ class LinkageNode(object):
         self._root_index = root_index
 
     def __dir__(self):
-        return [col for col in self._df.columns if name_is_pythonic(col)] + self._df._links.keys()
+        return [col for col in self._df.columns if name_is_pythonic(col)] + list(self._df._links.keys())
 
     def __getitem__(self, item):
         return self.__getattr__(item)
