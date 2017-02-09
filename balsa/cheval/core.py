@@ -1,4 +1,5 @@
-from __future__ import division, absolute_import, print_function, unicode_literals
+from __future__ import division, absolute_import, print_function
+# Note: unicode literals is deliberately NOT imported because it causes an error with np.dtype in Py2
 
 import numba as nb
 import numpy as np
