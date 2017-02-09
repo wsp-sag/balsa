@@ -1,6 +1,4 @@
-from enum import Enum
-import abc
-from typing import Any, Iterable, Dict
+from __future__ import division, absolute_import, print_function, unicode_literals
 
 import pandas as pd
 import numpy as np
@@ -11,23 +9,11 @@ from .expressions import SimpleUsage, DictLiteral, AttributedUsage, LinkedFrameU
 from ..ldf import LinkedDataFrame
 
 
-class Orientation(Enum):
-    RECORDS = 0
-    ALTERNATIVES = 1
-
-
 class ScopeOrientationError(IndexError):
     pass
 
 
-class AbstractSymbol(metaclass=abc.ABCMeta):
-
-    @abc.abstractmethod
-    def get_value(self, usage):
-        pass
-
-
-class ScalarSymbol(AbstractSymbol):
+class ScalarSymbol(object):
 
     def __init__(self, value):
         self._value = value
@@ -36,9 +22,9 @@ class ScalarSymbol(AbstractSymbol):
         return self._value
 
 
-class Array1DSymbol(AbstractSymbol):
+class Array1DSymbol(object):
 
-    def __init__(self, array: np.ndarray, orientation: int):
+    def __init__(self, array, orientation):
         self._data = array
         self._orientation = orientation
 
@@ -54,22 +40,22 @@ class Array1DSymbol(AbstractSymbol):
         return view
 
 
-class Array2DSymbol(AbstractSymbol):
+class Array2DSymbol(object):
 
-    def __init__(self, array: np.ndarray, orientation: int):
+    def __init__(self, array, orientation):
         self._data = np.transpose(array) if orientation == 1 else array[...]
 
-    def get_value(self, usage: SimpleUsage):
+    def get_value(self, usage):
         return self._data
 
 
-class FrameSymbol(AbstractSymbol):
+class FrameSymbol(object):
 
-    def __init__(self, frame: pd.DataFrame, orientation: int):
+    def __init__(self, frame, orientation):
         self._frame = frame
         self._orientation = orientation
 
-    def get_value(self, usage: AttributedUsage):
+    def get_value(self, usage):
         series = self._frame[usage.attribute]
         if series.dtype.name == 'category':
             # Categorical series. Need to convert to string type first
@@ -86,8 +72,8 @@ class FrameSymbol(AbstractSymbol):
         return data
 
 
-class LinkedFrameSymbol(AbstractSymbol):
-    def __init__(self, frame: LinkedDataFrame, orientation: int):
+class LinkedFrameSymbol(object):
+    def __init__(self, frame, orientation):
         self._frame = frame
         self._orientation = orientation
 
@@ -107,10 +93,10 @@ class LinkedFrameSymbol(AbstractSymbol):
 
         return data
 
-    def __get_attributed_value(self, usage: AttributedUsage):
+    def __get_attributed_value(self, usage):
         return self._frame[usage.attribute]
 
-    def __get_linked_usage(self, usage: LinkedFrameUsage):
+    def __get_linked_usage(self, usage):
         item = self._frame
         for attribute in reversed(usage.stack):
             item = getattr(item, attribute)
@@ -127,12 +113,12 @@ class LinkedFrameSymbol(AbstractSymbol):
         return item
 
 
-class PanelSymbol(AbstractSymbol):
+class PanelSymbol(object):
 
-    def __init__(self, panel: pd.Panel):
+    def __init__(self, panel):
         self._data = panel
 
-    def get_value(self, usage: AttributedUsage):
+    def get_value(self, usage):
         raise NotImplementedError()
 
 
@@ -146,7 +132,7 @@ class Scope(object):
         self._records = None
         self._alternatives = None
 
-    def set_record_index(self, index: Iterable):
+    def set_record_index(self, index):
         """
         Manually set the index of records being processed.
 
@@ -159,7 +145,7 @@ class Scope(object):
         self._initialize()
         self._records = pd.Index(index)
 
-    def empty_symbols(self) -> Iterable[str]:
+    def empty_symbols(self):
         """
         Iterate through the set of empty (not yet filled) symbols.
 
@@ -169,7 +155,7 @@ class Scope(object):
         """
         raise NotImplementedError()
 
-    def fill_symbol(self, symbol_name: str, data: Any, orientation: int=None, strict=True):
+    def fill_symbol(self, symbol_name, data, orientation=None, strict=True):
         """
         Associate an empty symbol with actual data, usually ararys, DataFrames, and/or Series. Symbol usages are
         collected from the list of model expressions already-loaded, so the type of `data` must conform to the rules of
@@ -255,7 +241,7 @@ class Scope(object):
         local_dict['__out'] = utility_table
         ne.evaluate(final_expression, local_dict=local_dict, out=final_expression)
 
-    def _fill_simple(self, data, orientation: int=None, strict=True):
+    def _fill_simple(self, data, orientation=None, strict=True):
         """"""
 
         '''
@@ -362,7 +348,7 @@ class Scope(object):
     def _check_records(self):
         assert self._records is not None, "This operation is not allowed if the records have not been set."
 
-    def _fill_attributed(self, data, orientation: int=None):
+    def _fill_attributed(self, data, orientation=None):
         self._check_records()
 
         if isinstance(data, pd.DataFrame):
@@ -394,7 +380,7 @@ class Scope(object):
         else:
             raise TypeError("Only DataFrames, dictionaries of DataFrames, or Panels can fill attributed symbols")
 
-    def _fill_linked(self, data, orientation: int):
+    def _fill_linked(self, data, orientation):
         assert isinstance(data, LinkedDataFrame), "Only LinkedDataFrames can fill linked symbols."
         self._check_records()
 
@@ -428,13 +414,13 @@ class Scope(object):
 
             self._fill_dict_literals(dict_literals)
 
-    def _fill_dict_literals(self, dict_literals: Dict[str, DictLiteral]):
+    def _fill_dict_literals(self, dict_literals):
         for alias, usage in iteritems(dict_literals):
             expanded_series = usage.series.reindex(self._alternatives, fill_value=0.0)
             symbol = Array1DSymbol(expanded_series.values, orientation=1)
             self._filled_symbols[alias] = symbol
 
-    def _symbolize(self)-> Dict[str, AbstractSymbol]:
+    def _symbolize(self):
         if self._empty_symbols:
             raise AttributeError("Cannot evaluate expressions when there are still empty symbols that need to be "
                                  "filled")

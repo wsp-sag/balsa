@@ -1,3 +1,5 @@
+from __future__ import division, absolute_import, print_function, unicode_literals
+
 import numpy as np
 import pandas as pd
 from threading import Thread
@@ -120,7 +122,7 @@ class ChoiceModel(object):
             assert len(self._expression_container) > 0, "Must define at least one utility expression"
             assert len(self._scope_container._empty_symbols) == 0, "Not all scope symbols have been filled with data"
 
-    def _eval_probabilities_and_sample(self, utilities, randomizer: np.random.RandomState, n_draws, n_threads):
+    def _eval_probabilities_and_sample(self, utilities, randomizer, n_draws, n_threads):
 
         # TODO: Try out saving the results in the random draws array to save on memory.
         result_shape = utilities.shape[0], n_draws

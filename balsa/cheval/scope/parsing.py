@@ -1,11 +1,12 @@
+from __future__ import division, absolute_import, print_function, unicode_literals
+
 import ast
 from collections import namedtuple, deque
 import astor
 import numpy as np
 import pandas as pd
 from numexpr import expressions as nee
-
-from typing import Tuple, Dict, Any
+import six
 
 from ..ldf import SUPPORTED_AGGREGATIONS
 
@@ -44,12 +45,15 @@ class UnsupportedSyntaxError(SyntaxError):
 class ExpressionProcessor(ast.NodeTransformer):
 
     # Only nodes used in expressions are included, due to the limited parsing
-    UNSUPPORTED_NODES = (
-        ast.Load, ast.Store, ast.Del, ast.Starred, ast.IfExp, ast.Subscript, ast.ListComp, ast.DictComp
-    )
+    UNSUPPORTED_NODES = [
+        ast.Load, ast.Store, ast.Del, ast.IfExp, ast.Subscript, ast.ListComp, ast.DictComp
+    ]
+    if six.PY3:
+        UNSUPPORTED_NODES.append(ast.Starred)
+    UNSUPPORTED_NODES = tuple(UNSUPPORTED_NODES)
 
     @staticmethod
-    def parse(expression: str) -> Tuple[str, Dict[str, Any]]:
+    def parse(expression):
         tree = ast.parse(expression, mode='eval').body
         transformer = ExpressionProcessor()
         new_tree = transformer.visit(tree)
@@ -79,7 +83,7 @@ class ExpressionProcessor(ast.NodeTransformer):
         name = "visit_" + node.__class__.__name__.lower()
         return getattr(self, name) if hasattr(self, name) else self.generic_visit
 
-    def visit_call(self, node: ast.Call):
+    def visit_call(self, node):
         func_node = node.func
 
         if isinstance(func_node, ast.Name):
@@ -91,7 +95,7 @@ class ExpressionProcessor(ast.NodeTransformer):
         else:
             return self.generic_visit(node)
 
-    def __visit_toplevel_func(self, node: ast.Call, func_node: ast.Name):
+    def __visit_toplevel_func(self, node, func_node):
         func_name = func_node.id
         if func_name not in NUMEXPR_FUNCTIONS:
             raise UnsupportedSyntaxError("Function '%s' not supported." % func_name)
@@ -103,7 +107,7 @@ class ExpressionProcessor(ast.NodeTransformer):
 
         return node
 
-    def __visit_method(self, call_node: ast.Call, func_node: ast.Attribute):
+    def __visit_method(self, call_node, func_node):
         name, stack = self.__get_name_from_attribute(func_node)
         func_name = stack.popleft()
         if func_name not in SUPPORTED_AGGREGATIONS:
@@ -126,13 +130,13 @@ class ExpressionProcessor(ast.NodeTransformer):
         new_node = ast.Name(substitution, ast.Load())
         return new_node
 
-    def visit_name(self, node: ast.Name):
+    def visit_name(self, node):
         # Register the symbol but do not change it.
         symbol_name = node.id
         self.__append_symbol(symbol_name, SimpleUsage())
         return node
 
-    def visit_attribute(self, node: ast.Attribute):
+    def visit_attribute(self, node):
         name, stack = self.__get_name_from_attribute(node)
         substitution = self.__generate_substitution(name)
         if len(stack) == 1:
@@ -146,20 +150,20 @@ class ExpressionProcessor(ast.NodeTransformer):
         return ast.Name(substitution, ast.Load())
 
     @staticmethod
-    def __get_name_from_attribute(node: ast.Attribute):
+    def __get_name_from_attribute(node):
         current_node = node
         stack = deque()
         while not isinstance(current_node, ast.Name):
             if not isinstance(current_node, ast.Attribute):
                 raise UnsupportedSyntaxError()
             if len(stack) > MAX_ATTRIBUTE_CHAINS:
-                raise RecursionError()
+                raise RuntimeError("Recursion error")
             stack.append(current_node.attr)
             current_node = current_node.value
 
         return current_node.id, stack
 
-    def visit_dict(self, node: ast.Dict):
+    def visit_dict(self, node):
         substitution = '__dict%s' % self.__n_dicts
         self.__n_dicts += 1
         new_node = ast.Name(substitution, ast.Load())

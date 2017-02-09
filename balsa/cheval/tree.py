@@ -1,3 +1,5 @@
+from __future__ import division, absolute_import, print_function, unicode_literals
+
 from .core import INSTRUCTION_TYPE_1, INSTRUCTION_TYPE_2
 from six import iterkeys, itervalues
 

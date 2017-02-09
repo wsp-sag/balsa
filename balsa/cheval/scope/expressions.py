@@ -1,4 +1,5 @@
-from typing import Union, Dict, Iterable
+from __future__ import division, absolute_import, print_function, unicode_literals
+
 from .parsing import ExpressionProcessor, SimpleUsage, DictLiteral, AttributedUsage, LinkedFrameUsage
 from six import iteritems
 
@@ -9,14 +10,14 @@ class InconsistentUsageError(RuntimeError):
 
 class Expression(object):
 
-    def __init__(self, expr: str):
+    def __init__(self, expr):
         self._raw_expr = expr
         parsed, symbols = ExpressionProcessor.parse(expr)
         self._parsed_expr = parsed
         self._symbols = symbols
 
     def symbols(self):
-        yield from iteritems(self._symbols)
+        for item in iteritems(self._symbols): yield item
 
 
 class ExpressionContainer(object):
@@ -28,23 +29,23 @@ class ExpressionContainer(object):
         self._cached_types = None
         self._cached_literals = None
 
-    def __iter__(self) -> Iterable[Expression]:
-        yield from self._expressions
+    def __iter__(self):
+        for expr in self._expressions: yield expr
 
     def __len__(self):
         return len(self._expressions)
 
-    def append_expression(self, expression: str):
+    def append_expression(self, expression):
         expr_wrapper = Expression(expression)
         self._expressions.append(expr_wrapper)
         self._modify_event()
 
-    def insert_expression(self, expression: str, index: int):
+    def insert_expression(self, expression, index):
         expr_wrapper = Expression(expression)
         self._expressions.insert(index, expr_wrapper)
         self._modify_event()
 
-    def remove_expression(self, index: int):
+    def remove_expression(self, index):
         del self._expressions[index]
         self._modify_event()
 
@@ -62,7 +63,7 @@ class ExpressionContainer(object):
         self._modified = True
         self._model_ref.scope.clear()
 
-    def get_symbols(self) -> Dict[str, Union[SimpleUsage, DictLiteral, AttributedUsage, LinkedFrameUsage]]:
+    def get_symbols(self):
         if self._modified or self._cached_types is None or self._cached_literals is None:
             symbol_types = {}
             dict_literals = {}
