@@ -183,9 +183,7 @@ class Scope(object):
         """
         self._initialize()
 
-        # TODO: Popping is probably very unsafe, especially if there's an error later
-
-        symbol_usage = self._empty_symbols.pop(symbol_name)
+        symbol_usage = self._empty_symbols[symbol_name]
 
         if symbol_usage is LinkedFrameUsage:
             symbol_meta = self._fill_linked(data, orientation)
@@ -198,6 +196,7 @@ class Scope(object):
         else:
             raise NotImplementedError("Usage type '%s' not understood" % symbol_usage)
 
+        del self._empty_symbols[symbol_name]
         self._filled_symbols[symbol_name] = symbol_meta
 
     def _compute_utilities(self, n_threads, logger=None):
