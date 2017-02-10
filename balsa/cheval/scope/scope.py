@@ -7,6 +7,7 @@ from six import iteritems
 
 from .expressions import SimpleUsage, DictLiteral, AttributedUsage, LinkedFrameUsage
 from ..ldf import LinkedDataFrame
+from .parsing import NAN_STR
 
 
 class ScopeOrientationError(IndexError):
@@ -182,6 +183,8 @@ class Scope(object):
         """
         self._initialize()
 
+        # TODO: Popping is probably very unsafe, especially if there's an error later
+
         symbol_usage = self._empty_symbols.pop(symbol_name)
 
         if symbol_usage is LinkedFrameUsage:
@@ -221,7 +224,7 @@ class Scope(object):
 
     def _evaluate_single_expression(self, expr, utility_table):
         # Setup local dictionary of data
-        local_dict = {}
+        local_dict = {NAN_STR: np.nan}
         for symbol_name, usage in expr.symbols():
             # Usage is one of SimpleUsage, DictLiteral, AttributedUsage, or LinkedFrameUsage
 

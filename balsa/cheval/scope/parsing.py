@@ -12,6 +12,7 @@ from ..ldf import SUPPORTED_AGGREGATIONS
 
 NUMEXPR_FUNCTIONS = set(nee.functions.keys())
 MAX_ATTRIBUTE_CHAINS = 50  # To avoid infinite loop in __get_name_from_attribute()
+NAN_STR = '__NAN'
 
 
 class SimpleUsage(object):
@@ -131,9 +132,14 @@ class ExpressionProcessor(ast.NodeTransformer):
         return new_node
 
     def visit_name(self, node):
-        # Register the symbol but do not change it.
         symbol_name = node.id
-        self.__append_symbol(symbol_name, SimpleUsage())
+
+        if symbol_name.lower() == 'nan' or symbol_name == 'None':
+            # Allow None or NaN or nan to mean 'null'
+            node.id = NAN_STR
+        else:
+            # Register the symbol but do not change it.
+            self.__append_symbol(symbol_name, SimpleUsage())
         return node
 
     def visit_attribute(self, node):
