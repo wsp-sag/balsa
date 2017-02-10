@@ -1,8 +1,10 @@
 import unittest
+from bisect import bisect_right
 import numpy as np
 from numpy.testing import assert_allclose
 
-from balsa.cheval.core import sample_multinomial_worker, sample_nested_worker, stochastic_multinomial_worker, stochastic_nested_worker
+from balsa.cheval.core import (sample_multinomial_worker, sample_nested_worker, stochastic_multinomial_worker,
+                               stochastic_nested_worker, logarithmic_search)
 from balsa.cheval.tree import ChoiceTree
 
 
@@ -122,6 +124,25 @@ class TestCore(unittest.TestCase):
             sample_nested_worker(utilities, random_numbers, instructions1, instructions2, test_result)
 
             assert test_result[0, 0] == expected_index, "Bad result for row %s" % row_number
+
+    def test_bisection_search(self):
+        cumsums = np.array([0, 0, 0.25, 0.25, 0.25, 0.25, 0.25, 0.5, 0.75, 1.0, 1.0, 1.0], dtype=np.float64)
+
+        expected_samples = [
+            (0.0, 2),
+            (0.2, 2),
+            (0.4, 7),
+            (0.6, 8),
+            (0.8, 9),
+            (0.99, 9)
+        ]
+
+        for random_draw, expected_index in expected_samples:
+            test_result = logarithmic_search(np.float64(random_draw), cumsums)
+            assert test_result == expected_index
+
+            standard_result = bisect_right(cumsums, random_draw)
+            assert test_result == standard_result
 
 
 if __name__ == '__main__':
