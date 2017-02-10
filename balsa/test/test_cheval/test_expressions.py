@@ -8,6 +8,23 @@ from balsa.cheval.scope import SimpleUsage, AttributedUsage, DictLiteral, Linked
 
 class TestExpressionParsing(unittest.TestCase):
 
+    # TODO: Test Expression constructor with bad inputs
+
+    def test_literals(self):
+        exprs_to_pass = [
+             "'bob'",
+             "1.0",
+             "2",
+             "1E6",
+             "True",
+             "False",
+             "None",
+             "u'pi'"
+        ]
+        for e in exprs_to_pass:
+            # Just test to ensure that there are no errors
+            _ = Expression(e)
+
     def test_simple_usage(self):
         expr = Expression("a + b")
 
@@ -22,23 +39,50 @@ class TestExpressionParsing(unittest.TestCase):
 
     def test_attributed_usage(self):
         expr = Expression("a.b")
-
+        # Expression("abc.def")
+        # Expression("'a bc'.d)
+        # Fail:  # Expression("'a'.upper)
         assert 'a' in expr._symbols
         assert len(expr._symbols['a']) == 1
         assert isinstance(expr._symbols['a'][0], AttributedUsage)
         assert expr._symbols['a'][0].attribute == 'b'
 
     def test_dict_literal(self):
-        expr = Expression("{a: 1, b: 2, c: 3}")
 
-        assert '__dict0' in expr._symbols
-        assert isinstance(expr._symbols['__dict0'], DictLiteral)
-        assert isinstance(expr._symbols['__dict0'].series, pd.Series)
+        expr_pass = [
+            "{abc: 1, ghi: 1.0}",
+            "{'choice 1': 5.0, 'choice 2': 6.0}",
+            "{'jane & finch': 0.25}"
+        ]
+
+        for e in expr_pass:
+            expr = Expression(e)
+            assert '__dict0' in expr._symbols
+            assert isinstance(expr._symbols['__dict0'], DictLiteral)
+            assert isinstance(expr._symbols['__dict0'].series, pd.Series)
+
+        expr_fail = [
+            "{'a': 'b'}",
+            "{'c': None}",
+            "{'d': NaN}",
+            "{@a: 1}",
+            "{a b: 2}"
+        ]
+        with self.assertRaises(Exception):
+            for e in expr_fail: _ = Expression(e)
 
     def test_top_level_func(self):
         expr = Expression('log(a.b)')
 
         assert expr._parsed_expr.startswith('log')
+
+        assert 'a' in expr._symbols
+        assert len(expr._symbols['a']) == 1
+        assert isinstance(expr._symbols['a'][0], AttributedUsage)
+        assert expr._symbols['a'][0].attribute == 'b'
+
+        with self.assertRaises(UnsupportedSyntaxError):
+            _ = Expression("bob(1 + 2)")
 
     def test_linked_usage(self):
         expr1 = Expression("a.b.c")
