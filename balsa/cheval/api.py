@@ -95,11 +95,13 @@ class ChoiceModel(object):
         if override_utilities is None:
             utilities = self._scope_container._compute_utilities(n_threads, logger=logger)
         else:
-            utilities = override_utilities
+            assert override_utilities.columns.equals(self._tree_container.node_index)
+            self._scope_container._records = override_utilities.index
+            utilities = override_utilities.values
 
-        results = self._eval_probabilities_only(utilities, n_threads)
+        raw_results = self._eval_probabilities_only(utilities, n_threads)
 
-        return results
+        return pd.DataFrame(raw_results, self._scope_container._records, self._scope_container._alternatives)
 
     def copy(self, expressions=False, scope=False):
         """
@@ -181,7 +183,7 @@ class ChoiceModel(object):
         for col in range(n_draws):
             indices = results[:, col]
             retval.append(pd.Series(lookup_table.take(indices), index=record_index))
-        retval = pd.concat(retval)
+        retval = pd.concat(retval, axis=1)
         retval.columns = column_index
 
         return retval

@@ -58,11 +58,7 @@ class FrameSymbol(object):
 
     def get_value(self, usage):
         series = self._frame[usage.attribute]
-        if series.dtype.name == 'category':
-            # Categorical series. Need to convert to string type first
-            data = convert_categorical_series(series)
-        else:
-            data = series.values
+        data = convert_series(series)
 
         length = len(self._frame)
         shape_tuple = [1, 1]
@@ -86,7 +82,7 @@ class LinkedFrameSymbol(object):
         else:
             raise NotImplementedError("This should never happen")
 
-        data = series.values[...]  # Make a shallow copy so we can change the shape
+        data = convert_series(series)[...]  # Make a shallow copy so we can change the shape
         n = len(series)
         new_shape = [1, 1]
         new_shape[self._orientation] = n
@@ -144,7 +140,9 @@ class Scope(object):
 
         """
         self._initialize()
-        self._records = pd.Index(index)
+        if not isinstance(index, pd.Index):
+            index = pd.Index(index)
+        self._records = index
 
     def empty_symbols(self):
         """
@@ -224,24 +222,28 @@ class Scope(object):
     def _evaluate_single_expression(self, expr, utility_table):
         # Setup local dictionary of data
         local_dict = {NAN_STR: np.nan}
-        for symbol_name, usage in expr.symbols():
-            # Usage is one of SimpleUsage, DictLiteral, AttributedUsage, or LinkedFrameUsage
+        for symbol_name, list_of_usages in expr.symbols():
+            if isinstance(list_of_usages, DictLiteral):
+                list_of_usages = [list_of_usages]
 
-            # Symbol meta is an instance of scope.AbstractSymbol
-            symbol_meta = self._filled_symbols[symbol_name]
-            data = symbol_meta.get_value(usage)
+            for usage in list_of_usages:
+                # Usage is one of SimpleUsage, DictLiteral, AttributedUsage, or LinkedFrameUsage
 
-            if isinstance(usage, SimpleUsage):
-                # In this case, no substitution was performed, so we can just use the symbol name
-                local_dict[symbol_name] = data
-            else:
-                # Otherwise, we need to set the data to another alias
-                local_dict[usage.substitution] = data
+                # Symbol meta is an instance of scope.AbstractSymbol
+                symbol_meta = self._filled_symbols[symbol_name]
+                data = symbol_meta.get_value(usage)
+
+                if isinstance(usage, SimpleUsage):
+                    # In this case, no substitution was performed, so we can just use the symbol name
+                    local_dict[symbol_name] = data
+                else:
+                    # Otherwise, we need to set the data to another alias
+                    local_dict[usage.substitution] = data
 
         # Run the expression.
         final_expression = '__out + (%s)' % expr._parsed_expr
         local_dict['__out'] = utility_table
-        ne.evaluate(final_expression, local_dict=local_dict, out=final_expression)
+        ne.evaluate(final_expression, local_dict=local_dict, out=utility_table)
 
     def _fill_simple(self, data, orientation=None, strict=True):
         """"""
@@ -429,11 +431,28 @@ class Scope(object):
         return self._filled_symbols
 
 
+def convert_series(series):
+    if series.dtype.name == 'category':
+        # Categorical series. Need to convert to string type first
+        return convert_categorical_series(series)
+    elif hasattr(series, 'str'):
+        return convert_string_series(series)
+    else:
+        return series.values
+
+
 def convert_categorical_series(s):
-    categorical = s.values #Get the pandas.Categorical
+    categorical = s.values  # Get the pandas.Categorical
 
     category_names = categorical.categories
     max_len = category_names.str.len().max()
     typename = 'a%s' % max_len
 
     return categorical.astype(typename)
+
+
+def convert_string_series(s):
+    max_characters = s.str.len().max()
+    typename = 'a%s' % max_characters
+
+    return s.values.astype(typename)
