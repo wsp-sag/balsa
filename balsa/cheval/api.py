@@ -67,7 +67,7 @@ class ChoiceModel(object):
         if override_utilities is None:
             utilities = self._scope_container._compute_utilities(n_threads, logger=logger)
         else:
-            utilities = override_utilities
+            utilities = self._prep_override_utilities(override_utilities)
 
         result_indices = self._eval_probabilities_and_sample(utilities, randomizer, n_draws, n_threads)
 
@@ -95,9 +95,7 @@ class ChoiceModel(object):
         if override_utilities is None:
             utilities = self._scope_container._compute_utilities(n_threads, logger=logger)
         else:
-            assert override_utilities.columns.equals(self._tree_container.node_index)
-            self._scope_container._records = override_utilities.index
-            utilities = override_utilities.values
+            utilities = self._prep_override_utilities(override_utilities)
 
         raw_results = self._eval_probabilities_only(utilities, n_threads)
 
@@ -219,3 +217,8 @@ class ChoiceModel(object):
         for t in threads: t.join()
 
         return result
+
+    def _prep_override_utilities(self, override_utilities):
+        assert override_utilities.columns.equals(self._tree_container.node_index)
+        self._scope_container._records = override_utilities.index
+        return override_utilities.values
