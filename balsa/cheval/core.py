@@ -202,7 +202,7 @@ def sample_nested_worker(utilities, random_numbers, instruction_set_1, instructi
             out[i, j] = result
 
 
-@nb.jit(nb.void(nb.float64[:, :], nb.float64[:, :], nb.int64[:, :]))
+@nb.jit(nb.void(nb.float64[:, :], nb.float64[:, :], nb.int64[:, :]), nopython=True, nogil=True)
 def sample_multinomial_worker(utilities, random_numbers, out):
     nrows, n_draws = random_numbers.shape
 
@@ -217,7 +217,8 @@ def sample_multinomial_worker(utilities, random_numbers, out):
             out[i, j] = result
 
 
-@nb.jit(nb.void(nb.float64[:, :], _NB_INSTRUCTION_TYPE_1[:], _NB_INSTRUCTION_TYPE_2[:], nb.float64[:, :]))
+@nb.jit(nb.void(nb.float64[:, :], _NB_INSTRUCTION_TYPE_1[:], _NB_INSTRUCTION_TYPE_2[:], nb.float64[:, :]),
+        nopython=True, nogil=True)
 def stochastic_nested_worker(utilities, instruction_set_1, instruction_set_2, out):
     nrows = utilities.shape[0]
 
@@ -227,7 +228,7 @@ def stochastic_nested_worker(utilities, instruction_set_1, instruction_set_2, ou
         out[i, :] = probabilities
 
 
-@nb.jit(nb.void(nb.float64[:, :], nb.float64[:, :]))
+@nb.jit(nb.void(nb.float64[:, :], nb.float64[:, :]), nopython=True, nogil=True)
 def stochastic_multinomial_worker(utilities, out):
     nrows = utilities.shape[0]
 
