@@ -205,9 +205,45 @@ class Config(object):
 
     def __contains__(self, item): return item in self._contents
 
-    def as_dict(self):
-        """Returns the Config as a dictionary. Sub-dictionaries will still be Configs"""
-        return self._contents
+    def as_dict(self, key_type=None, value_type=None):
+        """
+        Converts this entry to a primitive dictionary, using specified types for the keys and values.
+
+        Args:
+            key_type (type): The type to which the keys will be cast, or None to ignore casting.
+            value_type (type): The type to which the values will be cast, or None to ignore casting.
+
+        Returns: dict
+
+        """
+
+        if key_type is None and value_type is None:
+            return self._contents.copy()
+
+        def any_type(val): return val
+
+        if key_type is None: key_type = any_type
+        if value_type is None: value_type = any_type
+
+        retval = OrderedDict()
+        for key, val in iteritems(self._contents):
+            try:
+                key = key_type(key)
+            except ValueError:
+                message = "Key <{}> = '{}' could not be converted to {}".format(
+                    self.namespace, self.value, key_type
+                )
+                raise ConfigTypeError(message)
+
+            try:
+                val = value_type(val)
+            except ValueError:
+                message = "Value <{}> = '{}' could not be converted to {}".format(
+                    self.namespace, self.value, key_type
+                )
+                raise ConfigTypeError(message)
+            retval[key] = val
+        return retval
 
     def serialize(self):
         """Recursively converts the Config back to primitive dictionaries"""
