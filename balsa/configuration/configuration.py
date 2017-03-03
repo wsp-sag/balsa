@@ -9,6 +9,12 @@ try:
     from StringIO import StringIO  # Py 2.x
 except ImportError:
     from io import StringIO  # Py 3.x
+try:
+    from pathlib import Path
+    PATHLIB_LOADED = True
+except ImportError:
+    PATHLIB_LOADED = False
+
 from ..utils import is_identifier
 
 
@@ -58,6 +64,8 @@ class ConfigValue(object):
 
         Returns: The value cast as type
 
+        Raises: ConfigTypeError if the casting could not be performed.
+
         """
 
         try:
@@ -95,6 +103,9 @@ class ConfigValue(object):
             item.as_type(sub_type)
             for item in self.as_type(list)
         ]
+
+    if PATHLIB_LOADED:
+        def as_path(self): return Path(self.as_str())
 
     def as_set(self, sub_type=None):
         """
