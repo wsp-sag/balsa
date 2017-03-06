@@ -215,3 +215,33 @@ def split_zone_in_matrix(base_matrix, old_zone, new_zones, proportions):
 
     return new_matrix
 
+
+def sum_df_sequence(seq, fill_value=0):
+    """
+    Sums over a sequence of DataFrames, even if they have different indexes or columns, filling in 0 (or a value of your
+    choice) for missing rows or columns. Useful when you have a sequence of DataFrames which are supposed to have
+    the same indexes and columns but might be missing a few values.
+
+    Args:
+        seq (Iterable[DataFrame]): Any iterable of DataFrame type, ordered or unordered.
+        fill_value: The value fo use for missing cells. Preferably a number to avoid erros.
+
+    Returns:
+        DataFrame: The sum over all items in seq.
+
+    """
+    common_index = Index([])
+    common_columns = Index([])
+    accumulator = DataFrame()
+
+    for df in seq:
+        if not df.index.equals(common_index):
+            common_index |= df.index
+            accumulator = accumulator.reindex_axis(common_index, axis=0, fill_value=fill_value)
+            df = df.reindex_axis(common_index, axis=0, fill_value=fill_value)
+        if not df.columns.equals(common_columns):
+            common_columns |= df.columns
+            accumulator = accumulator.reindex_axis(common_columns, axis=1, fill_value=fill_value)
+            df = df.reindex_axis(common_columns, axis=1, fill_value=fill_value)
+        accumulator += df
+    return accumulator
