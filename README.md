@@ -7,3 +7,4 @@ Collection of modelling utilities. Works with both Python 2.7 and Python 3.5+
 * __matrices__: Matrix balancing, as well as I/O for binary matrices.
 * __pandas_utils__: Utilities (such as `fast_stack`, and `align_cateogires`) for the Pandas library
 * __configuration__: Parsing and validation of JSON-based configuration files
+* __scribe__: Convenient functions for logging model information during a run.
