@@ -3,6 +3,7 @@ from __future__ import division, absolute_import, print_function, unicode_litera
 import logging
 import sys
 from contextlib import contextmanager
+import traceback as tb
 
 REPORT_LEVEL = 15
 logging.addLevelName(REPORT_LEVEL, 'REPORT')
@@ -83,21 +84,23 @@ def log_to_file(log_file, logger=None):
         log_file: Path to the log file.
         logger (Logger): An optional logger to add the file handler to.
     """
-    fh = None
 
     if logger is None:
         logger = logging.getLogger(_CURRENT_ROOT)
 
+    fh = logging.FileHandler(log_file, mode='w')
+    fh.setFormatter(logging.Formatter(_MODEL_FORMAT))
+    fh.addFilter(RangeFilter(0, 100))
+
+    logger.addHandler(fh)
+
     try:
-        fh = logging.FileHandler(log_file, mode='w')
-        fh.setFormatter(logging.Formatter(_MODEL_FORMAT))
-        fh.addFilter(RangeFilter(0, 100))
-
-        logger.addHandler(fh)
-
         yield
-
+    except:
+        with open(log_file, mode='a') as writer:
+            writer.write("\n" + "-" * 100 + "\n\n")
+            writer.write(tb.format_exc())
+        raise
     finally:
-        if fh is not None:
-            logger.removeHandler(fh)
-            fh.close()
+        logger.removeHandler(fh)
+        fh.close()
