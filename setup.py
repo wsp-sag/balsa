@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='balsa',
-    version='0.1',
+    version='0.2',
     requires=[
         'pandas',
         'numpy',
