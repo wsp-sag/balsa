@@ -25,7 +25,7 @@ class TestScope(unittest.TestCase):
 
     def __prep_for_testing(self, expression):
         self.__model.expressions.clear()
-        self.__model.expressions.append_expression(expression)
+        self.__model.expressions.append(expression)
         self.__model.scope.set_record_index(self.__record_index)
 
     def test_scalar_symbol(self):

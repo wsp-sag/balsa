@@ -202,7 +202,8 @@ class ChoiceTree(object):
             level = node.level
 
             if level not in levels: levels[level] = [node]
-            else: levels[level].append(node)
+            else:
+                levels[level].append(node)
 
         # 2. Construct instruction set 1
         instruction_set_1 = []

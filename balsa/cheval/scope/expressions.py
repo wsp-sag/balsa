@@ -1,7 +1,7 @@
 from __future__ import division, absolute_import, print_function, unicode_literals
 
 from .parsing import ExpressionProcessor, SimpleUsage, DictLiteral, AttributedUsage, LinkedFrameUsage
-from six import iteritems
+from six import iteritems, string_types
 
 
 class InconsistentUsageError(RuntimeError):
@@ -35,27 +35,59 @@ class ExpressionContainer(object):
     def __len__(self):
         return len(self._expressions)
 
-    def append_expression(self, expression):
+    def append(self, expression_or_iterable):
+        """
+        Appends an expression into the LogitModel scope. Expressions are assumed to be order-dependant, just in case.
+
+        If the given argument is an iterable of strings, then this method will perform a "batch-add", adding them all
+        to the model in order.
+
+        Args:
+            expression_or_iterable (str or Iterable): The expression or sequence of expressions to append to the model
+        """
+        if isinstance(expression_or_iterable, string_types):
+            self._append_single(expression_or_iterable)
+        # Assume that it's an iterable
+        self._batch_add_expressions(expression_or_iterable)
+
+    def _append_single(self, expression):
         expr_wrapper = Expression(expression)
         self._expressions.append(expr_wrapper)
         self._modify_event()
 
-    def insert_expression(self, expression, index):
-        expr_wrapper = Expression(expression)
-        self._expressions.insert(index, expr_wrapper)
-        self._modify_event()
-
-    def remove_expression(self, index):
-        del self._expressions[index]
-        self._modify_event()
-
-    def batch_add_expressions(self, list_of_expressions):
+    def _batch_add_expressions(self, list_of_expressions):
         for expr in list_of_expressions:
             expr_wrapper = Expression(expr)
             self._expressions.append(expr_wrapper)
         self._modify_event()
 
+    def insert(self, expression, index):
+        """
+        Inserts an expression into the LogitModel scope at a given location. Expressions are assumed to be
+        order-dependant, just in case.
+
+        Args:
+            expression (str): The expression to insert.
+            index (int): The 0-based position in which to insert the expression.
+        """
+        expr_wrapper = Expression(expression)
+        self._expressions.insert(index, expr_wrapper)
+        self._modify_event()
+
+    def remove_expression(self, index):
+        """
+        Removes an expression at the provided index.
+
+        Args:
+            index (int): The 0-based index at which to remove an expression
+        """
+        del self._expressions[index]
+        self._modify_event()
+
     def clear(self):
+        """
+        Clears the LogitModel of all expressions. Any symbols already filled in the Scope will be cleared as well.
+        """
         self._expressions.clear()
         self._modify_event()
 
