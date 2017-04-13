@@ -154,7 +154,7 @@ class Scope(object):
         """
         raise NotImplementedError()
 
-    def fill_symbol(self, symbol_name, data, orientation=None, strict=True):
+    def fill_symbol(self, symbol_name, data, orientation=None, strict=True, allow_unused=True):
         """
         Associate an empty symbol with actual data, usually ararys, DataFrames, and/or Series. Symbol usages are
         collected from the list of model expressions already-loaded, so the type of `data` must conform to the rules of
@@ -172,14 +172,23 @@ class Scope(object):
             strict (bool): In the case that Cheval is unable to recognize or support the type of `data`, turning off
                 `strict` will permit the data to be filled at this time, and checked by the NumExpr engine later. In
                 most cases, this should probably be left to True.
+            allow_unused (bool): Disables raising KeyError if the symbol is not found in the expressions. This can be a
+                common occurrence if the expressions are read in from user input and the code makes more symbols
+                available for computation than are used.
 
         Raises:
-            KeyError: If the symbol_name is not found used in any Expression.
+            KeyError: If the symbol_name is not found used in any Expression and allow_unused=False
             TypeError: If the type of `data` was not understood or not supported by the scoping rules.
             ScopeOrientationError: If the data do not conform to the rules for scoping.
 
         """
         self._initialize()
+
+        if symbol_name not in self._empty_symbols:
+            if allow_unused:
+                return  # Do not actually add the symbol, since it is known to be unused
+            else:
+                raise KeyError("Symbol '%s' is not used in any expression" % symbol_name)
 
         symbol_usage = self._empty_symbols[symbol_name]
 
