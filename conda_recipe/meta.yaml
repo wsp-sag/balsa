@@ -1,0 +1,21 @@
+package:
+  name: balsa
+  version: "0.3.0"
+
+source:
+  path: "../"
+
+build:
+  number: auto
+
+requirements:
+  build:
+    - python
+    - setuptools
+  run:
+    - 'pandas >=0.20*'
+    - 'numba >=0.33.*'
+    - 'numexpr >=2.5.*'
+    - 'astor >=0.5*'
+    - 'six >= 1.10.*'
+
