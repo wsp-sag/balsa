@@ -1,6 +1,6 @@
 package:
   name: balsa
-  version: "0.4.0"
+  version: "0.4.1"
 
 source:
   path: "../"
@@ -13,9 +13,9 @@ requirements:
     - python
     - setuptools
   run:
-    - 'pandas >=0.20*'
-    - 'numba >=0.33.*'
-    - 'numexpr >=2.5.*'
-    - 'astor >=0.5*'
-    - 'six >= 1.10.*'
+    - "pandas 0.20*"
+    - "numba 0.33.*"
+    - "numexpr 2.5.*"
+    - "astor 0.5*"
+    - "six 1.10.*"
 

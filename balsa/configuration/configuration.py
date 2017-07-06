@@ -236,7 +236,7 @@ class Config(object):
                 raise ConfigTypeError(message)
 
             try:
-                val = value_type(val)
+                val = val.as_type(value_type)
             except ValueError:
                 message = "Value <{}> = '{}' could not be converted to {}".format(
                     self.namespace, self.value, key_type
