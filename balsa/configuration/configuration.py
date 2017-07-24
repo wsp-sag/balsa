@@ -105,7 +105,9 @@ class ConfigValue(object):
         ]
 
     if PATHLIB_LOADED:
-        def as_path(self): return Path(self.as_str())
+        def as_path(self, parent=None):
+            if parent is not None: return Path(parent) / Path(self.as_str())
+            return Path(self.as_str())
 
     def as_set(self, sub_type=None):
         """
