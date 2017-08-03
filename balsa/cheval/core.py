@@ -25,14 +25,14 @@ _NB_INSTRUCTION_TYPE_1 = nb.from_dtype(INSTRUCTION_TYPE_1)
 INSTRUCTION_TYPE_2 = np.dtype([('child_index', 'i8'), ('parent_index', 'i8')])
 _NB_INSTRUCTION_TYPE_2 = nb.from_dtype(INSTRUCTION_TYPE_2)
 
-MIN_RANDOM_VALUE = np.finfo(np.float64).tiny
-
 
 @nb.jit(nb.int64(nb.float64, nb.float64[:]), nogil=True, nopython=True)
 def logarithmic_search(r, cps):
     """
     Logarithmic (binary) search algorithm for finding the greatest index whose cumulative probability is <= the random
     draw.
+
+    Allows for cells with 0 probability.
 
     Args:
         r (float): The random draw to compare against.
@@ -41,28 +41,24 @@ def logarithmic_search(r, cps):
     Returns (int): The found index.
     """
 
-    # The check below is required to avoid a very specific edge case in which there is more than one 0-probability
-    # choice at the start of the probability array, e.g. [0, 0, 0, 0.1, 0.3, 0.7, 1.0]. The randomizer draws on the
-    # interval [0, 1), so it's a (very) small possibility, but nonetheless would yield potentially very wrong results
-    if r == 0:
-        r = MIN_RANDOM_VALUE
+    mask, = np.where(cps > 0)  # The masked indices can be used to transform back to the original array
+    masked_cps = cps[mask]
 
-    ncols = len(cps)
+    ncols = len(masked_cps)
 
     lower_bound, upper_bound = 0, ncols - 1
     while (upper_bound - lower_bound) > 1:
         mid_index = np.uint32((upper_bound + lower_bound) // 2)
-        cp_at_mid = cps[mid_index]
+        cp_at_mid = masked_cps[mid_index]
         if r <= cp_at_mid: # left branch
             upper_bound = mid_index
         else:  # right branch
             lower_bound = mid_index
 
-    cp_at_left = cps[lower_bound]
-    if r <= cp_at_left:
-        return lower_bound
-    else:
-        return upper_bound
+    cp_at_left = masked_cps[lower_bound]
+    result = lower_bound if r <= cp_at_left else upper_bound
+
+    return mask[result]
 
 
 @nb.jit(nb.int64(nb.float64, nb.float64[:]), nogil=True, nopython=True)
