@@ -233,5 +233,19 @@ def stochastic_multinomial_worker(utilities, out):
         probabilities = multinomial_probabilities(util_row)
         out[i, :] = probabilities
 
+
+# @nb.jit(nb.void(nb.int64[:, :], nb.float64[:], nb.int64[:]), nogil=True, nopython=True)
+def weighted_sample_worker(weights, random_numbers, out):
+    nrows = weights.shape[0]
+
+    for i in range(nrows):
+        row = weights[i, :]
+        total = row.sum()
+        cps = np.cumsum(row / total)
+        r = random_numbers[i]
+
+        index = logarithmic_search(r, cps)
+        out[i] = index
+
 # endregion
 

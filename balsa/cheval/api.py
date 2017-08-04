@@ -6,7 +6,8 @@ from threading import Thread
 
 from .scope import Scope, ExpressionContainer
 from .tree import ChoiceTree
-from .core import sample_multinomial_worker, sample_nested_worker, stochastic_multinomial_worker, stochastic_nested_worker
+from .core import sample_multinomial_worker, sample_nested_worker, stochastic_multinomial_worker, \
+    stochastic_nested_worker, weighted_sample_worker
 
 
 class ChoiceModel(object):
@@ -222,3 +223,51 @@ class ChoiceModel(object):
         assert override_utilities.columns.equals(self._tree_container.node_index)
         self._scope_container._records = override_utilities.index
         return override_utilities.values
+
+
+def sample_from_weights(weights, randomizer, astype='category', n_threads=1):
+    """
+
+    Args:
+        weights (pd.DataFrame):
+        randomizer (inr, RandomState, or None):
+        astype (type or str):
+        n_threads (int):
+
+    Returns (pd.Series):
+
+    """
+    assert np.all(weights.sum(axis=1) > 0)
+
+    if randomizer is None:
+        randomizer = np.random
+    elif isinstance(randomizer, (int, np.int_)):
+        randomizer = np.random.RandomState(randomizer)
+
+    nrows = len(weights)
+
+    raw_weight_table = weights.values.astype(np.int64)
+    random_draws = randomizer.uniform(shape=nrows)
+    out = np.zeros(shape=nrows, dtype=np.int64)
+
+    if n_threads <= 1:
+        weighted_sample_worker(raw_weight_table, random_draws, out)
+    else:
+        weight_chunks = np.array_split(raw_weight_table, n_threads, axis=0)
+        random_chunks = np.array_split(random_draws, n_threads, axis=0)
+        out_chunks = np.array_split(out, n_threads, axis=0)
+
+        threads = [Thread(target=weighted_sample_worker, args=[
+           weight_chunks[i], random_chunks[i], out_chunks[i]
+        ]) for i in range(n_threads)]
+        for t in threads: t.start()
+        for t in threads: t.join()
+
+    if astype == 'index':
+        return pd.Series(out, index=weights.index)
+    elif astype == 'category':
+        lookup_table = pd.Categorical(weights.columns)
+    else:
+        lookup_table = weights.columns.values.astype(astype)
+
+    return pd.Series(lookup_table.take(out), index=weights.index)
