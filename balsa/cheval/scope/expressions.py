@@ -47,8 +47,9 @@ class ExpressionContainer(object):
         """
         if isinstance(expression_or_iterable, string_types):
             self._append_single(expression_or_iterable)
-        # Assume that it's an iterable
-        self._batch_add_expressions(expression_or_iterable)
+        else:
+            # Assume that it's an iterable
+            self._batch_add_expressions(expression_or_iterable)
 
     def _append_single(self, expression):
         expr_wrapper = Expression(expression)
