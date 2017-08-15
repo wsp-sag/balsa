@@ -15,7 +15,7 @@ requirements:
   run:
     - "pandas 0.20*"
     - "numba 0.33.*"
-    - "numexpr 2.5.*"
+    - "numexpr 2.6.*"
     - "astor 0.5*"
     - "six 1.10.*"
 
