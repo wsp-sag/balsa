@@ -247,7 +247,7 @@ def sample_from_weights(weights, randomizer, astype='category', n_threads=1):
     nrows = len(weights)
 
     raw_weight_table = weights.values.astype(np.int64)
-    random_draws = randomizer.uniform(shape=nrows)
+    random_draws = randomizer.uniform(size=nrows)
     out = np.zeros(shape=nrows, dtype=np.int64)
 
     if n_threads <= 1:

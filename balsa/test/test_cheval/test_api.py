@@ -10,12 +10,12 @@ class RandomStateProxy(object):
     def __init__(self, fixed_draws):
         self.data = np.array(fixed_draws, dtype=np.float64)
 
-    def uniform(self, shape, *args, **kwargs):
-        n = np.prod(shape)
+    def uniform(self, size, *args, **kwargs):
+        n = np.prod(size)
         assert n <= len(self.data)
 
         ret = self.data[: n]
-        ret.shape = shape
+        ret.shape = size
 
         return ret
 
