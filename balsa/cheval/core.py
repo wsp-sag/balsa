@@ -234,7 +234,7 @@ def stochastic_multinomial_worker(utilities, out):
         out[i, :] = probabilities
 
 
-# @nb.jit(nb.void(nb.int64[:, :], nb.float64[:], nb.int64[:]), nogil=True, nopython=True)
+@nb.jit(nb.void(nb.int64[:, :], nb.float64[:], nb.int64[:]), nogil=True, nopython=True)
 def weighted_sample_worker(weights, random_numbers, out):
     nrows = weights.shape[0]
 
