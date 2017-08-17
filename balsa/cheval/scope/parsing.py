@@ -186,6 +186,36 @@ class ExpressionProcessor(ast.NodeTransformer):
 
         return new_node
 
+    def visit_boolop(self, node):
+        # Converts 'and' and 'or' into '&' and '|' which NumExpr supports
+        # BoolOp objects have a list of values but need to be converted into a tree of BinOpd
+
+        values = node.values
+
+        if isinstance(node.op, ast.And):
+            new_op = ast.BitAnd
+        elif isinstance(node.op, ast.Or):
+            new_op = ast.BitOr
+        else:
+            raise NotImplementedError(type(node.op))
+
+        new_value1 = self.visit(values[-1])
+        new_value2 = self.visit(values[-2])
+        new_node = ast.BinOp(left=new_value2, right=new_value1, op=new_op())
+        i = len(values) - 3
+        while i >= 0:
+            new_value = self.visit(values[i])
+            ast.BinOp(left=new_value, right=new_node, op=new_op())
+            i -= 1
+
+        return new_node
+
+    def visit_unaryop(self, node):
+        # Converts 'not' into '~' which NumExpr supports
+        if isinstance(node.op, ast.Not):
+            return ast.UnaryOp(op=ast.Invert(), operand=self.visit(node.operand))
+        raise NotImplementedError(type(node.op))
+
     @staticmethod
     def __get_dict_key(node):
         if isinstance(node, ast.Name):

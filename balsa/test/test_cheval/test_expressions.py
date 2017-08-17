@@ -114,5 +114,10 @@ class TestExpressionParsing(unittest.TestCase):
             Expression("a[0:5]")  # Subscript w slice
             Expression("a + {")  # Malformed syntax
 
+    def test_replacements(self):
+        expression = Expression("a and not b or c == 'notandor'")
+        assert expression._parsed_expr == "((a & (~ b)) | (c == 'notandor'))"
+
+
 if __name__ == '__main__':
     unittest.main()
