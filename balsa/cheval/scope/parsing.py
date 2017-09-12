@@ -216,6 +216,12 @@ class ExpressionProcessor(ast.NodeTransformer):
             return ast.UnaryOp(op=ast.Invert(), operand=self.visit(node.operand))
         raise NotImplementedError(type(node.op))
 
+    def visit_str(self, node):
+        # Converts text-strings to NumExpr-supported byte-strings
+        if six.PY3:
+            return ast.Bytes(node.s.encode())
+        return node
+
     @staticmethod
     def __get_dict_key(node):
         if isinstance(node, ast.Name):

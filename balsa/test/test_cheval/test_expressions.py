@@ -1,6 +1,7 @@
 import unittest
 
 import pandas as pd
+import six
 
 from balsa.cheval.scope.expressions import Expression
 from balsa.cheval.scope import SimpleUsage, AttributedUsage, DictLiteral, LinkedFrameUsage, UnsupportedSyntaxError
@@ -116,8 +117,14 @@ class TestExpressionParsing(unittest.TestCase):
 
     def test_replacements(self):
         expression = Expression("a and not b or c == 'notandor'")
-        assert expression._parsed_expr == "((a & (~ b)) | (c == 'notandor'))"
+        expected = "((a & (~ b)) | (c == b'notandor'))" if six.PY3 else "((a & (~ b)) | (c == 'notandor'))"
+        assert expression._parsed_expr == expected
 
+    def test_py3_string_replacement(self):
+        if six.PY3:
+            expression = Expression("where(my_array == 'some_value', 1, 0)")
+            actual = expression._parsed_expr
+            assert actual == "where((my_array == b'some_value'), 1, 0)"
 
 if __name__ == '__main__':
     unittest.main()
