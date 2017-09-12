@@ -30,13 +30,13 @@ class Array1DSymbol(object):
         self._orientation = orientation
 
     def get_value(self, usage):
-        # TODO: Support Categorical series
+        converted = convert_series(self._data, allow_raw=True)
 
-        length = len(self._data)
+        length = len(converted)
         new_shape = [1, 1]
         new_shape[self._orientation] = length
 
-        view = self._data[...]  # Make a shallow copy
+        view = converted[...]  # Make a shallow copy
         view.shape = new_shape
         return view
 
@@ -334,11 +334,11 @@ class Scope(object):
                 if not data.index.equals(self._records):
                     raise ScopeOrientationError("Series must align with either the records or alternatives")
 
-                return Array1DSymbol(data.values, orientation)
+                return Array1DSymbol(data, orientation)
             elif data.index.equals(self._records):
-                return Array1DSymbol(data.values, 0)
+                return Array1DSymbol(data, 0)
             elif data.index.equals(self._alternatives):
-                return Array1DSymbol(data.values, 1)
+                return Array1DSymbol(data, 1)
             else:
                 raise ScopeOrientationError("Series must align with either the records or the alternatives")
         elif strict:
@@ -440,28 +440,34 @@ class Scope(object):
         return self._filled_symbols
 
 
-def convert_series(series):
-    if series.dtype.name == 'category':
-        # Categorical series. Need to convert to string type first
-        return convert_categorical_series(series)
-    elif hasattr(series, 'str'):
-        return convert_string_series(series)
-    else:
-        return series.values
+def convert_series(s, *, allow_raw=False):
+    dtype = s.dtype
 
+    if dtype.name == 'category':
+        # Categorical column
+        categorical = s.values
 
-def convert_categorical_series(s):
-    categorical = s.values  # Get the pandas.Categorical
+        category_index = categorical.categories
+        if category_index.dtype.name == 'object':
+            max_len = category_index.str.len().max()
+            typename = 'S%s' % max_len
+        else:
+            typename = category_index.dtype
 
-    category_names = categorical.categories
-    max_len = category_names.str.len().max()
-    typename = 'a%s' % max_len
+        return categorical.astype(typename)
+    elif dtype.name == 'object':
+        # Object or text column
+        max_length = s.str.len().max()
+        if np.isnan(max_length):
+            raise TypeError("Could not get max string length")
 
-    return categorical.astype(typename)
-
-
-def convert_string_series(s):
-    max_characters = s.str.len().max()
-    typename = 'a%s' % max_characters
-
-    return s.values.astype(typename)
+        return s.values.astype("S%s" % max_length)
+    elif np.issubdtype(dtype, np.datetime64):
+        raise TypeError("Datetime columns are not supported")
+    elif np.issubdtype(dtype, np.timedelta64):
+        raise TypeError("Timedelta columns are not supported")
+    try:
+        return s.values
+    except:
+        if allow_raw: return s
+        raise
