@@ -46,22 +46,28 @@ def _coerce_matrix(matrix, allow_raw=True):
     return matrix
 
 
-def expand_array(a, n):
+def expand_array(a, n, axis=None):
     """
     Expands an array across all dimensions by a set amount
 
     Args:
         a: The array to expand
         n: The (non-negative) number of items to expand by.
+        axis (int or None): The axis to expand along, or None to exapnd along all axes
 
     Returns: The expanded array
     """
 
-    new_shape = [i + n for i in a.shape]
+    if axis is None: new_shape = [dim + n for dim in a.shape]
+    else:
+        new_shape = []
+        for i, dim in enumerate(a.shape):
+            dim += n if i == axis else 0
+            new_shape.append(dim)
 
     out = np.zeros(new_shape, dtype=a.dtype)
 
-    indexer = [slice(0, i) for i in a.shape]
+    indexer = [slice(0, dim) for dim in a.shape]
     out[indexer] = a
 
     return out
@@ -408,7 +414,7 @@ def read_fortran_square(file, zones=None, tall=False):
         return matrix.stack() if tall else matrix
 
 
-def to_fortran(matrix, file):
+def to_fortran(matrix, file, n_columns=None):
     """
     Reads a FORTRAN-friendly .bin file (a.k.a. 'simple binary format'), in a square format.
 
@@ -416,10 +422,17 @@ def to_fortran(matrix, file):
         matrix (DataFrame or Series or ndarray): The matrix to write to disk. If a Series is given, it MUST have a
             MultiIndex with exactly 2 levels to unstack.
         file (basestring or File): The path or file handler to write to.
+        n_columns (int): Optionally specify a desired "width" of the matrix file. For example, n_columns=4000 on a
+            matrix 3500x3500 will pad the width with 500 extra columns containing 0. If None if provided or if the
+            number of columns <= the width of the given matrix, no padding will be performed.
 
     """
 
     array = _coerce_matrix(matrix)
+
+    if n_columns is not None and n_columns > array.shape[1]:
+        extra_columns = n_columns - array.shape[1]
+        array = expand_array(array, extra_columns, axis=0)
 
     with open_file(file, mode='wb') as writer:
         n = array.shape[0]
