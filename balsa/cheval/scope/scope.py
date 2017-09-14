@@ -440,7 +440,7 @@ class Scope(object):
         return self._filled_symbols
 
 
-def convert_series(s, *, allow_raw=False):
+def convert_series(s, allow_raw=False):
     dtype = s.dtype
 
     if dtype.name == 'category':
