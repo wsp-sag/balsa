@@ -5,26 +5,6 @@ import numba as nb
 import numpy as np
 
 
-'''
-These dtypes are required to instruct the Numba machines in what order to process a nested logit model. Numba otherwise
-has no way of understanding the the tree (it doesn't permit hierarchical data).
-
-Instruction type 1 is used to compute (from the utilities) the probability of each alternative conditional on its
-parent. For example, the particular probability of all child nodes under a particular alternative will sum to 1.0,
-but the entire array will not. This part of the computation also applies the logsum scaling parameter. The nature of
-this computation is such that probabilities are computed "bottom-up", starting with the lowest level nests and
-processing all of the nodes at EACH level (regardless of whether they share a parent node) before moving up a level.
-
-Instruction type 2 is used to compute the absolute probability for the entire tree, working in the opposite direction as
-before. The probability of each child node is multiplied by that of its parent, and then each parent node has its
-probability zeroed out.
-'''
-INSTRUCTION_TYPE_1 = np.dtype([('node_index', 'i8'), ('logsum_flag', '?'), ('logsum_scale', 'f8')])
-_NB_INSTRUCTION_TYPE_1 = nb.from_dtype(INSTRUCTION_TYPE_1)
-
-INSTRUCTION_TYPE_2 = np.dtype([('child_index', 'i8'), ('parent_index', 'i8')])
-_NB_INSTRUCTION_TYPE_2 = nb.from_dtype(INSTRUCTION_TYPE_2)
-
 MIN_RANDOM_VALUE = np.finfo(np.float64).tiny
 
 
@@ -110,101 +90,68 @@ def cumsum(array):
 # region Nested Probabilities
 
 
-@nb.jit(nb.void(nb.float64[:], _NB_INSTRUCTION_TYPE_1[:]), nopython=True, nogil=True)
-def nested_step_1(probabilities, instructions):
-    """
-    Implements the 'bottom-up' process of computing nested probabilities. Starts with an array of UTILITIES (one cell
-    for each alternative) and modifies it in-place to contain conditional probabilities (each sub-nest will sum to 1.0).
-
-    This function is intrinsically tied in the LogitModel._flatten(), which constructs the 'flat' list of instructions
-    used in this function.
-    """
-    logsum = 0.0
-    cached_nodes = []
-    for record in instructions:
-        node_index = record.node_index
-        logsum_scale = record.logsum_scale
-
-        if record.logsum_flag:
-            # Node index refers to the parent node currently
-
-            # Add the logsum of child nodes to this node's utility
-            probabilities[node_index] += logsum_scale * np.log(logsum)
-
-            # Consume the cache of child nodes, converting the exp(u) to conditional probability
-            while len(cached_nodes) > 0:
-                child_index = cached_nodes.pop()
-                probabilities[child_index] /= logsum
-            # The cache is now empty
-
-            # Reset the logsum term for the next nest
-            logsum = 0.0
-        else:
-            # Exponentiate a utility, and add it to the on-going logsum
-            expu = np.exp(probabilities[node_index]) / logsum_scale
-            logsum += expu
-            probabilities[node_index] = expu
-            cached_nodes.append(node_index)
-
-    # Finalize top-level nodes
-    while len(cached_nodes) > 0:
-        child_index = cached_nodes.pop()
-        probabilities[child_index] /= logsum
-
-
-@nb.jit(nb.void(nb.float64[:], _NB_INSTRUCTION_TYPE_2[:]), nopython=True, nogil=True)
-def nested_step_2(probabilities, instructions):
-    """
-    Implements the 'top-down' process of multiplying conditional probabilities against one another until the entire
-    array sums to 1.0. Parent nodes will get a probability of 0.
-
-    This function is intrinsically tied in the LogitModel._flatten(), which constructs the 'flat' list of instructions
-    used in this function.
-    """
-    # Now we've go conditional probabilities for all choices. But the branch nodes need to be zero'd out can their
-    # probabilities applied lower in the nest.
-    parent_nodes = set()
-    for record in instructions:
-        parent_p = probabilities[record.parent_index]
-        probabilities[record.child_index] = probabilities[record.child_index] * parent_p
-        parent_nodes.add(record.parent_index)
-    for pi in parent_nodes:
-        probabilities[pi] = 0.0
-
-
-@nb.jit(nb.float64[:](nb.float64[:], _NB_INSTRUCTION_TYPE_1[:], _NB_INSTRUCTION_TYPE_2[:]), nopython=True, nogil=True)
-def nested_probabilities(utilities, instruction_set_1, instruction_set_2):
-    """
-    Computes probabilities for a nested logit model, from an array of utilities.
-
-    Args:
-        utilities:
-        instruction_set_1:
-        instruction_set_2:
-
-    Returns:
-
-    """
+@nb.jit(nb.float64[:](nb.float64[:], nb.int64[:], nb.int64[:], nb.float64[:]), nopython=True, nogil=True)
+def nested_probabilities(utilities, hierarchy, levels, logsum_scales):
+    n_cells = len(utilities)
     probabilities = utilities.copy()
+    top_logsum = 0
+    logsums = np.zeros(n_cells, dtype=np.float64)
 
-    nested_step_1(probabilities, instruction_set_1)
-    nested_step_2(probabilities, instruction_set_2)
+    # Step 1: Exponentiate the utilities and collect logsums
+    max_level =levels.max()
+    current_level = max_level
+    for _ in range(max_level + 1):
+        # Go through levels in reverse order (e.g. starting at the bottom)
+        for index, level in enumerate(levels):
+            if level != current_level: continue
+            parent = hierarchy[index]
+
+            existing_logsum = logsums[index]
+            parent_ls_scale = logsum_scales[parent] if parent >= 0 else 1.0
+            if existing_logsum != 0:
+                current_ls_scale = logsum_scales[index]
+                expu = np.exp((probabilities[index] + current_ls_scale * np.log(existing_logsum)) / parent_ls_scale)
+            else:
+                expu = np.exp(probabilities[index] / parent_ls_scale)
+            if parent >= 0: logsums[parent] += expu
+            else: top_logsum += expu
+            probabilities[index] = expu
+        current_level -= 1
+
+    # Step 2: Use logsums to compute conditional probabilities
+    for index, parent in enumerate(hierarchy):
+        ls = top_logsum if parent == -1 else logsums[parent]
+        probabilities[index] = probabilities[index] / ls
+
+    # Step 3: Compute absolute probabilities for child nodes, collecting parent nodes
+    for current_level in range(1, max_level + 1):
+        for index, level in enumerate(levels):
+            if level != current_level: continue
+            parent = hierarchy[index]
+            probabilities[index] *= probabilities[parent]
+
+    # Step 4: Zero-out parent node probabilities
+    # This does not use a Set because Numba sets are really slow
+    for parent in hierarchy:
+        if parent < 0: continue
+        probabilities[parent] = 0.0
 
     return probabilities
+
 
 # endregion
 
 # region Mid-level functions
 
 
-@nb.jit(nb.void(nb.float64[:, :], nb.float64[:, :], _NB_INSTRUCTION_TYPE_1[:], _NB_INSTRUCTION_TYPE_2[:], nb.int64[:, :]),
+@nb.jit(nb.void(nb.float64[:, :], nb.float64[:, :], nb.int64[:], nb.int64[:], nb.float64[:], nb.int64[:, :]),
         nogil=True, nopython=True)
-def sample_nested_worker(utilities, random_numbers, instruction_set_1, instruction_set_2, out):
-    nrows , n_draws = random_numbers.shape
+def sample_nested_worker(utilities, random_numbers, hierarchy, levels, logsum_scales, out):
+    nrows, n_draws = random_numbers.shape
 
     for i in range(nrows):
         util_row = utilities[i, :]
-        probabilities = nested_probabilities(util_row, instruction_set_1, instruction_set_2)
+        probabilities = nested_probabilities(util_row, hierarchy, levels, logsum_scales)
         cumsum(probabilities)  # Convert to cumulative sum
 
         for j in range(n_draws):
@@ -228,14 +175,14 @@ def sample_multinomial_worker(utilities, random_numbers, out):
             out[i, j] = result
 
 
-@nb.jit(nb.void(nb.float64[:, :], _NB_INSTRUCTION_TYPE_1[:], _NB_INSTRUCTION_TYPE_2[:], nb.float64[:, :]),
+@nb.jit(nb.void(nb.float64[:, :],  nb.int64[:], nb.int64[:], nb.float64[:], nb.float64[:, :]),
         nopython=True, nogil=True)
-def stochastic_nested_worker(utilities, instruction_set_1, instruction_set_2, out):
+def stochastic_nested_worker(utilities, hierarchy, levels, logsum_scales, out):
     nrows = utilities.shape[0]
 
     for i in range(nrows):
         util_row = utilities[i, :]
-        probabilities = nested_probabilities(util_row, instruction_set_1, instruction_set_2)
+        probabilities = nested_probabilities(util_row, hierarchy, levels, logsum_scales)
         out[i, :] = probabilities
 
 

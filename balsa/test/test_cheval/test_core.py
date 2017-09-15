@@ -1,10 +1,11 @@
 import unittest
 from bisect import bisect_right
+
 import numpy as np
 from numpy.testing import assert_allclose
 
 from balsa.cheval.core import (sample_multinomial_worker, sample_nested_worker, stochastic_multinomial_worker,
-                               stochastic_nested_worker, logarithmic_search)
+                               nested_probabilities, logarithmic_search)
 from balsa.cheval.tree import ChoiceTree
 
 
@@ -66,21 +67,24 @@ class TestCore(unittest.TestCase):
         assert_allclose(test_result, expected_result)
 
     def test_nested_probabilities(self):
-        utilities = self._get_utility_row()
+        utilities = np.float64([0, -1.63364, -0.73754, -0.05488, -0.66127, -1.17165, 0, 0])
 
-        expected_result = np.array(
-            [0, 0, 0.171971982, 0.110203821, 0.354475969, 0, 0.201757526, 0.161590702],
-            dtype=np.float64
-        )
-        n = len(expected_result)
-        expected_result.shape = 1, n
+        expected_result = np.float64([0, 0.06527, 0.17893, 0.47448, 0.23791, 0.04341, 0, 0])
 
-        instructions1, instructions2 = self._get_flattened_tree()
+        tree = ChoiceTree(None)
+        auto = tree.add_node("Auto", logsum_scale=0.7)
+        auto.add_node("Carpool")
+        auto.add_node("Drive")
+        pt = tree.add_node("Transit", logsum_scale=0.7)
+        pt.add_node("Bus")
+        train = pt.add_node("Train", logsum_scale=0.3)
+        train.add_node("T Access Drive")
+        train.add_node("T Access Walk")
 
-        test_result = np.zeros(utilities.shape)
-        stochastic_nested_worker(utilities, instructions1, instructions2, test_result)
+        hierarchy, levels, logsum_scales = tree.flatten()
+        test_result = nested_probabilities(utilities, hierarchy, levels, logsum_scales)
 
-        assert_allclose(test_result, expected_result)
+        assert_allclose(test_result, expected_result, rtol=1e-4)
 
     def test_multinomial_sampling(self):
         utilities = self._get_utility_row()
@@ -105,25 +109,38 @@ class TestCore(unittest.TestCase):
             assert test_result[0, 0] == expected_index, "Bad result for row %s" % row_number
 
     def test_nested_sampling(self):
-        utilities = self._get_utility_row()
+
+        utilities = np.float64([[0, -1.63364, -0.73754, -0.05488, -0.66127, -1.17165, 0, 0]])
+
+        tree = ChoiceTree(None)
+        auto = tree.add_node("Auto", logsum_scale=0.7)
+        auto.add_node("Carpool")
+        auto.add_node("Drive")
+        pt = tree.add_node("Transit", logsum_scale=0.7)
+        pt.add_node("Bus")
+        train = pt.add_node("Train", logsum_scale=0.3)
+        train.add_node("T Access Drive")
+        train.add_node("T Access Walk")
+
+        hierarchy, levels, logsum_scales = tree.flatten()
 
         expected_samples = [
-            (0, 2),
-            (0.1, 2),
-            (0.2, 3),
-            (0.6, 4),
-            (0.7, 6),
-            (0.9, 7)
+            (0, 1),
+            (0.04, 1),
+            (0.2, 2),
+            (0.5, 3),
+            (0.75, 4),
+            (0.99, 5)
         ]
-
-        instructions1, instructions2 = self._get_flattened_tree()
 
         for row_number, (random_draw, expected_index) in enumerate(expected_samples):
             random_numbers = np.array([[random_draw]], dtype=np.float64)
             test_result = np.zeros([1, 1], dtype=np.int64)
-            sample_nested_worker(utilities, random_numbers, instructions1, instructions2, test_result)
 
-            assert test_result[0, 0] == expected_index, "Bad result for row %s" % row_number
+            sample_nested_worker(utilities, random_numbers, hierarchy, levels, logsum_scales, test_result)
+            result_cell = test_result[0, 0]
+
+            assert result_cell == expected_index, "Bad result for row %s. Expected %s got %s" % (row_number, expected_index, result_cell)
 
     def test_bisection_search(self):
         cumsums = np.array([0, 0, 0.25, 0.25, 0.25, 0.25, 0.25, 0.5, 0.75, 1.0, 1.0, 1.0], dtype=np.float64)

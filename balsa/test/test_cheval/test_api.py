@@ -3,7 +3,7 @@ import unittest
 import pandas as pd
 import numpy as np
 
-from balsa.cheval.api import sample_from_weights
+from balsa.cheval.api import sample_from_weights, ChoiceTree
 
 
 class RandomStateProxy(object):
@@ -38,6 +38,30 @@ class TestAPI(unittest.TestCase):
 
         actual_result = sample_from_weights(weights, randomizer, astype='index').values
         assert np.all(actual_result == expected_result)
+
+    def test_flatten(self):
+        tree = ChoiceTree(None)
+        a1 = tree.add_node('A1', 0.3)
+        a2 = tree.add_node('A2', 0.6)
+
+        a1.add_node('A3')
+        a1.add_node('A4')
+
+        a2.add_node('A5')
+        a6 = a2.add_node('A6', 0.5)
+
+        a6.add_node('A7')
+        a6.add_node('A8')
+
+        hierarchy, levels, ls_scales = tree.flatten()
+
+        expected_hierarchy = np.int64([-1, -1, 0, 0, 1, 1, 5, 5])
+        expected_levels = np.int64([0, 0, 1, 1, 1, 1, 2, 2])
+        expected_scales = np.float64([0.3, 0.6, 1, 1, 1, 0.5, 1, 1])
+
+        assert np.all(expected_hierarchy == hierarchy)
+        assert np.all(expected_levels == levels)
+        assert np.allclose(expected_scales, ls_scales)
 
 
 if __name__ == '__main__':

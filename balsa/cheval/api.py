@@ -146,11 +146,15 @@ class ChoiceModel(object):
         else:
             # Nested model
 
-            instructions1, instructions2 = self.tree.flatten()
+            # instructions1, instructions2 = self.tree.flatten()
+            hierarchy, levels, ls_scales = self.tree.flatten()
+            h_copies = [hierarchy.copy() for _ in range(n_threads)]
+            l_copies = [levels.copy() for _ in range(n_threads)]
+            s_copies = [ls_scales.copy() for _ in range(n_threads)]
 
             threads = [
                 Thread(target=sample_nested_worker, args=[
-                    utility_chunks[i], random_chunks[i], instructions1, instructions2, result_chunks[i]
+                    utility_chunks[i], random_chunks[i], h_copies[i], l_copies[i], s_copies[i], result_chunks[i]
                 ])
                 for i in range(n_threads)
             ]

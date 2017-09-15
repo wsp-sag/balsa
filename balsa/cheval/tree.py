@@ -1,6 +1,5 @@
 from __future__ import division, absolute_import, print_function, unicode_literals
 
-from .core import INSTRUCTION_TYPE_1, INSTRUCTION_TYPE_2
 from six import iterkeys, itervalues
 
 import numpy as np
@@ -146,7 +145,7 @@ class ChoiceTree(object):
             _ChoiceNode: The added node, which also has an 'add_node' method.
 
         """
-        return self._root_add(self, name, logsum_scale, 1)
+        return self._root_add(self, name, logsum_scale, 0)
 
     def add_nodes(self, names, logsum_scales=None):
         """
@@ -191,45 +190,22 @@ class ChoiceTree(object):
         self._cached_node_index = None
 
     def flatten(self):
-        """Creates instruction sets for nested models"""
         node_index = self.node_index
         node_positions = {name: i for i, name in enumerate(node_index)}
 
-        # 1. Organize parent nodes by level
-        levels = {}
+        hierarchy = np.full(len(node_index), -1, dtype='i8')
+        levels = np.zeros(len(node_index), dtype='i8')
+        logsum_scales = np.ones(len(node_index), dtype='f8')
+
         for node in itervalues(self._all_nodes):
-            if not node.is_parent: continue
-            level = node.level
+            position = node_positions[node.name]
+            levels[position] = node.level
 
-            if level not in levels: levels[level] = [node]
-            else:
-                levels[level].append(node)
+            if node.parent is not self:
+                parent_position = node_positions[node.parent.name]
+                hierarchy[position] = parent_position
 
-        # 2. Construct instruction set 1
-        instruction_set_1 = []
-        for level in sorted(levels.keys(), reverse=True):
-            parent_nodes = levels[level]
-            for parent_node in parent_nodes:
-                for node in parent_node.children():
-                    node_position = node_positions[node.name]
-                    instruction_set_1.append((node_position, False, parent_node.logsum_scale))
-                parent_position = node_positions[parent_node.name]
-                instruction_set_1.append((parent_position, True, parent_node.logsum_scale))
-        for node in self.children():
-            node_position = node_positions[node.name]
-            instruction_set_1.append((node_position, False, 1.0))
-        instruction_set_1 = np.rec.array(instruction_set_1, dtype=INSTRUCTION_TYPE_1)
+            if node.is_parent:
+                logsum_scales[position] = node.logsum_scale
 
-        # 3. Construct instruction set 2
-        instruction_set_2 = []
-        for level in sorted(levels.keys()):
-            parent_nodes = levels[level]
-            for parent_node in parent_nodes:
-                parent_position = node_positions[parent_node.name]
-                for node in parent_node.children():
-                    node_position = np.int64(node_positions[node.name])
-                    instruction_set_2.append((node_position, parent_position))
-        instruction_set_2 = np.rec.array(instruction_set_2, dtype=INSTRUCTION_TYPE_2)
-
-        return instruction_set_1, instruction_set_2
-
+        return hierarchy, levels, logsum_scales
