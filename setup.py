@@ -8,6 +8,8 @@ setup(
         'pandas',
         'numpy',
         'astor',
-        'numba'
+        'numba',
+        'numexpr',
+        'six'
     ]
 )
