@@ -209,11 +209,11 @@ class ChoiceModel(object):
         else:
             # Nested model
 
-            instructions1, instructions2 = self.tree.flatten()
+            hierarchy, levels, ls_scales = self.tree.flatten()
 
             threads = [
                 Thread(target=stochastic_nested_worker, args=[
-                    utility_chunks[i], instructions1, instructions2, result_chunks[i]
+                    utility_chunks[i], hierarchy, levels, ls_scales, result_chunks[i]
                 ])
                 for i in range(n_threads)
             ]
