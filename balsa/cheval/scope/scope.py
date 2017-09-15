@@ -5,9 +5,8 @@ import numpy as np
 import numexpr as ne
 from six import iteritems
 
-from .expressions import SimpleUsage, DictLiteral, AttributedUsage, LinkedFrameUsage
-from ..ldf import LinkedDataFrame
-from .parsing import NAN_STR
+from balsa.cheval.scope.parsing import SimpleUsage, DictLiteral, AttributedUsage, LinkedFrameUsage, NAN_STR
+from balsa.cheval.ldf import LinkedDataFrame
 
 
 class ScopeOrientationError(IndexError):

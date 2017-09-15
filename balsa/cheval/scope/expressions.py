@@ -1,6 +1,6 @@
 from __future__ import division, absolute_import, print_function, unicode_literals
 
-from .parsing import ExpressionProcessor, SimpleUsage, DictLiteral, AttributedUsage, LinkedFrameUsage
+from balsa.cheval.scope.parsing import ExpressionProcessor, SimpleUsage, DictLiteral, AttributedUsage, LinkedFrameUsage
 from six import iteritems, string_types
 
 
