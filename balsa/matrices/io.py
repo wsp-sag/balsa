@@ -432,14 +432,14 @@ def to_fortran(matrix, file, n_columns=None):
 
     if n_columns is not None and n_columns > array.shape[1]:
         extra_columns = n_columns - array.shape[1]
-        array = expand_array(array, extra_columns, axis=0)
+        array = expand_array(array, extra_columns, axis=1)
 
     with open_file(file, mode='wb') as writer:
-        n = array.shape[0]
-        temp = np.zeros([n, n + 1], dtype=np.float32)
+        rows, columns = array.shape
+        temp = np.zeros([rows, columns + 1], dtype=np.float32)
         temp[:, 1:] = array
 
-        index = np.arange(1, n + 1, dtype=np.int32)
+        index = np.arange(1, rows + 1, dtype=np.int32)
         # Mask the integer binary representation as floating point
         index_as_float = np.frombuffer(index.tobytes(), dtype=np.float32)
         temp[:, 0] = index_as_float
