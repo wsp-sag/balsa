@@ -3,8 +3,8 @@ from __future__ import division, absolute_import, print_function, unicode_litera
 import pandas as pd
 import numpy as np
 
-from collections import namedtuple
-from six import iteritems, itervalues
+from collections import namedtuple, Hashable
+from six import iteritems, itervalues, string_types
 from balsa.utils import is_identifier
 
 LinkageEntry = namedtuple("LinkageEntry", ['other_frame', 'self_indexer', 'other_indexer', 'fill_value',
@@ -105,7 +105,7 @@ class LinkageAttributeAggregator(object):
     def __dir__(self):
         return dir(LinkageAttributeAggregator) + list(self._df.columns)
 
-    def _apply(self, func, expr):
+    def _apply_expr(self, expr, func_name):
         self_indexer, other_indexer, fill_value = self._history[0]
 
         s = self._df.eval(expr)
@@ -114,14 +114,9 @@ class LinkageAttributeAggregator(object):
             s = pd.Series(s, index=self._df.index)
         s.index = other_indexer
         grouper = 0 if other_indexer.nlevels == 1 else other_indexer.names
-        grouped = s. groupby(level=grouper)
+        grouped = s.groupby(level=grouper)
 
-        if func == 'first':
-            s = grouped.first()
-        elif func == 'last':
-            s = grouped.last()
-        else:
-            s = grouped.aggregate(func)
+        s = getattr(grouped, func_name)()
         s = s.reindex(self_indexer, fill_value=fill_value)
 
         for left_indexer, right_indexer, fill_value in self._history[1:]:
@@ -129,18 +124,6 @@ class LinkageAttributeAggregator(object):
             s = s.reindex(left_indexer, fill_value=fill_value)
         s.index = self._root_index
         return s
-
-    def count(self, expr="1"):
-        """
-        Analagous to pandas.GroupBy.count()
-
-        Args:
-            expr (basestring): An attribute or expression to evaluate in the context of this DataFrame
-
-        Returns: Series
-
-        """
-        return self._apply(np.count_nonzero, expr)
 
     def first(self, expr="1"):
         """
@@ -152,7 +135,8 @@ class LinkageAttributeAggregator(object):
         Returns: Series
 
         """
-        return self._apply('first', expr)
+        return self._apply_expr(expr, 'first')
+        # return self._apply('first', expr)
 
     def last(self, expr="1"):
         """
@@ -164,7 +148,8 @@ class LinkageAttributeAggregator(object):
         Returns: Series
 
         """
-        return self._apply('last', expr)
+        return self._apply(expr, 'last')
+        # return self._apply('last', expr)
 
     def max(self, expr="1"):
         """
@@ -175,7 +160,8 @@ class LinkageAttributeAggregator(object):
 
         Returns: Series
         """
-        return self._apply(np.max, expr)
+        return self._apply_expr(expr, 'max')
+        # return self._apply(np.max, expr)
 
     def mean(self, expr="1"):
         """
@@ -186,7 +172,8 @@ class LinkageAttributeAggregator(object):
 
         Returns: Series
         """
-        return self._apply(np.mean, expr)
+        return self._apply_expr(expr, 'mean')
+        # return self._apply(np.mean, expr)
 
     def median(self, expr="1"):
         """
@@ -197,7 +184,8 @@ class LinkageAttributeAggregator(object):
 
         Returns: Series
         """
-        return self._apply(np.median, expr)
+        return self._apply_expr(expr, 'median')
+        # return self._apply(np.median, expr)
 
     def min(self, expr="1"):
         """
@@ -208,7 +196,8 @@ class LinkageAttributeAggregator(object):
 
         Returns: Series
         """
-        return self._apply(np.min, expr)
+        return self._apply_expr(expr, 'min')
+        # return self._apply(np.min, expr)
 
     def prod(self, expr="1"):
         """
@@ -219,7 +208,8 @@ class LinkageAttributeAggregator(object):
 
         Returns: Series
         """
-        return self._apply(np.prod, expr)
+        return self._apply_expr(expr, 'prod')
+        # return self._apply(np.prod, expr)
 
     def std(self, expr="1"):
         """
@@ -230,7 +220,8 @@ class LinkageAttributeAggregator(object):
 
         Returns: Series
         """
-        return self._apply(np.std, expr)
+        return self._apply_expr(expr, 'std')
+        # return self._apply(np.std, expr)
 
     def sum(self, expr="1"):
         """
@@ -241,7 +232,8 @@ class LinkageAttributeAggregator(object):
 
         Returns: Series
         """
-        return self._apply(np.sum, expr)
+        return self._apply_expr(expr, 'sum')
+        # return self._apply(np.sum, expr)
 
     def var(self, expr="1"):
         """
@@ -252,7 +244,8 @@ class LinkageAttributeAggregator(object):
 
         Returns: Series
         """
-        return self._apply(np.var, expr)
+        return self._apply_expr(expr, 'var')
+        # return self._apply(np.var, expr)
 
 
 def _is_aggregation_required(self_indexer, other_indexer):
@@ -338,8 +331,14 @@ class LinkedDataFrame(pd.DataFrame):
 
     def __finalize__(self, original_ldf, method=None, **kwargs):
         """ Essential functionality to ensure that slices of LinkedDataFrame retain the same behaviour """
+
+        # Super
         pd.DataFrame.__finalize__(self, original_ldf, method=method, **kwargs)
 
+        # Sometimes the original frame is not necessarily a LinkedDataFrame
+        if not isinstance(original_ldf, LinkedDataFrame): return self
+
+        # Copy the links across
         self._links = {}
         for alias, linkage_entry in iteritems(original_ldf._links):
             self_names = linkage_entry.self_names
@@ -363,12 +362,12 @@ class LinkedDataFrame(pd.DataFrame):
         return super(LinkedDataFrame, self).__dir__() + sorted(self._pythonic_links)
 
     def __getitem__(self, item):
-        if item in self._links:
+        if isinstance(item, Hashable) and item in self._links:
             return self._get_link(item)
         return super(LinkedDataFrame, self).__getitem__(item)
 
     def __getattr__(self, item):
-        if item in self._links:
+        if isinstance(item, Hashable) and item in self._links:
             return self._get_link(item)
         return super(LinkedDataFrame, self).__getattr__(item)
 
@@ -420,12 +419,12 @@ class LinkedDataFrame(pd.DataFrame):
 
         """
 
-        if isinstance(on, str): on = [on]
-        if isinstance(on_self, str): on_self = [on_self]
-        if isinstance(on_other, str): on_other = [on_other]
-        if isinstance(levels, str): levels = [levels]
-        if isinstance(self_levels, str): self_levels = [self_levels]
-        if isinstance(other_levels, str): other_levels = [other_levels]
+        if isinstance(on, string_types): on = [on]
+        if isinstance(on_self, string_types): on_self = [on_self]
+        if isinstance(on_other, string_types): on_other = [on_other]
+        if isinstance(levels, string_types): levels = [levels]
+        if isinstance(self_levels, string_types): self_levels = [self_levels]
+        if isinstance(other_levels, string_types): other_levels = [other_levels]
 
         self_indexer_names = None
         get_self_indexer_from_index = True

@@ -127,7 +127,7 @@ class TestLookups(unittest.TestCase):
     def testAggregateCount(self):
         oracle = self.persons.age.groupby(level=['hhid']).count()
 
-        result = self.hh.persons.count()
+        result = self.hh.persons.sum()
 
         assert_series_equal(oracle, result, check_names=False, check_dtype=False)
 
@@ -136,9 +136,9 @@ class TestLookups(unittest.TestCase):
             level=['hhid']
         ).count().reindex(self.hh.index, fill_value=0)
 
-        result = self.hh.persons.count("age > 20")
+        result = self.hh.persons.sum("age > 20")
 
-        assert_series_equal(oracle, result, check_names=False)
+        assert_series_equal(oracle, result, check_names=False, check_dtype=False)
 
     def testMultiIndexLookup(self):
         oracle = self.persons.sex
