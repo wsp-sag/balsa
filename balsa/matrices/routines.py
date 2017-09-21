@@ -155,3 +155,44 @@ def _calc_error(m, a, b):
     row_sum = _np.absolute(a - m.sum(1)).sum()
     col_sum = _np.absolute(b - m.sum(0)).sum()
     return row_sum + col_sum
+
+
+def matrix_bucket_rounding(m, decimals=0):
+    """ Bucket rounds to the given number of decimals.
+
+    Args:
+        m (np.ndarray or pd.DataFrame): Matrix to be balanced
+        decimals (int, optional):
+            Number of decimal places to round to (default: 0). If decimals is negative,
+            it specifies the number of positions to the left of the decimal point.
+
+    Return:
+        np.ndarray: rounded matrix
+    """
+
+    # Test if matrix is Pandas DataFrame
+    data_type = ''
+    if isinstance(m, _pd.DataFrame):
+        data_type = 'pd'
+        m_pd = m
+        m = m_pd.values
+
+    decimals = int(decimals)
+
+    # I really can't think of a way to vectorize bucket rounding,
+    # so here goes the slow for loop
+    a = _np.ravel(m)
+    b = _np.copy(a)
+    residual = 0
+    for i in range(0, len(b)):
+        b[i] = _np.round(a[i] + residual, decimals)
+        residual += a[i] - b[i]
+
+    if data_type == 'pd':
+        new_df = _pd.DataFrame(b.reshape(m.shape), index=m_pd.index, columns=m_pd.columns)
+        return new_df
+    else:
+        return b.reshape(m.shape)
+
+
+
