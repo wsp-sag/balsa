@@ -144,6 +144,43 @@ def nested_probabilities(utilities, hierarchy, levels, logsum_scales):
 # region Mid-level functions
 
 
+@nb.jit(nb.void(nb.float64[:], nb.float64[:], nb.int64[:], nb.int64[:], nb.float64[:], nb.int64[:]), nopython=True,
+        nogil=True)
+def sample_nested(utility_row, random_numbers, hierarchy, levels, logsum_scales, out):
+    probabilities = nested_probabilities(utility_row, hierarchy, levels, logsum_scales)
+    cumsum(probabilities)  # Convert to cumulative sum
+
+    for i, r in enumerate(random_numbers):
+        result = logarithmic_search(r, probabilities)
+        out[i] = result
+
+
+@nb.jit(nb.void(nb.float64[:], nb.float64[:], nb.int64[:]), nopython=True, nogil=True)
+def sample_multinomial(utility_row, random_numbers, out):
+    probabilities = multinomial_probabilities(utility_row)
+    cumsum(probabilities)
+
+    for i, r in enumerate(random_numbers):
+        result = logarithmic_search(r, probabilities)
+        out[i] = result
+
+
+@nb.jit(nb.void(nb.float64[:], nb.float64[:], nb.int64[:]), nopython=True, nogil=True)
+def weighted_sample(weights, random_numbers, out):
+    total = weights.sum()
+    cps = weights / total
+    cumsum(cps)
+
+    for i, r in enumerate(random_numbers):
+        result = logarithmic_search(r, cps)
+        out[i] = result
+
+
+# endregion
+
+# region High-level functions (to be wrapped in Threads)
+
+
 @nb.jit(nb.void(nb.float64[:, :], nb.float64[:, :], nb.int64[:], nb.int64[:], nb.float64[:], nb.int64[:, :]),
         nogil=True, nopython=True)
 def sample_nested_worker(utilities, random_numbers, hierarchy, levels, logsum_scales, out):
@@ -151,13 +188,7 @@ def sample_nested_worker(utilities, random_numbers, hierarchy, levels, logsum_sc
 
     for i in range(nrows):
         util_row = utilities[i, :]
-        probabilities = nested_probabilities(util_row, hierarchy, levels, logsum_scales)
-        cumsum(probabilities)  # Convert to cumulative sum
-
-        for j in range(n_draws):
-            r = random_numbers[i, j]
-            result = logarithmic_search(r, probabilities)
-            out[i, j] = result
+        sample_nested(util_row, random_numbers[i, :], hierarchy, levels, logsum_scales, out[i, :])
 
 
 @nb.jit(nb.void(nb.float64[:, :], nb.float64[:, :], nb.int64[:, :]), nopython=True, nogil=True)
@@ -166,13 +197,7 @@ def sample_multinomial_worker(utilities, random_numbers, out):
 
     for i in range(nrows):
         util_row = utilities[i, :]
-        probabilities = multinomial_probabilities(util_row)
-        cumsum(probabilities)
-
-        for j in range(n_draws):
-            r = random_numbers[i, j]
-            result = logarithmic_search(r, probabilities)
-            out[i, j] = result
+        sample_multinomial(util_row, random_numbers[i, :], out[i, :])
 
 
 @nb.jit(nb.void(nb.float64[:, :],  nb.int64[:], nb.int64[:], nb.float64[:], nb.float64[:, :]),
@@ -196,19 +221,12 @@ def stochastic_multinomial_worker(utilities, out):
         out[i, :] = probabilities
 
 
-@nb.jit(nb.void(nb.int64[:, :], nb.float64[:], nb.int64[:]), nogil=True, nopython=True)
+@nb.jit(nb.void(nb.float64[:, :], nb.float64[:, :], nb.int64[:, :]), nogil=True, nopython=True)
 def weighted_sample_worker(weights, random_numbers, out):
     nrows = weights.shape[0]
 
     for i in range(nrows):
-        row = weights[i, :]
-        total = row.sum()
-        cps = row / total
-        cumsum(cps)
-        r = random_numbers[i]
-
-        index = logarithmic_search(r, cps)
-        out[i] = index
+        weighted_sample(weights[i, :], random_numbers[i, :], out[i, :])
 
 # endregion
 

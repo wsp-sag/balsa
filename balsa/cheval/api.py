@@ -229,7 +229,7 @@ class ChoiceModel(object):
         return override_utilities.values
 
 
-def sample_from_weights(weights, randomizer, astype='category', n_threads=1):
+def sample_from_weights(weights, randomizer, astype='category', n_threads=1, n_draws=1, squeeze=True):
     """
 
     Args:
@@ -250,9 +250,9 @@ def sample_from_weights(weights, randomizer, astype='category', n_threads=1):
 
     nrows = len(weights)
 
-    raw_weight_table = weights.values.astype(np.int64)
-    random_draws = randomizer.uniform(size=nrows)
-    out = np.zeros(shape=nrows, dtype=np.int64)
+    raw_weight_table = np.ascontiguousarray(weights.values.astype(np.float64))
+    random_draws = randomizer.uniform(size=[nrows, n_draws])
+    out = np.zeros(shape=[nrows, n_draws], dtype=np.int64)
 
     if n_threads <= 1:
         weighted_sample_worker(raw_weight_table, random_draws, out)
@@ -268,10 +268,24 @@ def sample_from_weights(weights, randomizer, astype='category', n_threads=1):
         for t in threads: t.join()
 
     if astype == 'index':
-        return pd.Series(out, index=weights.index)
+        if n_draws == 1 and squeeze:
+            return pd.Series(out[:, 0], index=weights.index)
+        return pd.DataFrame(out, index=weights.index)
     elif astype == 'category':
         lookup_table = pd.Categorical(weights.columns)
     else:
         lookup_table = weights.columns.values.astype(astype)
 
-    return pd.Series(lookup_table.take(out), index=weights.index)
+    if n_draws == 1 and squeeze:
+        return pd.Series(lookup_table.take(out), index=weights.index)
+
+    column_index = pd.Index(range(n_draws))
+
+    retval = []
+    for col in range(n_draws):
+        indices = out[:, col]
+        retval.append(pd.Series(lookup_table.take(indices), index=weights.index))
+    retval = pd.concat(retval, axis=1)
+    retval.columns = column_index
+
+    return retval
