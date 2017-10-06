@@ -40,7 +40,7 @@ def _coerce_matrix(matrix, allow_raw=True):
 
     matrix = np.array(matrix, dtype=np.float32)
     assert len(matrix.shape) == 2
-    i,j = matrix.shape
+    i, j = matrix.shape
     assert i == j
 
     return matrix
@@ -145,14 +145,23 @@ def to_mdf(matrix, file):
             MultiIndex with exactly 2 levels to unstack.
         file (basestring or File or Path): The path or file handler to write to.
     """
+    if isinstance(matrix, pd.Series):
+        row_index = matrix.index.get_level_values(0).unique()
+        column_index = matrix.index.get_level_values(1).unique()
+    elif isinstance(matrix, pd.DataFrame):
+        row_index = matrix.index
+        column_index = matrix.columns
+    else:
+        raise TypeError("Only labelled matrix objects are supported")
+
     with open_file(file, mode='wb') as writer:
         data = _coerce_matrix(matrix, allow_raw=False)
 
         np.array([0xC4D4F1B2, 1, 1, 2], dtype=np.uint32).tofile(writer)  # Header
         np.array(data.shape, dtype=np.uint32).tofile(writer)  # Shape
 
-        np.array(matrix.index, dtype=np.int32).tofile(writer)
-        np.array(matrix.columns, dtype=np.int32).tofile(writer)
+        np.array(row_index, dtype=np.int32).tofile(writer)
+        np.array(column_index, dtype=np.int32).tofile(writer)
 
         data.tofile(writer)
 
