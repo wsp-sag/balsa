@@ -525,3 +525,10 @@ class LinkedDataFrame(pd.DataFrame):
             linkage_entry.other_indexer = _get_indexer_from_frame(linkage_entry.other_frame,
                                                                   linkage_entry.other_names,
                                                                   linkage_entry.other_index_flag)
+
+    def links(self):
+        """
+        Iterate over the names of links in this frame.
+        """
+        for link_name in self._links:
+            yield link_name
