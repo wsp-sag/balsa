@@ -250,7 +250,7 @@ class Config(object):
     def serialize(self):
         """Recursively converts the Config back to primitive dictionaries"""
         child_dict = OrderedDict()
-        for attr, item in self._d.iteritems():
+        for attr, item in iteritems(self._d):
             if isinstance(item, Config):
                 child_dict[attr] = item.serialize()
             elif isinstance(item, list):
