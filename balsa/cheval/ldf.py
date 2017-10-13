@@ -341,18 +341,24 @@ class LinkedDataFrame(pd.DataFrame):
         # Copy the links across
         self._links = {}
         for alias, linkage_entry in iteritems(original_ldf._links):
-            self_names = linkage_entry.self_names
-            get_self_indexer_from_index = linkage_entry.self_index_flag
+            try:
+                self_names = linkage_entry.self_names
+                get_self_indexer_from_index = linkage_entry.self_index_flag
 
-            new_self_indexer = _get_indexer_from_frame(self, self_names, get_self_indexer_from_index)
+                new_self_indexer = _get_indexer_from_frame(self, self_names, get_self_indexer_from_index)
 
-            new_linkage_entry = LinkageEntry(linkage_entry.other_frame, new_self_indexer, linkage_entry.other_indexer,
-                                             linkage_entry.fill_value,
-                                             linkage_entry.self_names, linkage_entry.self_index_flag,
-                                             linkage_entry.other_names, linkage_entry.other_index_flag,
-                                             linkage_entry.aggregation_required)
+                new_linkage_entry = LinkageEntry(linkage_entry.other_frame, new_self_indexer, linkage_entry.other_indexer,
+                                                 linkage_entry.fill_value,
+                                                 linkage_entry.self_names, linkage_entry.self_index_flag,
+                                                 linkage_entry.other_names, linkage_entry.other_index_flag,
+                                                 linkage_entry.aggregation_required)
 
-            self._links[alias] = new_linkage_entry
+                self._links[alias] = new_linkage_entry
+            except:
+                # If there's a problem, silently drop the linkage. This is deliberate as a lot of pandas' methods
+                # make slices and therefore this needs to be very very flexible to accommodate a lot of different use
+                # cases.
+                pass
         self._pythonic_links = set(original_ldf._pythonic_links)
 
         return self
