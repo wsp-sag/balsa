@@ -1,1 +1,1 @@
-from .utils import is_identifier
+from .utils import is_identifier, open_file
