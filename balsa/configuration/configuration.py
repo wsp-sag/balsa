@@ -15,7 +15,7 @@ try:
 except ImportError:
     PATHLIB_LOADED = False
 
-from ..utils import is_identifier
+from balsa.utils import is_identifier, open_file
 
 
 class ConfigParseError(IOError):
@@ -268,7 +268,7 @@ class Config(object):
 
         """
         dict_ = self.serialize()
-        with open(fp, 'w') as writer:
+        with open_file(fp, 'w') as writer:
             json.dump(dict_, writer, indent=2)
 
     @classmethod
@@ -286,7 +286,7 @@ class Config(object):
             ConfigParseError if there's a problem parsing the JSON file
 
         """
-        with open(fp, 'r') as reader:
+        with open_file(fp, 'r') as reader:
             try:
                 dict_ = json.loads(cls._parse_comments(reader), object_pairs_hook=OrderedDict)
             except ValueError as ve:
