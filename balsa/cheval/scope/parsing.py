@@ -214,6 +214,8 @@ class ExpressionProcessor(ast.NodeTransformer):
         # Converts 'not' into '~' which NumExpr supports
         if isinstance(node.op, ast.Not):
             return ast.UnaryOp(op=ast.Invert(), operand=self.visit(node.operand))
+        elif isinstance(node.op, ast.USub):
+            return node
         raise NotImplementedError(type(node.op))
 
     def visit_str(self, node):
