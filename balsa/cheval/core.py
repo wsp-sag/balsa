@@ -103,7 +103,7 @@ def nested_probabilities(utilities, hierarchy, levels, logsum_scales):
     for _ in range(max_level + 1):
         # Go through levels in reverse order (e.g. starting at the bottom)
         for index, level in enumerate(levels):
-            if level != current_level: continue
+            if level != current_level: continue  # This is still faster than using np.where()
             parent = hierarchy[index]
 
             existing_logsum = logsums[index]
