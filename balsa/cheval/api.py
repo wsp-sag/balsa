@@ -229,7 +229,7 @@ class ChoiceModel(object):
         return override_utilities.values
 
 
-def sample_from_weights(weights, randomizer, astype='category', n_threads=1, n_draws=1, squeeze=True):
+def sample_from_weights(weights, randomizer=None, astype='category', n_threads=1, n_draws=1, squeeze=True):
     """
 
     Args:
@@ -277,7 +277,7 @@ def sample_from_weights(weights, randomizer, astype='category', n_threads=1, n_d
         lookup_table = weights.columns.values.astype(astype)
 
     if n_draws == 1 and squeeze:
-        return pd.Series(lookup_table.take(out), index=weights.index)
+        return pd.Series(lookup_table.take(out[:, 0]), index=weights.index)
 
     column_index = pd.Index(range(n_draws))
 
