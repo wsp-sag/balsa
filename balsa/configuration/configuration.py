@@ -3,12 +3,9 @@ from __future__ import division, absolute_import, print_function, unicode_litera
 import json
 import os
 from collections import OrderedDict
-from six import iteritems
+from six import iteritems, StringIO
 import re
-try:
-    from StringIO import StringIO  # Py 2.x
-except ImportError:
-    from io import StringIO  # Py 3.x
+
 try:
     from pathlib import Path
     PATHLIB_LOADED = True
