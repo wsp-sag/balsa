@@ -283,7 +283,7 @@ class Config(object):
             ConfigParseError if there's a problem parsing the JSON file
 
         """
-        with open_file(fp, 'r') as reader:
+        with open_file(fp, mode='r') as reader:
             try:
                 dict_ = json.loads(cls._parse_comments(reader), object_pairs_hook=OrderedDict)
             except ValueError as ve:
