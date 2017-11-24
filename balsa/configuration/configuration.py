@@ -67,7 +67,7 @@ class ConfigValue(object):
 
         try:
             return type_(self.value)
-        except ValueError:
+        except (ValueError, TypeError):
 
             message = "Attribute <{}> = '{}' could not be converted to {}".format(
                 self.namespace, self.value, type_
