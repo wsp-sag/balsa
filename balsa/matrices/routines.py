@@ -15,6 +15,7 @@ matrix_balancing_2d    Doubly-constrained balancing using
 from __future__ import division as _division
 
 import multiprocessing as _mp
+import numba as _nb
 import numpy as _np
 import pandas as _pd
 
@@ -157,6 +158,19 @@ def _calc_error(m, a, b):
     return row_sum + col_sum
 
 
+@_nb.jit(_nb.float64[:, :](_nb.float64[:, :], _nb.int64))
+def _nbf_bucket_round(a_, decimals=0):
+    a = a_.ravel()
+    b = _np.copy(a)
+
+    residual = 0
+    for i in range(0, len(b)):
+        b[i] = _np.round(a[i] + residual, decimals)
+        residual += a[i] - b[i]
+
+    return b.reshape(a_.shape)
+
+
 def matrix_bucket_rounding(m, decimals=0):
     """ Bucket rounds to the given number of decimals.
 
@@ -181,18 +195,15 @@ def matrix_bucket_rounding(m, decimals=0):
 
     # I really can't think of a way to vectorize bucket rounding,
     # so here goes the slow for loop
-    a = _np.ravel(m)
-    b = _np.copy(a)
-    residual = 0
-    for i in range(0, len(b)):
-        b[i] = _np.round(a[i] + residual, decimals)
-        residual += a[i] - b[i]
+    b = _nbf_bucket_round(m, decimals)
+
+    if decimals <= 0:
+        b = b.astype(_np.int32)
 
     if data_type == 'pd':
         new_df = _pd.DataFrame(b.reshape(m.shape), index=m_pd.index, columns=m_pd.columns)
         return new_df
     else:
         return b.reshape(m.shape)
-
 
 
