@@ -105,7 +105,7 @@ class LinkageAttributeAggregator(object):
     def __dir__(self):
         return dir(LinkageAttributeAggregator) + list(self._df.columns)
 
-    def _apply_expr(self, expr, func_name):
+    def _apply_expr(self, expr, grouper_func):
         self_indexer, other_indexer, fill_value = self._history[0]
 
         s = self._df.eval(expr)
@@ -116,7 +116,7 @@ class LinkageAttributeAggregator(object):
         grouper = 0 if other_indexer.nlevels == 1 else other_indexer.names
         grouped = s.groupby(level=grouper)
 
-        s = getattr(grouped, func_name)()
+        s = grouper_func(grouped)
         s = s.reindex(self_indexer, fill_value=fill_value)
 
         for left_indexer, right_indexer, fill_value in self._history[1:]:
@@ -135,8 +135,7 @@ class LinkageAttributeAggregator(object):
         Returns: Series
 
         """
-        return self._apply_expr(expr, 'first')
-        # return self._apply('first', expr)
+        return self._apply_expr(expr, lambda grouped: grouped.first())
 
     def last(self, expr="1"):
         """
@@ -148,7 +147,7 @@ class LinkageAttributeAggregator(object):
         Returns: Series
 
         """
-        return self._apply(expr, 'last')
+        return self._apply_expr(expr, lambda grouped: grouped.last())
         # return self._apply('last', expr)
 
     def max(self, expr="1"):
@@ -160,8 +159,7 @@ class LinkageAttributeAggregator(object):
 
         Returns: Series
         """
-        return self._apply_expr(expr, 'max')
-        # return self._apply(np.max, expr)
+        return self._apply_expr(expr, lambda grouped: grouped.max())
 
     def mean(self, expr="1"):
         """
@@ -172,8 +170,7 @@ class LinkageAttributeAggregator(object):
 
         Returns: Series
         """
-        return self._apply_expr(expr, 'mean')
-        # return self._apply(np.mean, expr)
+        return self._apply_expr(expr, lambda grouped: grouped.mean())
 
     def median(self, expr="1"):
         """
@@ -184,8 +181,7 @@ class LinkageAttributeAggregator(object):
 
         Returns: Series
         """
-        return self._apply_expr(expr, 'median')
-        # return self._apply(np.median, expr)
+        return self._apply_expr(expr, lambda grouped: grouped.median())
 
     def min(self, expr="1"):
         """
@@ -196,8 +192,7 @@ class LinkageAttributeAggregator(object):
 
         Returns: Series
         """
-        return self._apply_expr(expr, 'min')
-        # return self._apply(np.min, expr)
+        return self._apply_expr(expr, lambda grouped: grouped.min())
 
     def prod(self, expr="1"):
         """
@@ -208,8 +203,7 @@ class LinkageAttributeAggregator(object):
 
         Returns: Series
         """
-        return self._apply_expr(expr, 'prod')
-        # return self._apply(np.prod, expr)
+        return self._apply_expr(expr, lambda grouped: grouped.prod())
 
     def std(self, expr="1"):
         """
@@ -220,8 +214,7 @@ class LinkageAttributeAggregator(object):
 
         Returns: Series
         """
-        return self._apply_expr(expr, 'std')
-        # return self._apply(np.std, expr)
+        return self._apply_expr(expr, lambda grouped: grouped.std())
 
     def sum(self, expr="1"):
         """
@@ -232,8 +225,7 @@ class LinkageAttributeAggregator(object):
 
         Returns: Series
         """
-        return self._apply_expr(expr, 'sum')
-        # return self._apply(np.sum, expr)
+        return self._apply_expr(expr, lambda grouped: grouped.sum())
 
     def var(self, expr="1"):
         """
@@ -244,8 +236,7 @@ class LinkageAttributeAggregator(object):
 
         Returns: Series
         """
-        return self._apply_expr(expr, 'var')
-        # return self._apply(np.var, expr)
+        return self._apply_expr(expr, lambda grouped: grouped.var())
 
 
 def _is_aggregation_required(self_indexer, other_indexer):
