@@ -175,9 +175,19 @@ class ExpressionProcessor(ast.NodeTransformer):
         new_node = ast.Name(substitution, ast.Load())
 
         try:
-            values = [np.float32(val.n) for val in node.values]
+            values = []
+            for val in node.values:
+                if isinstance(val, ast.UnaryOp):
+                    assert isinstance(val.operand, ast.Num)
+                    assert isinstance(val.op, ast.USub)
+                    values.append(np.float32(-val.operand.n))
+                elif isinstance(val, ast.Num):
+                    values.append(np.float32(val.n))
+                else:
+                    raise ValueError()
+
             keys = [self.__get_dict_key(key) for key in node.keys]
-        except ValueError:
+        except (ValueError, AssertionError):
             raise UnsupportedSyntaxError("Dict literals are supported for numeric values only")
 
         s = pd.Series(values, index=keys)
