@@ -58,7 +58,10 @@ class ExpressionContainer(object):
 
     def _batch_add_expressions(self, list_of_expressions):
         for expr in list_of_expressions:
-            expr_wrapper = Expression(expr)
+            try:
+                expr_wrapper = Expression(expr)
+            except Exception as e:
+                raise SyntaxError("Error parsing '%s': %s: %s" % (expr, e.__class__.__name__, e))
             self._expressions.append(expr_wrapper)
         self._modify_event()
 
