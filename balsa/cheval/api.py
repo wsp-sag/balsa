@@ -189,6 +189,8 @@ class ChoiceModel(object):
         retval = pd.concat(retval, axis=1)
         retval.columns = column_index
 
+        if n_draws == 1 and squeeze:
+            return retval.iloc[:, 0]
         return retval
 
     def _eval_probabilities_only(self, utilities, n_threads):
