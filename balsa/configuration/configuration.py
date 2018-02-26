@@ -162,22 +162,27 @@ class Config(object):
         self._parent = parent
         self._file = file_
 
-        for key, value in iteritems(config_dict):
-            if isinstance(value, dict):
-                value = Config(value, name=key, parent=self, file_=file_)
-            elif isinstance(value, (list, set)):
-                value = [
-                    (Config(item, name=key + "[%s]" % i, parent=self, file_=file_)
-                        if isinstance(item, dict)
-                        else ConfigValue(item, key + "[%s]" % i, owner=self))
-                    for (i, item) in enumerate(value)
-                ]
-                value = ConfigValue(value, key, owner=self)
+        for key, original_value in iteritems(config_dict):
+            if isinstance(original_value, dict):
+                value = Config(original_value, name=key, parent=self, file_=file_)
+            elif isinstance(original_value, (list, set)):
+                value_list = []
+                for (i, item) in enumerate(original_value):
+                    if isinstance(item, dict):
+                        value_list.append(Config(item, name=key + "[%s]" % i, parent=self, file_=file_))
+                    else:
+                        value_list.append(ConfigValue(item, key + "[%s]" % i, owner=self))
+                value = ConfigValue(value_list, key, owner=self)
+            elif original_value is None:
+                value = None
             else:
-                value = ConfigValue(value, key, owner=self)
+                value = ConfigValue(original_value, key, owner=self)
 
             if is_identifier(key):
-                setattr(self, key, value)
+                try:
+                    setattr(self, key, value)
+                except AttributeError:
+                    print("WARNING: Config key '%s' conflicts with reserved properties" % key)
             self._contents[key] = value
 
     @property
@@ -203,6 +208,11 @@ class Config(object):
         raise ConfigSpecificationError("Item '%s' is missing from config <%s>" % (item, self.namespace))
 
     def __contains__(self, item): return item in self._contents
+
+    def __getitem__(self, item):
+        if item not in self:
+            raise ConfigSpecificationError("Item '%s' is missing from config <%s>" % (item, self.namespace))
+        return self._contents[item]
 
     def as_dict(self, key_type=None, value_type=None):
         """
