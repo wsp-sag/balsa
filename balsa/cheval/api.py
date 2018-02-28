@@ -30,7 +30,7 @@ class ChoiceModel(object):
         return self._tree_container
 
     def run_discrete(self, randomizer=None, n_draws=1, astype='category', squeeze=True, n_threads=1,
-                     override_utilities=None, logger=None):
+                     override_utilities=None, logger=None, release_scope=True):
         """
         For each record, discretely sample one or more times (with replacement) from the probability distribution.
 
@@ -51,6 +51,8 @@ class ChoiceModel(object):
                 be used. The columns of the given DataFrame MUST match the sorted list of node (alternative) names.
             logger (None or Logger): Optionally provide a Logger to report progress during the run. Progress will be
                 reported at the INFO level.
+            release_scope (bool): If True and override_utilities not provided, data stored in the scope for
+                utility computation will be released, freeing up memory. Turning this off is of limited use.
 
         Returns:
             Series or DataFrame, depending on squeeze and n_draws. The dtype of the returned object depends on astype.
@@ -67,6 +69,8 @@ class ChoiceModel(object):
 
         if override_utilities is None:
             utilities = self._scope_container._compute_utilities(n_threads, logger=logger)
+            if release_scope:
+                self._scope_container.clear()
         else:
             utilities = self._prep_override_utilities(override_utilities)
 
@@ -74,7 +78,7 @@ class ChoiceModel(object):
 
         return self._convert_result(result_indices, astype, squeeze)
 
-    def run_stochastic(self, n_threads=1, override_utilities=None, logger=None):
+    def run_stochastic(self, n_threads=1, override_utilities=None, logger=None, release_scope=True):
         """
         For each record, compute the probability distribution of the logit model. A DataFrame will be returned whose
         columns match the sorted list of node names (alternatives) in the model. Probabilities over all alternatives for
@@ -86,6 +90,8 @@ class ChoiceModel(object):
                 utilities for each record x each alternative; otherwise the built-in utility computation framework will
                 be used. The columns of the given DataFrame MUST match the sorted list of node (alternative) names.
             logger (None or Logger): Provide a Logger object to record errors during expression evaluation.
+            release_scope (bool): If True and override_utilities not provided, data stored in the scope for
+                utility computation will be released, freeing up memory. Turning this off is of limited use.
 
         Returns:
             DataFrame of probabilities of each record x each alternative.
@@ -95,6 +101,8 @@ class ChoiceModel(object):
 
         if override_utilities is None:
             utilities = self._scope_container._compute_utilities(n_threads, logger=logger)
+            if release_scope:
+                self._scope_container.clear()
         else:
             utilities = self._prep_override_utilities(override_utilities)
 
