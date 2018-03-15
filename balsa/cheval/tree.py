@@ -121,6 +121,7 @@ class ChoiceTree(object):
         return self._cached_node_index
 
     def _root_add(self, parent, new_name, logsum_scale, level):
+        assert 0 < logsum_scale <= 1, "Logsum scale must be on the interval (0, 1]; got %s instead" % logsum_scale
         if new_name in self._all_nodes:
             old_node = self._all_nodes[new_name]
             old_node.parent._children.remove(old_node)
