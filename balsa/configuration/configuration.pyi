@@ -16,6 +16,11 @@ class ConfigValue:
 
 class Config:
 
+    _contents: dict
+    _name: str
+    _parent: Optional[Config]
+    _file = Optional[str]
+
     def name(self) -> string_types: pass
 
     def parent(self) -> Optional['Config']: pass

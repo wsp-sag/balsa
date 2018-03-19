@@ -124,6 +124,11 @@ class ConfigValue(object):
             for item in self.as_type(set)
         }
 
+    def serialize(self):
+        if isinstance(self.value, list):
+            return [x.serialize() for x in self.value]
+        return self.value
+
 
 class Config(object):
     """
@@ -240,15 +245,15 @@ class Config(object):
                 key = key_type(key)
             except ValueError:
                 message = "Key <{}> = '{}' could not be converted to {}".format(
-                    self.namespace, self.value, key_type
+                    self.namespace, key, key_type
                 )
                 raise ConfigTypeError(message)
 
             try:
                 val = val.as_type(value_type)
             except ValueError:
-                message = "Value <{}> = '{}' could not be converted to {}".format(
-                    self.namespace, self.value, key_type
+                message = "Value <{}.{}> = '{}' could not be converted to {}".format(
+                    self.namespace, key, val, key_type
                 )
                 raise ConfigTypeError(message)
             retval[key] = val
@@ -257,13 +262,8 @@ class Config(object):
     def serialize(self):
         """Recursively converts the Config back to primitive dictionaries"""
         child_dict = OrderedDict()
-        for attr, item in iteritems(self._d):
-            if isinstance(item, Config):
-                child_dict[attr] = item.serialize()
-            elif isinstance(item, list):
-                child_dict[attr] = [x.serialize() if isinstance(x, Config) else x for x in item]
-            else:
-                child_dict[attr] = item
+        for attr, item in iteritems(self._contents):
+            child_dict[attr] = item.serialize()
         return child_dict
 
     def to_file(self, fp):
@@ -275,7 +275,7 @@ class Config(object):
 
         """
         dict_ = self.serialize()
-        with open_file(fp, 'w') as writer:
+        with open_file(fp, mode='w') as writer:
             json.dump(dict_, writer, indent=2)
 
     @classmethod
