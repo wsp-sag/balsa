@@ -1,4 +1,4 @@
-from typing import Union, List, Any, Iterable, Dict
+from typing import Union, List, Any, Iterable, Dict, Tuple
 from io import FileIO
 
 import numpy as np
@@ -42,3 +42,17 @@ MATRIX_TYPES = Union[pd.DataFrame, pd.Series, np.ndarray]
 
 def read_omx(file: Union[Path, str], matrices: Iterable[str]=None, mapping: str=None, raw=False, tall=False,
              squeeze=True) -> Union[MATRIX_TYPES, Dict[str, MATRIX_TYPES]]: pass
+
+def _check_types(matrices: Dict[str, MATRIX_TYPES]) -> str: pass
+
+def _check_raw_matrices(matrices: Dict[str, np.ndarray]) -> Tuple[Dict[str, np.ndarray], int]: pass
+
+def _check_matrix_series(matrices: Dict[str, pd.Series]) -> Tuple[Dict[str, np.ndarray], pd.Index]: pass
+
+def _check_matrix_frames(matrices: Dict[str, pd.DataFrame]) -> Tuple[Dict[str, np.ndarray], pd.Index]: pass
+
+def _prep_matrix_dict(matrices: Dict[str, MATRIX_TYPES], desired_zone_index: pd.Index
+                      ) -> Tuple[Dict[str, np.ndarray], pd.Index]: pass
+
+def to_omx(file: str, matrices: Dict[str, MATRIX_TYPES], zone_index: pd.Index=None, title: str='',
+               descriptions: Dict[str, str]=None,  attrs: Dict[str, dict]=None, mapping: str='zone_numbers'): pass
