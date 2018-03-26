@@ -11,6 +11,11 @@ try:
 except ImportError:
     Path = None
 
+try:
+    from openmatrix import omx
+except ImportError:
+    omx = None
+
 # region Common functions
 
 
@@ -74,17 +79,7 @@ def expand_array(a, n, axis=None):
 
 
 # endregion
-# region OMX (Open Matrix Format)
 
-
-def read_omx(*args, **kawrgs):
-    raise NotImplementedError()
-
-
-def to_omx(*args, **kwargs):
-    raise NotImplementedError()
-
-# endregion
 # region INRO MDF (MatrixData File) format
 
 
@@ -454,5 +449,72 @@ def to_fortran(matrix, file, n_columns=None):
         temp[:, 0] = index_as_float
 
         temp.tofile(writer)
+
+# endregion
+
+# region OMX Files
+
+if omx is not None:
+
+    def read_omx(file, matrices=None, mapping=None, raw=False, tall=False, squeeze=True):
+        """
+        Reads Open Matrix (OMX) files. An OMX file can contain multiple matrices, so this function
+        typically returns a Dict.
+
+        Args:
+            file: OMX file from which to read. Cannot be an open file handler.
+            matrices: List of matrices to read from the file. If None, all matrices will be read.
+            mapping: The zone number mapping to use, if known in advance. If None, and the OMX file only contains
+                one mapping, then that one is used. No mapping is read if raw is False.
+            raw: If True, matrices will be returned as raw Numpy arrays. Otherwise, Pandas objects are returned
+            tall: If True, matrices will be returned in 1D format (pd.Series if raw is False). Otherwise, a 2D object
+                is returned.
+            squeeze: If True, and the file contains exactly one matrix, return that matrix instead of a Dict.
+
+        Returns:
+            The matrix, or matrices contained in the OMX file.
+
+        """
+        file = str(file)
+        omx_file = omx.open_file(file)
+        try:
+            if mapping is None and not raw:
+                all_mappings = omx_file.list_mappings()
+                assert len(all_mappings) == 1
+                mapping = all_mappings[0]
+
+            if matrices is None:
+                matrices = sorted(omx_file.list_matrices())
+            else:
+                matrices = sorted(matrices)
+
+            if not raw:
+                labels = pd.Index(omx_file.mapping(mapping).keys())
+                if tall:
+                    labels = pd.MultiIndex.from_product([labels, labels], names=['o', 'd'])
+
+            return_value = {}
+            for matrix_name in matrices:
+                wrapper = omx_file[matrix_name]
+                matrix = wrapper.read()
+
+                if tall:
+                    n = matrix.shape[0] * matrix.shape[1]
+                    matrix.shape = n
+
+                if not raw:
+                    if tall: matrix = pd.Series(matrix, index=labels)
+                    else: matrix = pd.DataFrame(matrix, index=labels, columns=labels)
+
+                    matrix.name = matrix_name
+
+                return_value[matrix_name] = matrix
+
+            if len(matrices) == 1 and squeeze:
+                return return_value[matrices[0]]
+            return return_value
+
+        finally:
+            omx_file.close()
 
 # endregion

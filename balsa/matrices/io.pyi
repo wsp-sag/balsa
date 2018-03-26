@@ -1,4 +1,4 @@
-from typing import Union, List, Any
+from typing import Union, List, Any, Iterable, Dict
 from io import FileIO
 
 import numpy as np
@@ -37,3 +37,8 @@ def read_fortran_square(file: file_type, zones: pd.Index=None, tall: bool=False
 
 
 def to_fortran(matrix: Union[pd.Series, pd.DataFrame, np.ndarray], file: file_type, n_columns: int=None): pass
+
+MATRIX_TYPES = Union[pd.DataFrame, pd.Series, np.ndarray]
+
+def read_omx(file: Union[Path, str], matrices: Iterable[str]=None, mapping: str=None, raw=False, tall=False,
+             squeeze=True) -> Union[MATRIX_TYPES, Dict[str, MATRIX_TYPES]]: pass
