@@ -14,7 +14,7 @@ except ImportError:
     Path = None
 
 try:
-    from openmatrix import omx
+    import openmatrix as omx
 except ImportError:
     omx = None
 
@@ -540,7 +540,7 @@ if omx is not None:
             attrs = {name: None for name in iterkeys(matrices)}
 
         file = str(file)  # Converts from Path
-        with omx.open_filr(file, mode='w', title=title) as omx_file:
+        with omx.open_file(file, mode='w', title=title) as omx_file:
             omx_file.create_mapping(mapping, zone_index.tolist())
 
             for name, array in iteritems(matrices):
@@ -651,5 +651,12 @@ if omx is not None:
             assert zone_index.equals(matrix.columns)
             retval[name] = matrix.values
         return retval, zone_index
+
+else:
+    def read_omx(*args, **kwargs):
+        raise NotImplementedError()
+
+    def to_omx(*args, **kwargs):
+        raise NotImplementedError()
 
 # endregion
