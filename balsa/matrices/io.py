@@ -476,8 +476,7 @@ if omx is not None:
 
         """
         file = str(file)
-        omx_file = omx.open_file(file)
-        try:
+        with omx.open_file(file, mode='r') as omx_file:
             if mapping is None and not raw:
                 all_mappings = omx_file.list_mappings()
                 assert len(all_mappings) == 1
@@ -513,8 +512,5 @@ if omx is not None:
             if len(matrices) == 1 and squeeze:
                 return return_value[matrices[0]]
             return return_value
-
-        finally:
-            omx_file.close()
 
 # endregion
