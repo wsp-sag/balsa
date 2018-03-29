@@ -12,3 +12,8 @@ def matrix_balancing_2d(m: np.ndarray, a: np.ndarray, b: np.ndarray, max_iterati
 
 def matrix_bucket_rounding(m: Union[np.ndarray, pd.DataFrame], decimals: int=0) -> Union[np.ndarray, pd.DataFrame]:
     pass
+
+
+def split_zone_in_matrix(base_matrix: pd.DataFrame, old_zone: int, new_zones: List[int], proportions: List[float]
+                         ) -> pd.DataFrame:
+    pass
