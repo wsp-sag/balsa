@@ -278,25 +278,24 @@ def split_zone_in_matrix(base_matrix, old_zone, new_zones, proportions):
     return new_matrix
 
 
-def aggregate_matrix(matrix, aggregator=None,  row_aggregator=None, col_aggregator=None, aggfunc=_np.sum):
+def aggregate_matrix(matrix, groups=None, row_groups=None, col_groups=None, aggfunc=_np.sum):
+    if groups is not None:
+        row_groups = groups
+        col_groups = groups
 
-    if aggregator is not None:
-        row_aggregator = aggregator
-        col_aggregator = aggregator
-
-    assert row_aggregator is not None, "Row aggregator must be specified"
-    assert col_aggregator is not None, "Column aggregator must be specified"
+    assert row_groups is not None, "Row groups must be specified"
+    assert col_groups is not None, "Column groups must be specified"
 
     if isinstance(matrix, _pd.DataFrame):
-        row_aggregator = _prep_square_index(matrix.index, row_aggregator)
-        col_aggregator = _prep_square_index(matrix.columns, col_aggregator)
+        row_groups = _prep_square_index(matrix.index, row_groups)
+        col_groups = _prep_square_index(matrix.columns, col_groups)
 
-        return _aggregate_frame(matrix, row_aggregator, col_aggregator, aggfunc)
+        return _aggregate_frame(matrix, row_groups, col_groups, aggfunc)
     elif isinstance(matrix, _pd.Series):
         assert matrix.index.nlevels == 2
 
-        row_aggregator, col_aggregator = _prep_tall_index(matrix.index, row_aggregator, col_aggregator)
-        return _aggregate_series(matrix, row_aggregator, col_aggregator, aggfunc)
+        row_groups, col_groups = _prep_tall_index(matrix.index, row_groups, col_groups)
+        return _aggregate_series(matrix, row_groups, col_groups, aggfunc)
     else:
         raise NotImplementedError()
 

@@ -22,6 +22,6 @@ Num = Union[int, float]
 Vector = Union[pd.Series, np.ndarray]
 
 def aggregate_matrix(matrix: Union[pd.DataFrame, pd.Series],
-                     aggregator: Vector=None,  row_aggregator: Vector=None, col_aggregator: Vector=None,
+                     groups: Vector=None,  row_groups: Vector=None, col_groups: Vector=None,
                      aggfunc: Callable[List[Iterable[Num]], Num]=np.sum) -> Union[pd.DataFrame, pd.Series]:
     pass

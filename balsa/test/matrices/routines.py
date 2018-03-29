@@ -120,13 +120,13 @@ class TestAggregateMatrix(unittest.TestCase):
             [42, 44, 40]
         ], index=[1, 2, 3], columns=[1, 2, 3])
 
-        test1 = aggregate_matrix(self._square_symatrix, row_aggregator=self._grouper1, col_aggregator=self._grouper1)
+        test1 = aggregate_matrix(self._square_symatrix, row_groups=self._grouper1, col_groups=self._grouper1)
         pdt.assert_frame_equal(expected_result, test1, check_dtype=False)
 
-        test2 = aggregate_matrix(self._square_symatrix, aggregator=self._grouper1)
+        test2 = aggregate_matrix(self._square_symatrix, groups=self._grouper1)
         pdt.assert_frame_equal(expected_result, test2, check_dtype=False)
 
-        test3 = aggregate_matrix(self._square_symatrix, aggregator=self._grouper1.values)
+        test3 = aggregate_matrix(self._square_symatrix, groups=self._grouper1.values)
         pdt.assert_frame_equal(expected_result, test3, check_dtype=False)
 
     def test_square_dmatrix(self):
@@ -136,11 +136,11 @@ class TestAggregateMatrix(unittest.TestCase):
             [9, 22],
         ], index=[1, 2, 3], columns=['A', 'B'])
 
-        test1 = aggregate_matrix(self._square_dmatrix, row_aggregator=self._grouper1, col_aggregator=self._grouper2)
+        test1 = aggregate_matrix(self._square_dmatrix, row_groups=self._grouper1, col_groups=self._grouper2)
         pdt.assert_frame_equal(expected_result, test1, check_dtype=False)
 
-        test2 = aggregate_matrix(self._square_dmatrix, row_aggregator=self._grouper1.values,
-                                 col_aggregator=self._grouper2.values)
+        test2 = aggregate_matrix(self._square_dmatrix, row_groups=self._grouper1.values,
+                                 col_groups=self._grouper2.values)
         pdt.assert_frame_equal(expected_result, test2, check_dtype=False)
 
     def test_tall_symatrix(self):
@@ -159,17 +159,17 @@ class TestAggregateMatrix(unittest.TestCase):
         tall_row_grouper = self._grouper1.reindex(self._tall_symatrix.index, level=0)
         tall_col_grouper = self._grouper1.reindex(self._tall_symatrix.index, level=1)
 
-        test1 = aggregate_matrix(self._tall_symatrix, row_aggregator=tall_row_grouper, col_aggregator=tall_col_grouper)
+        test1 = aggregate_matrix(self._tall_symatrix, row_groups=tall_row_grouper, col_groups=tall_col_grouper)
         pdt.assert_series_equal(expected_result, test1, check_dtype=False, check_names=False)
 
-        test2 = aggregate_matrix(self._tall_symatrix, row_aggregator=self._grouper1, col_aggregator=self._grouper1)
+        test2 = aggregate_matrix(self._tall_symatrix, row_groups=self._grouper1, col_groups=self._grouper1)
         pdt.assert_series_equal(expected_result, test2, check_dtype=False, check_names=False)
 
         test3 = aggregate_matrix(self._tall_symatrix,
-                                 row_aggregator=tall_row_grouper.values, col_aggregator=tall_col_grouper.values)
+                                 row_groups=tall_row_grouper.values, col_groups=tall_col_grouper.values)
         pdt.assert_series_equal(expected_result, test3, check_dtype=False, check_names=False)
 
-        test4 = aggregate_matrix(self._tall_symatrix, aggregator=self._grouper1)
+        test4 = aggregate_matrix(self._tall_symatrix, groups=self._grouper1)
         pdt.assert_series_equal(expected_result, test4, check_dtype=False, check_names=False)
 
     def test_tall_dmatrix(self):
@@ -185,14 +185,14 @@ class TestAggregateMatrix(unittest.TestCase):
         tall_row_grouper = self._grouper1.reindex(self._tall_dmatrix.index, level=0)
         tall_col_grouper = self._grouper2.reindex(self._tall_dmatrix.index, level=1)
 
-        test1 = aggregate_matrix(self._tall_dmatrix, row_aggregator=tall_row_grouper, col_aggregator=tall_col_grouper)
+        test1 = aggregate_matrix(self._tall_dmatrix, row_groups=tall_row_grouper, col_groups=tall_col_grouper)
         pdt.assert_series_equal(expected_result, test1, check_dtype=False, check_names=False)
 
-        test2 = aggregate_matrix(self._tall_dmatrix, row_aggregator=self._grouper1, col_aggregator=self._grouper2)
+        test2 = aggregate_matrix(self._tall_dmatrix, row_groups=self._grouper1, col_groups=self._grouper2)
         pdt.assert_series_equal(expected_result, test2, check_dtype=False, check_names=False)
 
         test3 = aggregate_matrix(self._tall_dmatrix,
-                                 row_aggregator=tall_row_grouper.values, col_aggregator=tall_col_grouper.values)
+                                 row_groups=tall_row_grouper.values, col_groups=tall_col_grouper.values)
         pdt.assert_series_equal(expected_result, test3, check_dtype=False, check_names=False)
 
 if __name__ == '__main__':
