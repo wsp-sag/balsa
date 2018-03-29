@@ -279,6 +279,25 @@ def split_zone_in_matrix(base_matrix, old_zone, new_zones, proportions):
 
 
 def aggregate_matrix(matrix, groups=None, row_groups=None, col_groups=None, aggfunc=_np.sum):
+    """
+    Aggregates a matrix based on mappings provided for each axis, using a specified aggregation function.
+
+    Args:
+        matrix: Matrix data to aggregate. DataFrames and Series with 2-level indices are supported
+        groups: Syntactic sugar to specify both row_groups and col_groups to use the same grouping series.
+        row_groups: Groups for the rows. If aggregating a DataFrame, this must match the index of the matrix. For a
+            "tall" matrix, this series can match either the "full" index of the series, or it can match the first level
+            of the matrix (it would be the same as if aggregating a DataFrame). Alternatively, an array can be provided,
+            but it must be the same length as the DataFrame's index, or the full length of the Series.
+        col_groups: Groups for the columns. If aggregating a DataFrame, this must match the columns of the matrix. For a
+            "tall" matrix, this series can match either the "full" index of the series, or it can match the second level
+            of the matrix (it would be the same as if aggregating a DataFrame). Alternatively, an array can be provided,
+            but it must be the same length as the DataFrame's columns, or the full length of the Series.
+        aggfunc: The aggregation function to use. Default is sum.
+
+    Returns: The aggregated matrix, in the same type as was provided, e.g. Series -> Series, DataFrame -> DataFrame.
+
+    """
     if groups is not None:
         row_groups = groups
         col_groups = groups
