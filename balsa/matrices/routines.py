@@ -276,3 +276,70 @@ def split_zone_in_matrix(base_matrix, old_zone, new_zones, proportions):
     new_matrix.loc[result.index, result.columns] = result
 
     return new_matrix
+
+
+def aggregate_matrix(matrix, aggregator=None,  row_aggregator=None, col_aggregator=None, aggfunc=_np.sum):
+
+    if aggregator is not None:
+        row_aggregator = aggregator
+        col_aggregator = aggregator
+
+    assert row_aggregator is not None, "Row aggregator must be specified"
+    assert col_aggregator is not None, "Column aggregator must be specified"
+
+    if isinstance(matrix, _pd.DataFrame):
+        row_aggregator = _prep_square_index(matrix.index, row_aggregator)
+        col_aggregator = _prep_square_index(matrix.columns, col_aggregator)
+
+        return _aggregate_frame(matrix, row_aggregator, col_aggregator, aggfunc)
+    elif isinstance(matrix, _pd.Series):
+        assert matrix.index.nlevels == 2
+
+        row_aggregator, col_aggregator = _prep_tall_index(matrix.index, row_aggregator, col_aggregator)
+        return _aggregate_series(matrix, row_aggregator, col_aggregator, aggfunc)
+    else:
+        raise NotImplementedError()
+
+
+def _prep_tall_index(target_index, row_aggregator, col_aggregator):
+
+    if isinstance(row_aggregator, _pd.Series):
+        if row_aggregator.index.equals(target_index):
+            row_aggregator = row_aggregator.values
+        else:
+            assert target_index.levels[0].equals(row_aggregator.index)
+            reindexed = row_aggregator.reindex(target_index, level=0)
+            row_aggregator = reindexed.values
+    else:
+        assert len(row_aggregator) == len(target_index)
+        row_aggregator = _np.array(row_aggregator)
+
+    if isinstance(col_aggregator, _pd.Series):
+        if col_aggregator.index.equals(target_index):
+            col_aggregator = col_aggregator.values
+        else:
+            assert target_index.levels[1].equals(col_aggregator.index)
+            reindexed = col_aggregator.reindex(target_index, level=1)
+            col_aggregator = reindexed.values
+    else:
+        assert len(col_aggregator) == len(target_index)
+        col_aggregator = _np.array(col_aggregator)
+
+    return row_aggregator, col_aggregator
+
+
+def _prep_square_index(index, aggregator):
+    if isinstance(aggregator, _pd.Series):
+        assert aggregator.index.equals(index)
+        return aggregator.values
+    else:
+        assert len(aggregator) == len(index)
+        return _np.array(aggregator)
+
+
+def _aggregate_frame(matrix, row_aggregator, col_aggregator, aggfunc):
+    return matrix.groupby(row_aggregator, axis=0).aggregate(aggfunc).groupby(col_aggregator, axis=1).aggregate(aggfunc)
+
+
+def _aggregate_series(matrix, row_aggregator, col_aggregator, aggfunc):
+    return matrix.groupby([row_aggregator, col_aggregator]).aggregate(aggfunc)
