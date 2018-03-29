@@ -69,14 +69,16 @@ class ChoiceModel(object):
 
         if override_utilities is None:
             utilities = self._scope_container._compute_utilities(n_threads, logger=logger)
+            record_index = self._scope_container._records
             if release_scope:
                 self._scope_container.clear()
         else:
+            record_index = override_utilities.index
             utilities = self._prep_override_utilities(override_utilities)
 
         result_indices = self._eval_probabilities_and_sample(utilities, randomizer, n_draws, n_threads)
 
-        return self._convert_result(result_indices, astype, squeeze)
+        return self._convert_result(result_indices, astype, squeeze, record_index)
 
     def run_stochastic(self, n_threads=1, override_utilities=None, logger=None, release_scope=True):
         """
@@ -101,14 +103,16 @@ class ChoiceModel(object):
 
         if override_utilities is None:
             utilities = self._scope_container._compute_utilities(n_threads, logger=logger)
+            record_index = self._scope_container._records
             if release_scope:
                 self._scope_container.clear()
         else:
+            record_index = override_utilities.index
             utilities = self._prep_override_utilities(override_utilities)
 
         raw_results = self._eval_probabilities_only(utilities, n_threads)
 
-        return pd.DataFrame(raw_results, self._scope_container._records, self._scope_container._alternatives)
+        return pd.DataFrame(raw_results, record_index, self._scope_container._alternatives)
 
     def copy(self, expressions=False, scope=False):
         """
@@ -172,13 +176,12 @@ class ChoiceModel(object):
 
         return result
 
-    def _convert_result(self, results, astype, squeeze):
+    def _convert_result(self, results, astype, squeeze, record_index):
         """
         Takes the discrete outcomes as an ndarray and converts it to a Series or DataFrame of the user-specified type.
         """
 
         n_draws = results.shape[1]
-        record_index = self._scope_container._records
         column_index = pd.Index(range(n_draws))
 
         if astype == 'index':
@@ -235,7 +238,6 @@ class ChoiceModel(object):
 
     def _prep_override_utilities(self, override_utilities):
         assert override_utilities.columns.equals(self._tree_container.node_index)
-        self._scope_container._records = override_utilities.index
         return override_utilities.values
 
 
