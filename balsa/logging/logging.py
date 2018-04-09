@@ -81,6 +81,7 @@ class ModelLogger(logging.Logger):
         if levelname is not None: d['levelname'] = levelname
         if asctime is not None: d['asctime'] = asctime
         if name is not None: d['name'] = name
+        else: d['name'] = self.name
 
         rec = logging.makeLogRecord(d)
         self.handle(rec)
