@@ -2,6 +2,7 @@ from __future__ import division, absolute_import, print_function, unicode_litera
 
 from pandas import DataFrame, Series, Index, MultiIndex
 import numpy as np
+from six import iteritems
 
 
 def fast_stack(frame, multi_index, deep_copy=True):
@@ -107,42 +108,63 @@ def align_categories(iterable):
         iterable: Any iterable of Series or DataFrame objects (anything that is acceptable to pandas.concat())
 
     """
-    all_categories = set()
-    for series_or_frame in iterable:
-        if isinstance(series_or_frame, Series):
-            all_categories |= set(series_or_frame.cat.categories)
-        elif isinstance(series_or_frame, DataFrame):
-            for column in series_or_frame:
-                s = series_or_frame[column]
-                try:
-                    all_categories |= set(s.cat.categories)
-                except AttributeError:
-                    # Skip series with non-categorical dtype
-                    pass
+    iterable_type = None
+    for item in iterable:
+        if iterable_type is None:
+            if isinstance(item, DataFrame): iterable_type = DataFrame
+            elif isinstance(item, Series): iterable_type = Series
+            else: raise TypeError(type(item))
         else:
-            # Do nothing, although concat() might not allow this
-            pass
-    sorted_categories = sorted(all_categories)
+            assert isinstance(item, iterable_type)
 
-    for series_or_frame in iterable:
-        if isinstance(series_or_frame, Series):
-            missing_categories = all_categories - set(series_or_frame.cat.categories)
-            if missing_categories:
-                series_or_frame.cat.add_categories(missing_categories)
-            series_or_frame.cat.reorder_categories(sorted_categories, inplace=True)
-        elif isinstance(series_or_frame, DataFrame):
-            for column in series_or_frame:
-                s = series_or_frame[column]
-                try:
-                    missing_categories = all_categories - set(s.cat.categories)
-                except AttributeError:
-                    pass
-                else:
-                    if missing_categories:
-                        s.cat.add_categories(missing_categories)
-                    s.car.reorder_categories(sorted_categories, inplace=True)
+    if iterable_type is Series:
+        _align_series_categories(iterable)
+    else:
+        column_categories = _enumerate_frame_categories(iterable)
+        _align_frame_categories(iterable, column_categories)
 
     return
+
+
+def _align_series_categories(series_list):
+    all_categories = set()
+    for series in series_list:
+        if not hasattr(series, 'cat'):
+            raise TypeError()
+        all_categories |= set(series.cat.categories)
+
+    sorted_categories = sorted(all_categories)
+    for series in series_list:
+        missing_categories = all_categories.difference(series.cat.categories)
+        if missing_categories:
+            series.cat.add_categories(missing_categories, inplace=True)
+        series.cat.reorder_categories(sorted_categories, inplace=True)
+
+
+def _enumerate_frame_categories(frames):
+    column_categories = {}
+    for frame in frames:
+        for col_name, series in frame.items():
+            if not hasattr(series, 'cat'): continue
+            categories = set(series.cat.categories)
+
+            if col_name not in column_categories:
+                column_categories[col_name] = categories
+            else:
+                column_categories[col_name] |= categories
+    return column_categories
+
+
+def _align_frame_categories(frames, column_categories):
+    for col_name, all_categories in iteritems(column_categories):
+        sorted_categories = sorted(all_categories)
+        for frame in frames:
+            if col_name not in frame: continue
+            s = frame[col_name]
+            missing_categories = all_categories.difference(s.cat.categories)
+            if missing_categories:
+                s.cat.add_categories(missing_categories, inplace=True)
+            s.cat.reorder_categories(sorted_categories, inplace=True)
 
 
 def sum_df_sequence(seq, fill_value=0):
