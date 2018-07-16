@@ -19,6 +19,8 @@ import numba as _nb
 import numpy as _np
 import pandas as _pd
 
+EPS = 1.0e-7
+
 
 def matrix_balancing_1d(m, a, axis):
     """ Balances a matrix using a single constraint.
@@ -56,8 +58,8 @@ def matrix_balancing_2d(m, a, b, totals_to_use='raise', max_iterations=1000,
               - average: scales both row and column totals to the average value of their sums
               - raise: raises an Exception if the sums of the row and column totals do not match
         max_iterations (int, optional): Maximum number of iterations, defaults to 1000
-        rel_error (float, optional): Relative error stopping criteria, defaults to 10e-5
-        n_procs (int, optional): Number of processors for parallel computation. Defaults to 1.
+        rel_error (float, optional): Relative error stopping criteria, defaults to 1e-4
+        n_procs (int, optional): Number of processors for parallel computation. Defaults to 1. (Not used)
 
     Return:
         Numpy ndarray(M, M): balanced matrix
@@ -119,7 +121,11 @@ def matrix_balancing_2d(m, a, b, totals_to_use='raise', max_iterations=1000,
     initial_error = _calc_error(m, a, b)
     err = 1.0
     i = 0
-    while i < max_iterations and err > rel_error:
+    while err > rel_error:
+        if i > max_iterations:
+            # todo: convert to logger, if possible
+            print("Matrix balancing did not converge")
+            break
         m = _balance(m, a, 1)
         m = _balance(m, b, 0)
         err = _calc_error(m, a, b) / initial_error
@@ -143,7 +149,7 @@ def _balance(matrix, tot, axis):
     Return:
         w :  Numpy ndarray(..., M, M)
     """
-    sc = tot / matrix.sum(axis)
+    sc = tot / (matrix.sum(axis) + EPS)
     sc = _np.nan_to_num(sc)  # replace divide by 0 errors from the prev. line
     if axis:  # along rows
         matrix = _np.multiply(matrix.T, sc).T
