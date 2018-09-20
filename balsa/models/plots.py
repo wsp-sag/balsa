@@ -77,7 +77,7 @@ def convergence_boxplot(targets: pd.DataFrame, results: pd.DataFrame, filter_fun
 
 
 def location_summary(model: pd.DataFrame, target: pd.DataFrame, ensemble_names: pd.Series, title: str='', fp: Path=None,
-                     dpi: int=150) -> Axes:
+                     dpi: int=150, district_name: str='Ensemble') -> Axes:
     fig, ax = plt.subplots(1, 3, figsize=[16, 8], gridspec_kw={'width_ratios': [4, 2, 2]})
 
     model_col = model.reindex(ensemble_names.index, fill_value=0)
@@ -88,10 +88,10 @@ def location_summary(model: pd.DataFrame, target: pd.DataFrame, ensemble_names: 
 
     df = pd.DataFrame({'Model': model_col, "Target": target_col})
     df.index = ensemble_names
-    df.index.name = 'Ensemble'
+    df.index.name = district_name
     sub_ax = ax[0]
     df.plot.barh(ax=sub_ax)
-    sub_ax.set_title(title + " total employment")
+    sub_ax.set_title(title)
     sub_ax.invert_yaxis()
 
     short_labels = np.arange(1, len(ensemble_names) + 1)
