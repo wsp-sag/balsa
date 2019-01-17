@@ -230,9 +230,15 @@ class Scope(object):
     def _evaluate_single_expression(self, expr, utility_table):
         # Setup local dictionary of data
         local_dict = {NAN_STR: np.nan}
+        columns = self._root.tree.node_index
         for symbol_name, list_of_usages in expr.symbols():
             if isinstance(list_of_usages, DictLiteral):
-                list_of_usages = [list_of_usages]
+                s = list_of_usages.series
+                reindexed = s.reindex(columns, fill_value=0)
+                vector = reindexed.values
+                vector.shape = 1, utility_table.shape[1]
+                local_dict[symbol_name] = vector
+                continue
 
             for usage in list_of_usages:
                 # Usage is one of SimpleUsage, DictLiteral, AttributedUsage, or LinkedFrameUsage
