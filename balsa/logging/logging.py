@@ -152,11 +152,12 @@ def get_model_logger(name: str) -> ModelLogger:
 
 
 @contextmanager
-def log_to_file(file_name: str, name):
+def log_to_file(file_name: str, name, *, append=False):
     root = logging.getLogger(name)
 
-    handler = logging.FileHandler(file_name, mode='w')
-    handler.setFormatter(_DEFAULT_FMT)
+    write_mode = 'a' if append else 'w'
+    handler = logging.FileHandler(file_name, mode=write_mode)
+    handler.setFormatter(logging.Formatter(_DEFAULT_FMT))
     handler.addFilter(RangeFilter(0, 100))
 
     root.addHandler(handler)
