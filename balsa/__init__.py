@@ -3,7 +3,6 @@ import balsa.cheval
 import balsa.matrices
 import balsa.pandas_utils
 import balsa.utils
-import balsa.scribe
 
 from balsa.cheval import LinkedDataFrame, ChoiceModel, sample_from_weights
 from balsa.configuration import Config
