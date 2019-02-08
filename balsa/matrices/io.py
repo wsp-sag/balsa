@@ -21,7 +21,7 @@ except ImportError:
 # region Common functions
 
 
-def _coerce_matrix(matrix, allow_raw=True):
+def coerce_matrix(matrix, allow_raw=True):
     """
     Infers a NumPy array from given input
 
@@ -152,7 +152,7 @@ def to_mdf(matrix, file):
         raise TypeError("Only labelled matrix objects are supported")
 
     with open_file(file, mode='wb') as writer:
-        data = _coerce_matrix(matrix, allow_raw=False)
+        data = coerce_matrix(matrix, allow_raw=False)
 
         np.array([0xC4D4F1B2, 1, 1, 2], dtype=np.uint32).tofile(writer)  # Header
         np.array(data.shape, dtype=np.uint32).tofile(writer)  # Shape
@@ -279,7 +279,7 @@ def to_emx(matrix, file, emmebank_zones):
     assert emmebank_zones > 0
 
     with open_file(file, mode='wb') as writer:
-        data = _coerce_matrix(matrix)
+        data = coerce_matrix(matrix)
         n = data.shape[0]
         if n > emmebank_zones:
             out = data[:emmebank_zones, :emmebank_zones].astype(np.float32)
@@ -434,7 +434,7 @@ def to_fortran(matrix, file, n_columns=None):
 
     """
 
-    array = _coerce_matrix(matrix)
+    array = coerce_matrix(matrix)
 
     if n_columns is not None and n_columns > array.shape[1]:
         extra_columns = n_columns - array.shape[1]

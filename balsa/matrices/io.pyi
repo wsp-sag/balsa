@@ -11,7 +11,7 @@ except ImportError:
     Path = None
     file_type = Union[str, FileIO]
 
-def _coerce_matrix(matrix, allow_raw=True): pass
+def coerce_matrix(matrix, allow_raw=True): pass
 
 def expand_array(a: np.ndarray, n: int, axis: int=None) -> np.ndarray: pass
 
