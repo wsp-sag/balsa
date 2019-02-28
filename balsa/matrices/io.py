@@ -21,7 +21,7 @@ except ImportError:
 # region Common functions
 
 
-def coerce_matrix(matrix, allow_raw=True):
+def coerce_matrix(matrix, allow_raw=True, force_square=True):
     """
     Infers a NumPy array from given input
 
@@ -32,7 +32,8 @@ def coerce_matrix(matrix, allow_raw=True):
         2D ndarray of type float32
     """
     if isinstance(matrix, pd.DataFrame):
-        assert matrix.index.equals(matrix.columns)
+        if force_square:
+            assert matrix.index.equals(matrix.columns)
         return matrix.values.astype(np.float32)
     elif isinstance(matrix, pd.Series):
         assert matrix.index.nlevels == 2, "Cannot infer a matrix from a Series with more or fewer than 2 levels"
@@ -420,7 +421,7 @@ def read_fortran_square(file, zones=None, tall=False):
         return matrix.stack() if tall else matrix
 
 
-def to_fortran(matrix, file, n_columns=None):
+def to_fortran(matrix, file, n_columns=None, min_index=1, force_square=True):
     """
     Reads a FORTRAN-friendly .bin file (a.k.a. 'simple binary format'), in a square format.
 
@@ -431,10 +432,12 @@ def to_fortran(matrix, file, n_columns=None):
         n_columns (int): Optionally specify a desired "width" of the matrix file. For example, n_columns=4000 on a
             matrix 3500x3500 will pad the width with 500 extra columns containing 0. If None if provided or if the
             number of columns <= the width of the given matrix, no padding will be performed.
+        min_index (int): The lowest numbered row. Used when slicing matrices
+        forec_square (bool):
 
     """
-
-    array = coerce_matrix(matrix)
+    assert min_index >= 1
+    array = coerce_matrix(matrix, force_square=force_square)
 
     if n_columns is not None and n_columns > array.shape[1]:
         extra_columns = n_columns - array.shape[1]
@@ -445,7 +448,7 @@ def to_fortran(matrix, file, n_columns=None):
         temp = np.zeros([rows, columns + 1], dtype=np.float32)
         temp[:, 1:] = array
 
-        index = np.arange(1, rows + 1, dtype=np.int32)
+        index = np.arange(min_index, rows + 1, dtype=np.int32)
         # Mask the integer binary representation as floating point
         index_as_float = np.frombuffer(index.tobytes(), dtype=np.float32)
         temp[:, 0] = index_as_float

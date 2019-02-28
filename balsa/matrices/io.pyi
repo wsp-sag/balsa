@@ -11,7 +11,7 @@ except ImportError:
     Path = None
     file_type = Union[str, FileIO]
 
-def coerce_matrix(matrix, allow_raw=True): pass
+def coerce_matrix(matrix, allow_raw=True, force_square=True): pass
 
 def expand_array(a: np.ndarray, n: int, axis: int=None) -> np.ndarray: pass
 
@@ -36,7 +36,8 @@ def read_fortran_square(file: file_type, zones: pd.Index=None, tall: bool=False
                         ) -> Union[pd.Series, pd.DataFrame, np.ndarray]: pass
 
 
-def to_fortran(matrix: Union[pd.Series, pd.DataFrame, np.ndarray], file: file_type, n_columns: int=None): pass
+def to_fortran(matrix: Union[pd.Series, pd.DataFrame, np.ndarray], file: file_type, n_columns: int=None,
+               min_index: int=1, forec_square: bool=True): pass
 
 MATRIX_TYPES = Union[pd.DataFrame, pd.Series, np.ndarray]
 
