@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 import numexpr as ne
+from six import iteritems
 
 
 def tlfd(values, bin_start=0, bin_end=200, bin_step=2, weights=None, intrazonal=None, label_type='MULTI',
@@ -89,10 +90,36 @@ def tlfd(values, bin_start=0, bin_end=200, bin_step=2, weights=None, intrazonal=
     return new_hist
 
 
-def distance_matrix(x, y, tall=False, method='euclidean', coord_unit=1.0, labels=None):
+def _get_distance_equation(method):
+    if method.lower() == 'euclidean':
+        expr = "sqrt((x0 - x1)**2 + (y0 - y1) ** 2) * coord_unit"
+    elif method.lower() == 'manhattan':
+        expr = "(abs(x0 - x1) + abs(y0 - y1)) * coord_unit"
+    elif method.lower() == 'haversine':
+        y0 = "(y0 * pi / 180)"
+        y1 = "(y1 * pi / 180)"
+        delta_lon = "((x1 - x0) * pi / 180)"
+        delta_lat = "((y1 - y0) * pi / 180)"
+        part1 = "sin({delta_lat} / 2.0)**2 + cos({y0}) * cos({y1}) * (sin({delta_lon} / 2.0))**2"\
+            .format(delta_lat=delta_lat, delta_lon=delta_lon, y0=y0, y1=y1)
+        expr = "6371.0 * earth_radius_factor* 2.0 * arctan2(sqrt({part1}), sqrt(1.0 - {part1})) * coord_unit".\
+            format(part1=part1)
+    else:
+        raise NotImplementedError(method.lower())
+    return expr
+
+
+def _prepare_distance_kwargs(kwargs):
+    defaults = {'coord_unit': 1.0, 'earth_radius_factor': 1.0, 'pi': np.pi}
+    for key, val in iteritems(defaults):
+        if key not in kwargs:
+            kwargs[key] = val
+
+
+def distance_matrix(x, y, tall=False, method='euclidean', labels=None, **kwargs):
     """
-    Fastest method of computing a distance matrix from 2 vectors of coordinates, using the NumExpr package. Can compute
-    Manhattan distance as well as straight-line.
+    Fastest method of computing a distance matrix from 2 vectors of coordinates, using the NumExpr package. Supports
+    several equations for computing distances
 
     Args:
         x (ndarray or Series): Vector of x-coordinates, of length N. Can be a Series to specify labels.
@@ -102,9 +129,14 @@ def distance_matrix(x, y, tall=False, method='euclidean', coord_unit=1.0, labels
         method (str): Specifies the method by which to compute distance. Valid options are:
             'EUCLIDEAN': Computes straight-line, 'as-the-crow flies' distance.
             'MANHATTAN': Computes the Manhattan distance
-        coord_unit (float): Factor applies directly to the result, defaulting to 1.0 (no conversion). Useful when the
-            coordinates are provided in one unit (e.g. m) and the desired result is in a different unit (e.g. km).
+            'HAVERSINE': Computes distance based on lon/lat.
         labels (None or list or Index): Optional labels for each item in the x, y vectors; of length N.
+
+        **kwargs: Additional scalars to pass into the evaluation context
+            coord_unit (float): Factor applies directly to the result, defaulting to 1.0 (no conversion). Useful when
+                the coordinates are provided in one unit (e.g. m) and the desired result is in a different unit (e.g.
+                km). Only used for Euclidean or Manhattan distance
+            earth_radius_factor (float): Factor to convert from km to other units when using Haversine distance
 
     Returns:
         Series: Returned when `tall=True`, and labels can be inferred (see note below). Will always be have 2-level
@@ -150,15 +182,15 @@ def distance_matrix(x, y, tall=False, method='euclidean', coord_unit=1.0, labels
     x1.shape = n, 1
     y1.shape = n, 1
 
-    if method.lower() == 'euclidean':
-        expr = "sqrt((x0 - x1)**2 + (y0 - y1) ** 2) * coord_unit"
-    elif method.lower() == 'manhattan':
-        expr = "(abs(x0 - x1) + abs(y0 - y1)) * coord_unit"
-    else:
-        # TODO: Support Haversine approach in which coords are in Lat/Lon
-        raise NotImplementedError(method.lower())
+    expr = _get_distance_equation(method)
+    kwargs = kwargs.copy()
+    _prepare_distance_kwargs(kwargs)
+    kwargs['x0'] = x0
+    kwargs['x1'] = x1
+    kwargs['y0'] = y0
+    kwargs['y1'] = y1
 
-    raw_matrix = ne.evaluate(expr)
+    raw_matrix = ne.evaluate(expr, local_dict=kwargs)
 
     if tall:
         raw_matrix.shape = n * n
@@ -171,3 +203,50 @@ def distance_matrix(x, y, tall=False, method='euclidean', coord_unit=1.0, labels
 
     return pd.DataFrame(raw_matrix, index=labels, columns=labels)
 
+
+def distance_array(x0, y0, x1, y1, method='euclidean', **kwargs):
+    """
+    Fast method to compute distance between 2 (x, y) points, represented by 4 separate arrays, using the NumExpr
+    package. Supports several equations for computing distances
+
+    Args:
+        x0: X or Lon coordinate of first point
+        y0: Y or Lat coordinate of first point
+        x1: X or Lon coordinate of second point
+        y1: Y or Lat coordinate of second point
+        method: method (str): Specifies the method by which to compute distance. Valid options are:
+            'EUCLIDEAN': Computes straight-line, 'as-the-crow flies' distance.
+            'MANHATTAN': Computes the Manhattan distance
+            'HAVERSINE': Computes distance based on lon/lat.
+        **kwargs: Additional scalars to pass into the evaluation context
+            coord_unit (float): Factor applies directly to the result, defaulting to 1.0 (no conversion). Useful when
+                the coordinates are provided in one unit (e.g. m) and the desired result is in a different unit (e.g.
+                km). Only used for Euclidean or Manhattan distance
+            earth_radius_factor (float): Factor to convert from km to other units when using Haversine distance
+
+    Returns:
+        ndarray: Distance from the vectors of first points to the vectors of second points.
+
+    """
+    assert len(x0) == len(y0) == len(x1) == len(y1)
+
+    def coerce_to_numpy(item):
+        if isinstance(item, pd.Series):
+            return item.values
+        return item
+
+    x0 = coerce_to_numpy(x0)
+    x1 = coerce_to_numpy(x1)
+    y0 = coerce_to_numpy(y0)
+    y1 = coerce_to_numpy(y1)
+
+    expr = _get_distance_equation(method)
+    kwargs = kwargs.copy()
+    _prepare_distance_kwargs(kwargs)
+    kwargs['x0'] = x0
+    kwargs['x1'] = x1
+    kwargs['y0'] = y0
+    kwargs['y1'] = y1
+
+    result_array = ne.evaluate(expr, local_dict=kwargs)
+    return result_array
