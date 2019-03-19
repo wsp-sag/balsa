@@ -8,9 +8,47 @@ from matplotlib.axes import Axes
 from matplotlib.ticker import FormatStrFormatter, StrMethodFormatter, FuncFormatter
 
 
-def convergence_boxplot(targets: pd.DataFrame, results: pd.DataFrame, filter_func: Callable[[pd.Series], pd.Series],
-                        adjust_target: bool=True, percentage: bool=True, band: Tuple[float, float]=None,
-                        simple_labels: bool=True, ax=None, fp: str=None, title: str=None) -> Axes:
+def convergence_boxplot(targets, results, filter_func,
+                        adjust_target=True, percentage=True, band=None,
+                        simple_labels=True, ax=None, fp=None, title=None):
+    """
+    Measures convergence of constrained location-choice models (such as work-location choice). Can be used to
+    produce multiple boxplots for different sub-sets of zones, usually based on size.
+
+    Args:
+        targets:
+        results:
+        filter_func:
+        adjust_target:
+        percentage:
+        band:
+        simple_labels:
+        ax:
+        fp:
+        title:
+
+    Returns:
+
+    """
+
+    '''
+    # Type-hinting signature
+    
+    def convergence_boxplot(
+        targets: pd.DataFrame, 
+        results: pd.DataFrame, 
+        filter_func: Callable[[pd.Series], pd.Series], 
+        adjust_target: bool=True, 
+        percentage: bool=True, 
+        band: Tuple[float, float]=None, 
+        simple_labels: bool=True, 
+        ax=None, 
+        fp: str=None, 
+        title: str=None
+        ) -> Axes:
+    
+    '''
+
     assert results.columns.equals(targets.columns)
 
     columns, filters, n = [], [], 0
@@ -43,7 +81,7 @@ def convergence_boxplot(targets: pd.DataFrame, results: pd.DataFrame, filter_fun
 
     if not simple_labels:
         columns = [
-            f"{c}\n{model_sums[i]} workers\n{int(target_sums[i])} jobs\n{filters[i].sum()} zones"
+            "{}\n{} workers\n{} jobs\n{} zones".format(c, model_sums[i], int(target_sums[i]), filters[i].sum())
             for i, c in enumerate(columns)
         ]
     unlabelled_zones = pd.DataFrame(unlabelled_zones, columns=columns)
@@ -53,7 +91,7 @@ def convergence_boxplot(targets: pd.DataFrame, results: pd.DataFrame, filter_fun
         ax.axhline(0)
 
         if percentage:
-            ax.yaxis.set_major_formatter(FuncFormatter(lambda x, pos: f"{np.round(x, 2) * 100}%"))
+            ax.yaxis.set_major_formatter(FuncFormatter(lambda x, pos: "{}%".format(np.round(x, 2) * 100)))
             ax.set_ylabel("Relative error ((Model - Target) / Target)")
         else:
             ax.set_ylabel("Error (Model - Target)")
@@ -76,8 +114,37 @@ def convergence_boxplot(targets: pd.DataFrame, results: pd.DataFrame, filter_fun
         return ax
 
 
-def location_summary(model: pd.DataFrame, target: pd.DataFrame, ensemble_names: pd.Series, title: str='', fp: Path=None,
-                     dpi: int=150, district_name: str='Ensemble') -> Axes:
+def location_summary(model, target, ensemble_names, title='', fp=None,
+                     dpi=150, district_name='Ensemble'):
+    """
+    Creates a compound plot showing total attractions to specified locations
+
+    Args:
+        model:
+        target:
+        ensemble_names:
+        title:
+        fp:
+        dpi:
+        district_name:
+
+    Returns:
+
+    """
+
+    '''
+    # Type-hinting signature:
+    def location_summary(
+        model: pd.DataFrame, 
+        target: pd.DataFrame, 
+        ensemble_names: pd.Series, 
+        title: str='', 
+        fp: Path=None,
+        dpi: int=150, 
+        district_name: str='Ensemble'
+        ) -> Axes:
+    '''
+
     fig, ax = plt.subplots(1, 3, figsize=[16, 8], gridspec_kw={'width_ratios': [4, 2, 2]})
 
     model_col = model.reindex(ensemble_names.index, fill_value=0)
