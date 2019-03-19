@@ -131,3 +131,110 @@ def location_summary(model: pd.DataFrame, target: pd.DataFrame, ensemble_names: 
         fig.savefig(str(fp), dpi=dpi)
 
     return ax
+
+
+def trumpet_diagram(counts, model_volume, categories=None, category_colours=None, category_markers=None,
+                    label_format=None, title='', y_bounds=(-2, 2), ax=None, alpha=1.0, x_label="Count volume"):
+    """
+    Plots a auto volumes "trumpet" diagram of relative error vs. target count, and will draw min/max error curves based
+    on FHWA guidelines. Can be used to plot different categories of count locations.
+
+    Args:
+        counts (Series): Target counts. Each item represents a different count location. Index does not need to be
+            unique.
+        model_volume (Series): Modelled volumes for each location. The index must match the counts Series.
+        categories (None or Series or List[Series]): Optional classification of each count location. Must match the
+            index of the count Series. Can be provided as a List of Series (which all must match the count index) to
+            enable tuple-based categorization.
+        category_colours (None or Dict[Union[str, tuple], str]): Mapping of each category to a colour, specified as a
+            hex string. Only used when categories are provided. Missing categories revert to None, using the default
+            colour for the current style.
+        category_markers (None or Dict[Union[str, tuple], str]): Mapping of each category to a matplotlib marker string
+            (see https://matplotlib.org/api/markers_api.html for options). Only used when categories are provided.
+            Missing categories revert to None, using the default marker for the current style.
+        label_format (str): Used to convert category values (especially tuples) into readable strings for the plot
+            legend. The relevant line of code is `current_label = label_format % category_key`. Only used when
+            categories are provided.
+        title (str): Optional title to set on the plot.
+        y_bounds (tuple): Limit of the Y-Axis. This is needed because relative errors can be very high close to the
+            y-intercept of the plot. Defaults to (-2, 2), or (-200%, 200%).
+        ax (None or Axes): Sub-Axes to add this plot to, if using subplots().
+        alpha (float): Controls the transparency of all points.
+        x_label (str): Label to use for the X-axis. The Y-axis is always "Relative Error"
+
+    Returns:
+        Axes: The Axes object generated from the plot. For most use cases, this is not really needed.
+
+    """
+
+    '''
+    # Type-hinting signature
+    
+    def trumpet_diagram(
+        counts: Series, 
+        model_volume: Series, 
+        categories: Union[Series, List[Series]]=None,
+        category_colours: Dict[Union[Any, tuple]]=None, 
+        category_markers: Dict[Union[Any, tuple]]=None,
+        label_format: str=None, 
+        title: str='', 
+        y_bounds: Tuple[float, float]=(-2, 2), 
+        ax: Optional[Axes]=None, 
+        alpha: float=1.0, 
+        x_label: str="Count volume"
+        ) -> Axes:    
+    '''
+
+    assert model_volume.index.equals(counts.index)
+
+    n_categories = 0
+    if categories is not None:
+        if isinstance(categories, list):
+            for s in categories: assert s.index.equals(model_volume.index)
+            if label_format is None: label_format = '-'.join(['%s'] * len(categories))
+            categories = pd.MultiIndex.from_arrays(categories)
+            n_categories = len(categories.unique())
+        else:
+            assert categories.index.equals(model_volume.index)
+            n_categories = categories.nunique()
+
+        if category_colours is None: category_colours = {}
+        if category_markers is None: category_markers = {}
+    if label_format is None: label_format = "%s"
+
+    df = pd.DataFrame({'Model Volume': model_volume, 'Count Volume': counts})
+    df['Error'] = df['Model Volume'] - df['Count Volume']
+    df['% Error'] = df['Error'] / df['Count Volume']
+
+    if n_categories > 1:
+        for category_key, subset in df.groupby(categories):
+            current_label = label_format % category_key
+            current_color = category_colours[category_key] if category_key in category_colours else None
+            current_marker = category_markers[category_key] if category_key in category_markers else None
+
+            ax = subset.plot.scatter(x='Count Volume', y='% Error', alpha=alpha, ax=ax, c=current_color,
+                                     marker=current_marker, label=current_label)
+    else:
+        ax = df.plot.scatter(x='Count Volume', y='% Error', alpha=alpha, ax=ax)
+
+    top = counts.max() * 1.05  # Add 5% to the top, to give some visual room on the right side
+    xs = np.arange(1, top, 10)
+    pos_ys = (-13.7722 + (555.1382 * xs ** -0.26025)) / 100.
+    neg_ys = pos_ys * -1
+
+    ax.plot(xs, np.zeros(len(xs)), color='black')
+    ax.plot(xs, pos_ys, color='red', linewidth=1, zorder=1)
+    ax.plot(xs, neg_ys, color='red', linewidth=1, zorder=1)
+
+    ax.set_xlim(0, top)
+
+    bottom, top = y_bounds
+    ax.set_ylim(bottom, top)
+    ax.set_yticks(np.arange(bottom, top, 0.25))
+
+    ax.set_title(title)
+    ax.set_ylabel("Relative Error")
+    ax.set_xlabel(x_label)
+    ax.legend()
+
+    return ax
