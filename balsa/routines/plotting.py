@@ -31,24 +31,6 @@ def convergence_boxplot(targets, results, filter_func,
 
     """
 
-    '''
-    # Type-hinting signature
-    
-    def convergence_boxplot(
-        targets: pd.DataFrame, 
-        results: pd.DataFrame, 
-        filter_func: Callable[[pd.Series], pd.Series], 
-        adjust_target: bool=True, 
-        percentage: bool=True, 
-        band: Tuple[float, float]=None, 
-        simple_labels: bool=True, 
-        ax=None, 
-        fp: str=None, 
-        title: str=None
-        ) -> Axes:
-    
-    '''
-
     assert results.columns.equals(targets.columns)
 
     columns, filters, n = [], [], 0
@@ -131,19 +113,6 @@ def location_summary(model, target, ensemble_names, title='', fp=None,
     Returns:
 
     """
-
-    '''
-    # Type-hinting signature:
-    def location_summary(
-        model: pd.DataFrame, 
-        target: pd.DataFrame, 
-        ensemble_names: pd.Series, 
-        title: str='', 
-        fp: Path=None,
-        dpi: int=150, 
-        district_name: str='Ensemble'
-        ) -> Axes:
-    '''
 
     fig, ax = plt.subplots(1, 3, figsize=[16, 8], gridspec_kw={'width_ratios': [4, 2, 2]})
 
@@ -235,24 +204,6 @@ def trumpet_diagram(counts, model_volume, categories=None, category_colours=None
         Axes: The Axes object generated from the plot. For most use cases, this is not really needed.
 
     """
-
-    '''
-    # Type-hinting signature
-    
-    def trumpet_diagram(
-        counts: Series, 
-        model_volume: Series, 
-        categories: Union[Series, List[Series]]=None,
-        category_colours: Dict[Union[Any, tuple]]=None, 
-        category_markers: Dict[Union[Any, tuple]]=None,
-        label_format: str=None, 
-        title: str='', 
-        y_bounds: Tuple[float, float]=(-2, 2), 
-        ax: Optional[Axes]=None, 
-        alpha: float=1.0, 
-        x_label: str="Count volume"
-        ) -> Axes:    
-    '''
 
     assert model_volume.index.equals(counts.index)
 

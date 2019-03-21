@@ -12,7 +12,8 @@ try:
 except ImportError:
     PATHLIB_LOADED = False
 
-from balsa.utils import is_identifier, open_file
+from balsa.routines.general import is_identifier
+from balsa.routines.io import open_file
 
 
 class ConfigParseError(IOError):
@@ -30,11 +31,6 @@ class ConfigTypeError(ValueError):
 class ConfigValue(object):
     """
     Wraps the value of a Config attribute to facilitate type-checking and pretty error messages.
-
-    Attributes:
-        value: Get or set the underlying value of the wrapper.
-        namespace: The dot-separated namespace of this attribute within the full Config.
-
     """
 
     def __init__(self, value, name, owner=None):
@@ -48,6 +44,7 @@ class ConfigValue(object):
 
     @property
     def namespace(self):
+        """ Dot-separated name of this config value"""
         if self._owner is not None:
             return self._owner.namespace + '.' + self._name
         return self._name
@@ -74,17 +71,45 @@ class ConfigValue(object):
             )
             raise ConfigTypeError(message)
 
-    def as_bool(self): return self.as_type(bool)
+    def as_bool(self):
+        """
+        Resolves the value to bool
 
-    def as_int(self): return self.as_type(int)
+        Raises:
+            ConfigTypeError: If the value cannot be resolved to bool
+        """
+        return self.as_type(bool)
 
-    def as_float(self): return self.as_type(float)
+    def as_int(self):
+        """
+        Resolves the value to int
 
-    def as_str(self): return self.as_type(str)
+        Raises:
+            ConfigTypeError: If the value cannot be resolved to int
+        """
+        return self.as_type(int)
+
+    def as_float(self):
+        """
+        Resolves the value to float
+
+        Raises:
+            ConfigTypeError: If the value cannot be resolved to float
+        """
+        return self.as_type(float)
+
+    def as_str(self):
+        """
+        Resolves the value to str
+
+        Raises:
+            ConfigTypeError: If the value cannot be resolved to str
+        """
+        return self.as_type(str)
 
     def as_list(self, sub_type=None):
         """
-        Converts the value to a list.
+        Resolves the value to a list.
 
         Args:
             sub_type (type): Optional. Specifies the expected contiguous (uniform) type of the list to convert to.
@@ -103,6 +128,15 @@ class ConfigValue(object):
 
     if PATHLIB_LOADED:
         def as_path(self, parent=None):
+            """
+            Resolves the value to Path type (available only when using Python 3)
+
+            Args:
+                parent: Optional parent folder if this is a relative path
+
+            Raises:
+                ConfigTypeError: If the value cannot be resolved to Path
+            """
             if parent is not None: return Path(parent) / Path(self.as_str())
             return Path(self.as_str())
 
@@ -152,13 +186,6 @@ class Config(object):
         - Config implements __contains__ for testing if a name is 'in' the set of attributes.
         - To use __getitem__, __setitem__ (like a Dictionary), use the `as_dict()` method to convert to a dictionary
             representation. This also exposes dictionary iteration methods.
-
-    Attributes:
-        name: Short name of each part of the config. For non-root Configs, this will be the name of the attribute used
-            to access this Config from the parent.
-        parent: Pointer to the parent of non-root Configs.
-        namespace: The dot-separated namespace of this part of the full Config.
-
     """
 
     def __init__(self, config_dict, name=None, parent=None, file_=None):
@@ -191,13 +218,19 @@ class Config(object):
             self._contents[key] = value
 
     @property
-    def name(self): return self._name
+    def name(self):
+        """ Short name of each part of the config. For non-root Configs, this will be the name of the attribute used
+        to access this Config from the parent. """
+        return self._name
 
     @property
-    def parent(self): return self._parent
+    def parent(self):
+        """ Pointer to the parent of non-root Configs."""
+        return self._parent
 
     @property
     def namespace(self):
+        """The dot-separated namespace of this part of the full Config."""
         name = self._name if self._name is not None else '<unnamed>'
         if self._parent is None:
             return name

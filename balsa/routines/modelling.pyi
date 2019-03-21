@@ -16,3 +16,8 @@ def distance_matrix(x: _vector_type, y: _vector_type, tall: bool=False, method: 
                     labels: Union[Iterable, Index]=None
                     ) -> Union[ndarray, Series, DataFrame]:
     pass
+
+
+def distance_array(x0: _vector_type, y0: _vector_type, x1: _vector_type, y1: _vector_type, method: str='euclidean',
+                   **kwargs):
+    pass
