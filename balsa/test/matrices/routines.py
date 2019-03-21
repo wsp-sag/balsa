@@ -6,10 +6,6 @@ from pandas import testing as pdt
 
 from balsa.matrices.routines import matrix_bucket_rounding, aggregate_matrix
 
-if __name__ == '__main__':
-    unittest.main()
-
-
 class TestMatrixBucketRounding(unittest.TestCase):
 
     def test_small(self):
