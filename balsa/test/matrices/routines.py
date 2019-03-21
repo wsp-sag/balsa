@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 from pandas import testing as pdt
 
-from balsa.matrices.routines import matrix_bucket_rounding, aggregate_matrix
+from balsa.matrices.routines import matrix_bucket_rounding, aggregate_matrix, matrix_balancing_1d, matrix_balancing_2d
 
 class TestMatrixBucketRounding(unittest.TestCase):
 
@@ -190,6 +190,20 @@ class TestAggregateMatrix(unittest.TestCase):
         test3 = aggregate_matrix(self._tall_dmatrix,
                                  row_groups=tall_row_grouper.values, col_groups=tall_col_grouper.values)
         pdt.assert_series_equal(expected_result, test3, check_dtype=False, check_names=False)
+
+class TestMatrixBalancing(unittest.TestCase):
+    def setUp(self):
+        self._square_matrix = np.random.uniform(0, 1000, (5, 5))
+        self._1darray = np.random.uniform(0, 1000, 5)
+    
+    def test_1d_balance(self):
+        axes = [0, 1]
+        for ax in axes:
+            test = matrix_balancing_1d(self._square_matrix, self._1darray, ax)
+            self.assertAlmostEqual(test.sum(), self._1darray.sum(), places=5)
+            pdt.assert_series_equal(pd.Series(np.sum(test, ax)), pd.Series(self._1darray))
+
+    def test_2d_balance(self):
 
 if __name__ == '__main__':
     unittest.main()

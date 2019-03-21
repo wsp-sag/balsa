@@ -5,11 +5,16 @@ Core Matrix Manipulation Tools
 ==========================================================================
 Matrix Balancing
 ==========================================================================
-matrix_balancing_1d    Singly-constrained matrix balancing
-matrix_balancing_2d    Doubly-constrained balancing using
-                       iterative-proportional fitting
+matrix_balancing_1d         Singly-constrained matrix balancing
+matrix_balancing_2d         Doubly-constrained balancing using
+                            iterative-proportional fitting
 ==========================================================================
-
+Matrix Calculation
+==========================================================================
+matrix_bucket_rounding      Bucket round matrix
+split_zone_in_matrix        Split old zones into new zones
+aggregate_matrix            Group zones based on a mapping
+==========================================================================
 """
 
 from __future__ import division as _division
@@ -36,7 +41,7 @@ def matrix_balancing_1d(m, a, axis):
 
     assert axis in [0, 1], "axis must be either 0 or 1"
     assert m.ndim == 2, "m must be a two-dimensional matrix"
-    assert a.ndim == 1, "a must be a two-dimensional matrix"
+    assert a.ndim == 1, "a must be a one-dimensional matrix"
     assert m.shape[axis] == a.shape[0], "axis %d of matrice 'm' and 'a' must be the same." % axis
 
     return _balance(m, a, axis)
