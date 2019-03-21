@@ -201,7 +201,8 @@ def location_summary(model, target, ensemble_names, title='', fp=None,
 
 
 def trumpet_diagram(counts, model_volume, categories=None, category_colours=None, category_markers=None,
-                    label_format=None, title='', y_bounds=(-2, 2), ax=None, alpha=1.0, x_label="Count volume"):
+                    label_format=None, title='', y_bounds=(-2, 2), ax=None, x_label="Count volume", legend=True,
+                    **kwargs):
     """
     Plots a auto volumes "trumpet" diagram of relative error vs. target count, and will draw min/max error curves based
     on FHWA guidelines. Can be used to plot different categories of count locations.
@@ -226,8 +227,9 @@ def trumpet_diagram(counts, model_volume, categories=None, category_colours=None
         y_bounds (tuple): Limit of the Y-Axis. This is needed because relative errors can be very high close to the
             y-intercept of the plot. Defaults to (-2, 2), or (-200%, 200%).
         ax (None or Axes): Sub-Axes to add this plot to, if using subplots().
-        alpha (float): Controls the transparency of all points.
         x_label (str): Label to use for the X-axis. The Y-axis is always "Relative Error"
+        legend (bool): Flag to add a legend.
+        kwargs: Additional kwargs to pass to DataFrame.plot.scatter()
 
     Returns:
         Axes: The Axes object generated from the plot. For most use cases, this is not really needed.
@@ -279,10 +281,10 @@ def trumpet_diagram(counts, model_volume, categories=None, category_colours=None
             current_color = category_colours[category_key] if category_key in category_colours else None
             current_marker = category_markers[category_key] if category_key in category_markers else None
 
-            ax = subset.plot.scatter(x='Count Volume', y='% Error', alpha=alpha, ax=ax, c=current_color,
-                                     marker=current_marker, label=current_label)
+            ax = subset.plot.scatter(x='Count Volume', y='% Error', ax=ax, c=current_color,
+                                     marker=current_marker, label=current_label, **kwargs)
     else:
-        ax = df.plot.scatter(x='Count Volume', y='% Error', alpha=alpha, ax=ax)
+        ax = df.plot.scatter(x='Count Volume', y='% Error', ax=ax, **kwargs)
 
     top = counts.max() * 1.05  # Add 5% to the top, to give some visual room on the right side
     xs = np.arange(1, top, 10)
@@ -302,6 +304,6 @@ def trumpet_diagram(counts, model_volume, categories=None, category_colours=None
     ax.set_title(title)
     ax.set_ylabel("Relative Error")
     ax.set_xlabel(x_label)
-    ax.legend()
+    if legend: ax.legend()
 
     return ax
