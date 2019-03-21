@@ -22,10 +22,10 @@ class TestMatrixBucketRounding(unittest.TestCase):
 
         # first test, float return
         b = matrix_bucket_rounding(a, decimals=2)
-        assert b.dtype == a.dtype
+        self.assertEqual(b.dtype, a.dtype, "dtype of bucket rounded matrix is not equal to dtype of input matrix")
         # second test, int return
         b = matrix_bucket_rounding(a, decimals=0)
-        assert b.dtype == np.dtype('int32')
+        self.assertEqual(b.dtype, np.dtype('int32'), "dtype of bucket rounded matrix is not integer")
 
     def test_large(self):
         """ Test bucket rounding routine on a large matrix to various levels of rounding precision. """
@@ -43,19 +43,19 @@ class TestMatrixBucketRounding(unittest.TestCase):
         df_rnd = matrix_bucket_rounding(df, decimals=decimals)
         self._compare_matrix_sums(df.values, df_rnd.values, decimals)
         self._compare_matrix_values(df.values, df_rnd.values, decimals)
-        assert type(df_rnd) == pd.DataFrame
+        self.assertEqual(type(df_rnd), pd.DataFrame, "dtype of returned matrix is a Pandas DataFrame")
 
     def _compare_matrix_sums(self, a, b, decimal):
         max_error = 0.5*(10.0 ** (-decimal))
         a_sum = np.sum(a)
         b_sum = np.sum(b)
-        self.assertLessEqual(a_sum, b_sum + max_error)
-        self.assertGreaterEqual(a_sum, b_sum - max_error)
+        self.assertLessEqual(a_sum, b_sum + max_error, "Bucket rounded matrix is not within a small margin of error")
+        self.assertGreaterEqual(a_sum, b_sum - max_error, "Bucket rounded matrix is not within a small margin of error")
 
     def _compare_matrix_values(self, a, b, decimal):
         max_error = 10.0 ** (-decimal)
-        np.testing.assert_allclose(a, b, atol=max_error, rtol=0.0)
-
+        np.testing.assert_allclose(a, b, atol=max_error, rtol=0.0, 
+                                    err_msg="Bucket rounded matrix values are not within %f" % (max_error))
 
 class TestAggregateMatrix(unittest.TestCase):
 
