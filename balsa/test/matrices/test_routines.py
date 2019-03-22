@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 from pandas import testing as pdt
 
-from balsa.matrices.routines import matrix_bucket_rounding, aggregate_matrix, matrix_balancing_1d, matrix_balancing_2d
+from balsa.matrices.routines import matrix_balancing_1d, matrix_balancing_2d, matrix_bucket_rounding, aggregate_matrix
 
 class TestMatrixBucketRounding(unittest.TestCase):
 
@@ -203,7 +203,34 @@ class TestMatrixBalancing(unittest.TestCase):
             self.assertAlmostEqual(test.sum(), self._1darray.sum(), places=5)
             pdt.assert_series_equal(pd.Series(np.sum(test, ax)), pd.Series(self._1darray))
 
-    def test_2d_balance(self):
+    def test_2d_balance_matched_total(self):
+        row = self._1darray
+        column = np.roll(self._1darray, 2)
+
+        test = matrix_balancing_2d(self._square_matrix, row, column, rel_error=0.000001)
+        pdt.assert_series_equal(pd.Series(np.sum(test[0], 1)), pd.Series(row), check_less_precise=True)
+        pdt.assert_series_equal(pd.Series(np.sum(test[0], 0)), pd.Series(column), check_less_precise=True)
+
+    def test_2d_balance_average_total(self):
+        row = self._1darray
+        column = np.roll(np.sqrt(row), 2)
+
+        test = matrix_balancing_2d(self._square_matrix, row, column, rel_error=0.000001, totals_to_use='average')
+        self.assertAlmostEqual(test[0].sum().sum(), (row.sum() + column.sum())/2, places=5)
+
+    def test_2d_balance_row_total(self):
+        row = self._1darray
+        column = np.sqrt(row)
+
+        test = matrix_balancing_2d(self._square_matrix, row, column, rel_error=0.000001, totals_to_use='rows')
+        pdt.assert_series_equal(pd.Series(np.sum(test[0], 1)), pd.Series(row), check_less_precise=True)
+
+    def test_2d_balance_col_total(self):
+        row = self._1darray
+        column = np.sqrt(row)
+
+        test = matrix_balancing_2d(self._square_matrix, row, column, rel_error=0.000001, totals_to_use='columns')
+        pdt.assert_series_equal(pd.Series(np.sum(test[0], 0)), pd.Series(column), check_less_precise=True)
 
 if __name__ == '__main__':
     unittest.main()
