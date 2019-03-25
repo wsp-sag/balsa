@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 from pandas import testing as pdt
 
-from ...matrices.routines import matrix_balancing_1d, matrix_balancing_2d, matrix_bucket_rounding, aggregate_matrix
+from ...routines import matrix_balancing_1d, matrix_balancing_2d, matrix_bucket_rounding, aggregate_matrix
 
 class TestMatrixBucketRounding(unittest.TestCase):
 
