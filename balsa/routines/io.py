@@ -1,12 +1,14 @@
 from __future__ import division
 from __future__ import print_function
 
+from contextlib import contextmanager
+
 import numpy as np
 import pandas as pd
-from six import iteritems, itervalues, iterkeys
+from six import iteritems, itervalues, iterkeys, string_types
 
-from balsa.utils.utils import open_file
-from balsa.pandas_utils import fast_unstack
+from balsa.routines.matrices import fast_unstack
+from balsa.utils.utils import Path
 
 try:
     from pathlib import Path
@@ -663,3 +665,34 @@ else:
         raise NotImplementedError()
 
 # endregion
+
+
+@contextmanager
+def open_file(file_handle, **kwargs):
+    """
+    Context manager for opening files provided as several different types. Supports a file handler as a str, unicode,
+    pathlib.Path, or an already-opened handler.
+
+    Args:
+        file_handle (str or unicode or Path or File): The item to be opened or is already open.
+        **kwargs: Keyword args passed to open. Usually mode='w'.
+
+    Yields:
+        File: The opened file handler. Automatically closed once out of context.
+
+    """
+    opened = False
+    if isinstance(file_handle, string_types):
+        f = open(file_handle, **kwargs)
+        opened = True
+    elif Path is not None and isinstance(file_handle, Path):
+        f = file_handle.open(**kwargs)
+        opened = True
+    else:
+        f = file_handle
+
+    try:
+        yield f
+    finally:
+        if opened:
+            f.close()

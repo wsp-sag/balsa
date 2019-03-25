@@ -57,3 +57,5 @@ def _prep_matrix_dict(matrices: Dict[str, MATRIX_TYPES], desired_zone_index: pd.
 
 def to_omx(file: str, matrices: Dict[str, MATRIX_TYPES], zone_index: pd.Index=None, title: str='',
                descriptions: Dict[str, str]=None,  attrs: Dict[str, dict]=None, mapping: str='zone_numbers'): pass
+
+def open_file(file_handle, **kwargs): pass

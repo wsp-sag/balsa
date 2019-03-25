@@ -23,5 +23,13 @@ Vector = Union[pd.Series, np.ndarray]
 
 def aggregate_matrix(matrix: Union[pd.DataFrame, pd.Series],
                      groups: Vector=None,  row_groups: Vector=None, col_groups: Vector=None,
-                     aggfunc: Callable[List[Iterable[Num]], Num]=np.sum) -> Union[pd.DataFrame, pd.Series]:
+                     aggfunc: Callable[[Iterable[Num]], Num]=np.sum) -> Union[pd.DataFrame, pd.Series]:
+    pass
+
+
+def fast_stack(frame: pd.DataFrame, multi_index: pd.MultiIndex, deep_copy: bool=True) -> pd.Series:
+    pass
+
+
+def fast_unstack(series: pd.Series, index: pd.Index, columns: pd.Index, deep_copy: bool=True) -> pd.DataFrame:
     pass

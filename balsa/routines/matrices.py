@@ -22,7 +22,9 @@ from __future__ import division as _division
 import multiprocessing as _mp
 import numba as _nb
 import numpy as _np
+import numpy as np
 import pandas as _pd
+from pandas import Series, DataFrame
 
 EPS = 1.0e-7
 
@@ -372,3 +374,72 @@ def _aggregate_frame(matrix, row_aggregator, col_aggregator, aggfunc):
 
 def _aggregate_series(matrix, row_aggregator, col_aggregator, aggfunc):
     return matrix.groupby([row_aggregator, col_aggregator]).aggregate(aggfunc)
+
+
+def fast_stack(frame, multi_index, deep_copy=True):
+    """
+    Performs the same action as DataFrame.stack(), but provides better performance when the target stacked index is
+    known before hand. Useful in converting a lot of matrices from "wide" to "tall" format. The inverse of fast_unstack()
+
+    Notes:
+        This function does not check that the entries in the multi_index are compatible with the index and columns of the
+        source DataFrame, only that the lengths are compatible. It can therefore be used to assign a whole new set of
+        labels to the result.
+
+    Args:
+        frame (DataFrame): DataFrame to stack.
+        multi_index (Index): The 2-level MultiIndex known ahead-of-time.
+        deep_copy (bool): Flag indicating if the returned Series should be a view of the underlying data
+            (deep_copy=False) or a copy of it (deep_copy=True). A deep copy takes a little longer to convert and takes
+            up more memory but preserves the original data of the DataFrame. The default value of True is recommended
+            for most uses.
+
+    Returns:
+        Series: The stacked data.
+
+    """
+
+    assert multi_index.nlevels == 2, "Target index must be a MultiIndex with exactly 2 levels"
+    assert len(multi_index) == len(frame.index) * len(frame.columns), "Target index and source index and columns do " \
+                                                                      "not have compatible lengths"
+
+    array = np.ascontiguousarray(frame.values)
+    array = array.copy() if deep_copy else array[:, :]
+    array.shape = len(frame.index) * len(frame.columns)
+
+    return Series(array, index=multi_index)
+
+
+def fast_unstack(series, index, columns, deep_copy=True):
+    """
+    Performs the same action as DataFrame.unstack(), but provides better performance when the target unstacked index and
+    columns are known before hand. Useful in converting a lot of matrices from "tall" to "wide" format. The inverse of
+    fast_stack().
+
+    Notes:
+        This function does not check that the entries in index and columns are compatible with the MultiIndex of the
+        source Series, only that the lengths are compatible. It can therefore be used to assign a whole new set of
+        labels to the result.
+
+    Args:
+        series (Series): Series with 2-level MultiIndex to stack()
+        index (Index): The row index known ahead-of-time
+        columns (Index): The columns index known ahead-of-time.
+        deep_copy (bool): Flag indicating if the returned DataFrame should be a view of the underlying data
+            (deep_copy=False) or a copy of it (deep_copy=True). A deep copy takes a little longer to convert and takes
+            up more memory but preserves the original data of the Series. The default value of True is recommended
+            for most uses.
+
+    Returns:
+        DataFrame: The unstacked data
+
+    """
+
+    assert series.index.nlevels == 2, "Source Series must have an index with exactly 2 levels"
+    assert len(series) == len(index) * len(columns), "Source index and target index and columns do not have " \
+                                                     "compatible lengths"
+
+    array = series.values.copy() if deep_copy else series.values[:]
+    array.shape = len(index), len(columns)
+
+    return DataFrame(array, index=index, columns=columns)
