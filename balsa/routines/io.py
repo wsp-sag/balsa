@@ -8,7 +8,6 @@ import pandas as pd
 from six import iteritems, itervalues, iterkeys, string_types
 
 from balsa.routines.matrices import fast_unstack
-from balsa.utils.utils import Path
 
 try:
     from pathlib import Path
