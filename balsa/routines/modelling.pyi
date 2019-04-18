@@ -12,12 +12,13 @@ def tlfd(values: _vector_type, bin_start: int=0, bin_end: int=200, bin_step: int
     pass
 
 
-def distance_matrix(x: _vector_type, y: _vector_type, tall: bool=False, method: str='euclidean', coord_unit: float=1.0,
-                    labels: Union[Iterable, Index]=None
+def distance_matrix(x: _vector_type, y: _vector_type, tall: bool=False, method: str='euclidean',
+                    labels0: Union[Iterable, Index]=None, x1: _vector_type=None, y1: _vector_type=None,
+                    labels1: Union[Iterable, Index]=None, earth_radius_factor: float=1.0, coord_unit: float=1.0
                     ) -> Union[ndarray, Series, DataFrame]:
     pass
 
 
 def distance_array(x0: _vector_type, y0: _vector_type, x1: _vector_type, y1: _vector_type, method: str='euclidean',
-                   **kwargs):
+                   earth_radius_factor: float=1.0, coord_unit: float=1.0):
     pass

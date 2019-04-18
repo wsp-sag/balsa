@@ -116,21 +116,52 @@ def _prepare_distance_kwargs(kwargs):
             kwargs[key] = val
 
 
-def distance_matrix(x, y, tall=False, method='euclidean', labels=None, **kwargs):
+def _check_vectors(description: str, *vectors):
+    if len(vectors) < 1: return []
+
+    first = vectors[0]
+    retval = []
+    common_index, common_length = None, None
+    if isinstance(first, pd.Series):
+        common_index = first.index
+        common_length = len(common_index)
+        retval.append(first.values[...])
+    else:
+        retval.append(first[...])
+
+    for vector in vectors[1:]:
+        if isinstance(vector, pd.Series):
+            assert vector.index.equals(common_index), "All %s Series must have the same index" % description
+            retval.append(vector.values[...])
+        else:
+            assert len(vector) == common_length, "All %s vectors must have the same length" % description
+            retval.append(vector[...])
+
+    return common_index, retval
+
+
+def distance_matrix(x0, y0, tall=False, method='euclidean', labels0=None, x1=None, y1=None, labels1=None, **kwargs):
     """
-    Fastest method of computing a distance matrix from 2 vectors of coordinates, using the NumExpr package. Supports
-    several equations for computing distances
+    Fastest method of computing a distance matrix from vectors of coordinates, using the NumExpr package. Supports
+    several equations for computing distances.
+
+    Accepts two or four vectors of x-y coordinates. If only two vectors are provided (x0, y0), the result will be the
+    2D product of this vector with itself (vector0 * vector0). If all four are provided (x0, y0, x1, y1), the result
+    will be the 2D product of the first and second vector (vector0 * vector1).
 
     Args:
-        x (ndarray or Series): Vector of x-coordinates, of length N. Can be a Series to specify labels.
-        y (ndarray or Series): Vector of y-coordinates, of length N. Can be a Series to specify labels.
-        tall (bool): If True, returns a vecotr whose shape is (N x N,). Otherwise, returns a matrix whose shape is
-            (N, N).
+        x0 (ndarray or Series): Vector of x-coordinates, of length N0. Can be a Series to specify labels.
+        y0 (ndarray or Series): Vector of y-coordinates, of length N0. Can be a Series to specify labels.
+        tall (bool): If True, returns a vector whose shape is N0 x N1. Otherwise, returns a matrix whose shape is
+            (N0, N1).
         method (str): Specifies the method by which to compute distance. Valid options are:
             'EUCLIDEAN': Computes straight-line, 'as-the-crow flies' distance.
             'MANHATTAN': Computes the Manhattan distance
             'HAVERSINE': Computes distance based on lon/lat.
-        labels (None or list or Index): Optional labels for each item in the x, y vectors; of length N.
+        labels0 (Index-like): Override set of labels to use if x0 and y0 are both raw Numpy arrays
+        x1 (ndarray or Series): Optional second vector of x-coordinates, of length N1. Can be a Series to specify labels
+        y1 (ndarray or Series): Optional second vector of y-coordinates, of length N1. Can be a Series to specify labels
+        labels1 (Index-like): Override set of labels to use if x1 and y1 are both raw Numpy arrays
 
         **kwargs: Additional scalars to pass into the evaluation context
             coord_unit (float): Factor applies directly to the result, defaulting to 1.0 (no conversion). Useful when
@@ -155,53 +186,48 @@ def distance_matrix(x, y, tall=False, method='euclidean', labels=None, **kwargs)
 
     """
 
-    x_is_series, y_is_series = isinstance(x, pd.Series), isinstance(y, pd.Series)
+    second_coords = x1 is not None and y1 is not None
 
-    if x_is_series and y_is_series:
-        assert x.index.equals(y.index), "X and Y series must have the same index"
-        if labels is None: labels = x.index
-        x0, y0 = x.values[...], y.values[...]
-    elif x_is_series:
-        assert len(y) == len(x), "The length of the Y array does not match the length of the X series"
-        if labels is None: labels = x.index
-        x0, y0 = x.values[...], y[...]
-    elif y_is_series:
-        assert len(y) == len(x), "The length of the X array does not match the length of the Y series"
-        if labels is None: labels = y.index
-        x0, y0 = x[...], y.values[...]
+    descr = "first coordinate" if second_coords else "coordinate"
+    temp_labels, (x_array0, y_array0) = _check_vectors(descr, x0, y0)
+    if labels0 is None: labels0 = temp_labels
+
+    if second_coords:
+        temp_labels, (x_array1, y_array1) = _check_vectors("second coordinate", x1, y1)
+        if labels1 is None: labels1 = temp_labels
     else:
-        assert len(x) == len(y), "X and Y arrays are not the same length"
-        if labels is not None: assert len(labels) == len(x), "Vector length of labels does not match X/Y vector length"
-        x0, y0 = x[...], y[...]
+        x_array1 = x_array0[...]
+        y_array1 = y_array0[...]
+        labels1 = labels0
 
-    x1, y1 = x0[...], y0[...]
-    n = len(x0)
+    n0, n1 = len(x_array0), len(x_array1)
 
-    x0.shape = 1, n
-    y0.shape = 1, n
-    x1.shape = n, 1
-    y1.shape = n, 1
+    x_array0.shape = n0, 1
+    y_array0.shape = n0, 1
+    x_array1.shape = 1, n1
+    y_array1.shape = 1, n1
 
     expr = _get_distance_equation(method)
     kwargs = kwargs.copy()
     _prepare_distance_kwargs(kwargs)
-    kwargs['x0'] = x0
-    kwargs['x1'] = x1
-    kwargs['y0'] = y0
-    kwargs['y1'] = y1
+    kwargs['x0'] = x_array0
+    kwargs['x1'] = x_array1
+    kwargs['y0'] = y_array0
+    kwargs['y1'] = y_array1
 
     raw_matrix = ne.evaluate(expr, local_dict=kwargs)
+    labelled_result = labels0 is not None and labels1 is not None
 
     if tall:
-        raw_matrix.shape = n * n
-        if labels is None: return raw_matrix
+        raw_matrix.shape = n0 * n1
+        if not labelled_result: return raw_matrix
 
-        mi = pd.MultiIndex.from_product([labels, labels])
+        mi = pd.MultiIndex.from_product([labels0, labels1])
         return pd.Series(raw_matrix, index=mi)
-    elif labels is None:
+    elif not labelled_result:
         return raw_matrix
 
-    return pd.DataFrame(raw_matrix, index=labels, columns=labels)
+    return pd.DataFrame(raw_matrix, index=labels0, columns=labels1)
 
 
 def distance_array(x0, y0, x1, y1, method='euclidean', **kwargs):
@@ -226,19 +252,12 @@ def distance_array(x0, y0, x1, y1, method='euclidean', **kwargs):
 
     Returns:
         ndarray: Distance from the vectors of first points to the vectors of second points.
+        Series: Distance from the vectors of first points to the vectors of second points, when one or more coordinate
+            arrays are given as a Series object
 
     """
-    assert len(x0) == len(y0) == len(x1) == len(y1)
 
-    def coerce_to_numpy(item):
-        if isinstance(item, pd.Series):
-            return item.values
-        return item
-
-    x0 = coerce_to_numpy(x0)
-    x1 = coerce_to_numpy(x1)
-    y0 = coerce_to_numpy(y0)
-    y1 = coerce_to_numpy(y1)
+    labels, (x0, y0, x1, y1) = _check_vectors("coordinate", x0, y0, x1, y1)
 
     expr = _get_distance_equation(method)
     kwargs = kwargs.copy()
@@ -249,4 +268,8 @@ def distance_array(x0, y0, x1, y1, method='euclidean', **kwargs):
     kwargs['y1'] = y1
 
     result_array = ne.evaluate(expr, local_dict=kwargs)
+
+    if labels is not None:
+        return pd.Series(result_array, index=labels)
+
     return result_array
