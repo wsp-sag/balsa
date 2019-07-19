@@ -1,20 +1,4 @@
-"""
-Core Matrix Manipulation Tools
-==============================
-
-==========================================================================
-Matrix Balancing
-==========================================================================
-matrix_balancing_1d    Singly-constrained matrix balancing
-matrix_balancing_2d    Doubly-constrained balancing using
-                       iterative-proportional fitting
-==========================================================================
-
-"""
-
 from __future__ import division as _division
-
-from typing import Union
 
 import multiprocessing as _mp
 import numba as _nb

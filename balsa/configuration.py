@@ -12,8 +12,8 @@ try:
 except ImportError:
     PATHLIB_LOADED = False
 
-from balsa.routines.general import is_identifier
-from balsa.routines.io import open_file
+from .routines.general import is_identifier
+from .routines.io.common import open_file
 
 
 class ConfigParseError(IOError):
