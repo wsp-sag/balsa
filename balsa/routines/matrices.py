@@ -14,12 +14,14 @@ matrix_balancing_2d    Doubly-constrained balancing using
 
 from __future__ import division as _division
 
+from typing import Union
+
 import multiprocessing as _mp
 import numba as _nb
 import numpy as _np
-import numpy as np
 import pandas as _pd
-from pandas import Series, DataFrame
+from pandas import Series, DataFrame, Index
+import numexpr as _ne
 
 EPS = 1.0e-7
 
@@ -398,7 +400,7 @@ def fast_stack(frame, multi_index, deep_copy=True):
     assert len(multi_index) == len(frame.index) * len(frame.columns), "Target index and source index and columns do " \
                                                                       "not have compatible lengths"
 
-    array = np.ascontiguousarray(frame.values)
+    array = _np.ascontiguousarray(frame.values)
     array = array.copy() if deep_copy else array[:, :]
     array.shape = len(frame.index) * len(frame.columns)
 
@@ -438,3 +440,101 @@ def fast_unstack(series, index, columns, deep_copy=True):
     array.shape = len(index), len(columns)
 
     return DataFrame(array, index=index, columns=columns)
+
+
+def _check_disaggregation_input(mapping: Series, proportions: Series) -> _np.ndarray:
+    assert mapping is not None
+    assert proportions is not None
+    assert mapping.index.equals(proportions.index)
+
+    # Force proportions to sum to 1 by dividing by the total in each parent
+    parent_totals = (
+        proportions.groupby(mapping)  # Group the proportions by parent zones
+        .sum()                        # Sum the total for each parent
+        .reindex(mapping)             # Reindex for all child zones
+        .values                       # Get the ndarray to avoid index alignment problems
+    )
+
+    return proportions.values / parent_totals
+
+
+def disaggregate_matrix(matrix, mapping=None, proportions=None,row_mapping=None, row_proportions=None,
+                        col_mapping=None, col_proportions=None):
+    """
+    Split multiple rows and columns in a matrix all at once. The cells in the matrix MUST be numeric, but the row and
+    column labels do not.
+
+    Args:
+        matrix: The input matrix to disaggregate
+        mapping: Dict-like Series of "New label" : "Old label". Sets both the row_mapping and col_mapping variables if
+            provided (resulting in a square matrix).
+        proportions: Dict-like Series of "New label": "Proportion of old label". Its index must match the index of
+            the mapping argument. Sets both the row_proportions and col_proportions arguments if provided.
+        row_mapping: Same as mapping, except applied only to the rows.
+        row_proportions: Same as proportions, except applied only to the rows
+        col_mapping: Same as mapping, except applied only to the columns.
+        col_proportions: Same as proportions, except applied only to the columns
+
+    Returns:
+        An expanded DataFrame with the new indices. The new matrix will sum to the same total as the original.
+
+    Examples:
+
+        df:
+        |   | A  | B  | C  |
+        |---|----|----|----|
+        | A | 10 | 30 | 20 |
+        | B | 20 | 10 | 10 |
+        | C | 30 | 20 | 20 |
+
+        correspondence:
+        | new | old | prop |
+        |-----|-----|------|
+        | A1  |  A  | 0.25 |
+        | A2  |  A  | 0.75 |
+        | B1  |  B  | 0.55 |
+        | B2  |  B  | 0.45 |
+        | C1  |  C  | 0.62 |
+        | C2  |  C  | 0.38 |
+
+        new_matrix = disaggregate_matrix(df, mapping=correspondence['old'], proportions=correspondence['prop'])
+
+        new_matrix:
+        | new |  A1   | A2    | B1     | B2     | C1    | C2    |
+        |-----|-------|-------|--------|--------|-------|-------|
+        |  A1 | 0.625 | 1.875 |  4.125 |  3.375 | 3.100 | 1.900 |
+        |  A2 | 1.875 | 5.625 | 12.375 | 10.125 | 9.300 | 5.700 |
+        |  B1 | 2.750 | 8.250 |  3.025 |  2.475 | 3.410 | 2.090 |
+        |  B2 | 2.250 | 6.750 |  2.475 |  2.025 | 2.790 | 1.710 |
+        |  C1 | 4.650 | 13.95 |  6.820 |  5.580 | 7.688 | 4.712 |
+        |  C2 | 2.850 |  8.55 |  4.180 |  3.420 | 4.712 | 2.888 |
+
+    """
+
+    # Check that all inputs are specified
+    if mapping is not None:
+        row_mapping, col_mapping = mapping, mapping
+    if proportions is not None:
+        row_proportions, col_proportions = proportions, proportions
+
+    row_proportions = _check_disaggregation_input(row_mapping, row_proportions)
+    col_proportions = _check_disaggregation_input(col_mapping, col_proportions)
+
+    # Validate inputs
+    new_rows = row_mapping.index
+    new_cols = col_mapping.index
+
+    # Get raw indexers for NumPy & lookup the value in each parent cell
+    row_indexer = matrix.index.get_indexer(row_mapping)[:, _np.newaxis]
+    col_indexer = matrix.columns.get_indexer(col_mapping)[_np.newaxis, :]
+    parent_cells = matrix.values[row_indexer, col_indexer]
+
+    # Convert proportions to 2D vectors
+    row_proportions = row_proportions[:, _np.newaxis]
+    col_proportions = col_proportions[_np.newaxis, :]
+
+    # Multiply each parent cell by its disaggregation proportion & return
+    result_matrix = _ne.evaluate("parent_cells * row_proportions * col_proportions")
+
+    result_matrix = DataFrame(result_matrix, index=new_rows, columns=new_cols)
+    return result_matrix

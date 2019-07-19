@@ -33,3 +33,8 @@ def fast_stack(frame: pd.DataFrame, multi_index: pd.MultiIndex, deep_copy: bool=
 
 def fast_unstack(series: pd.Series, index: pd.Index, columns: pd.Index, deep_copy: bool=True) -> pd.DataFrame:
     pass
+
+def disaggregate_matrix(matrix: pd.DataFrame, mapping: pd.Series = None, proportions: pd.Series = None,
+                        row_mapping: pd.Series = None, row_proportions: pd.Series = None, col_mapping: pd.Series = None,
+                        col_proportions: pd.Series = None) -> pd.DataFrame:
+    pass
