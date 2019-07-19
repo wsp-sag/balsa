@@ -24,6 +24,9 @@ var/
 .installed.cfg
 *.egg
 setup.cfg
+doc/_build
+doc/_static
+doc/_templates
 
 # PyInstaller
 #  Usually these files are written by a python script from a template
