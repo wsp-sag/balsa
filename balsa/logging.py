@@ -19,7 +19,7 @@ logging.addLevelName(REPORT_LEVEL, 'REPORT')
 # region Classes
 
 
-class SetFilter(object):
+class _SetFilter(object):
 
     def __init__(self):
         self._excluded = set()
@@ -34,7 +34,7 @@ class SetFilter(object):
         self._excluded.remove(level)
 
 
-class RangeFilter(object):
+class _RangeFilter(object):
 
     def __init__(self, low, high):
         self._low = int(low)
@@ -44,10 +44,10 @@ class RangeFilter(object):
         return self. _low <= record.levelno <= self._high
 
 
-class SwitchFormatter(logging.Formatter):
+class _SwitchFormatter(logging.Formatter):
 
     def __init__(self, default_format):
-        super(SwitchFormatter, self).__init__()
+        super(_SwitchFormatter, self).__init__()
         self._default = logging.Formatter(default_format)
         self._formats = {}
 
@@ -111,17 +111,17 @@ def include_console_level(level):
     _CONSOLE_FILTER.include(level)
 
 
-_CONSOLE_FILTER = SetFilter()
-_CONSOLE_FORMATTER = SwitchFormatter(_DEFAULT_FMT)
+_CONSOLE_FILTER = _SetFilter()
+_CONSOLE_FORMATTER = _SwitchFormatter(_DEFAULT_FMT)
 
 _STDOUT_HANLDER = logging.StreamHandler(sys.stdout)
 _STDOUT_HANLDER.addFilter(_CONSOLE_FILTER)
-_STDOUT_HANLDER.addFilter(RangeFilter(0, logging.ERROR - 1))
+_STDOUT_HANLDER.addFilter(_RangeFilter(0, logging.ERROR - 1))
 _STDOUT_HANLDER.setFormatter(_CONSOLE_FORMATTER)
 
 _STDERR_HANDLER = logging.StreamHandler(sys.stderr)
 _STDERR_HANDLER.addFilter(_CONSOLE_FILTER)
-_STDERR_HANDLER.addFilter(RangeFilter(logging.ERROR, 100))
+_STDERR_HANDLER.addFilter(_RangeFilter(logging.ERROR, 100))
 _STDERR_HANDLER.setFormatter(_CONSOLE_FORMATTER)
 
 set_console_format(_DEFAULT_FMT, level=TIP_LEVEL, colour='blue')
@@ -158,7 +158,7 @@ def log_to_file(file_name: str, name, *, append=False):
     write_mode = 'a' if append else 'w'
     handler = logging.FileHandler(file_name, mode=write_mode)
     handler.setFormatter(logging.Formatter(_DEFAULT_FMT))
-    handler.addFilter(RangeFilter(0, 100))
+    handler.addFilter(_RangeFilter(0, 100))
 
     root.addHandler(handler)
     try:
