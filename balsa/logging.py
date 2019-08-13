@@ -68,14 +68,23 @@ class _SwitchFormatter(logging.Formatter):
 
 
 class ModelLogger(logging.Logger):
+    """
+    Extends the standard Python Logger object, adding additional logging statments such as .report().
+    """
 
     def report(self, msg, *args, **kwargs):
+        """Report useful model statistics or results to the user. Distinct from .info() which provides status
+        information. Printed in green when colours are available."""
         self.log(REPORT_LEVEL, msg, *args, **kwargs)
 
     def tip(self, msg, *args, **kwargs):
+        """Provide a more significant status statement (e.g. new section of the model). Simillar to .info(), but
+        more emphasized. Printed in blue when colours are available."""
         self.log(TIP_LEVEL, msg, *args, **kwargs)
 
     def pipe(self, msg, levelno=0, levelname=None, asctime=None, name=None):
+        """Turn a string message into a loging statment. Designed to work with stdout when working with
+        sub-processes."""
         d = {"msg": msg}
         if levelno is not None: d['levelno'] = levelno
         if levelname is not None: d['levelname'] = levelname
@@ -134,6 +143,17 @@ set_console_format(_DEFAULT_FMT, level=logging.WARNING, colour='red')
 
 
 def init_root(root_name: str) -> ModelLogger:
+    """
+    Call this function **at the start of a program** to setup Balsa's logging features, including colours.
+
+    Args:
+        root_name: Loggers use dotted namespaces to determine inheritance, which also gets passed into the logging
+            statements. So use a descriptive name for your program, with no spaces in it. Subsequent loggers should
+            include this name, then a dot, and then the model-specific name.
+
+    Returns: The root ModelLogger object.
+
+    """
     logging.setLoggerClass(ModelLogger)
     root = logging.getLogger(root_name)
     root.propagate = True
