@@ -17,7 +17,9 @@ Balsa is published by the Systems Analytics for Policy group inside WSP Canada.
  + Plotting functions such a Trip Length Frequency Distributions
  + Pretty Logging utilities for use in program applications
  + Management of JSON configuration files, including comments.
- + and more!  
+ + and more! 
+ 
+ Balsa is compatible with Python 2.7 and 3.5+
 
 ## Installation
 
