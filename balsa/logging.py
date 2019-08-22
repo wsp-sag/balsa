@@ -69,21 +69,21 @@ class _SwitchFormatter(logging.Formatter):
 
 class ModelLogger(logging.Logger):
     """
-    Extends the standard Python Logger object, adding additional logging statments such as .report().
+    Extends the standard Python Logger object, adding additional logging statements such as ``.report()``.
     """
 
     def report(self, msg, *args, **kwargs):
-        """Report useful model statistics or results to the user. Distinct from .info() which provides status
+        """Report useful model statistics or results to the user. Distinct from ``.info()`` which provides status
         information. Printed in green when colours are available."""
         self.log(REPORT_LEVEL, msg, *args, **kwargs)
 
     def tip(self, msg, *args, **kwargs):
-        """Provide a more significant status statement (e.g. new section of the model). Simillar to .info(), but
+        """Provide a more significant status statement (e.g. new section of the model). Similar to ``.info()``, but
         more emphasized. Printed in blue when colours are available."""
         self.log(TIP_LEVEL, msg, *args, **kwargs)
 
     def pipe(self, msg, levelno=0, levelname=None, asctime=None, name=None):
-        """Turn a string message into a loging statment. Designed to work with stdout when working with
+        """Turn a string message into a logging statement. Designed to work with stdout when working with
         sub-processes."""
         d = {"msg": msg}
         if levelno is not None: d['levelno'] = levelno
@@ -123,10 +123,10 @@ def include_console_level(level):
 _CONSOLE_FILTER = _SetFilter()
 _CONSOLE_FORMATTER = _SwitchFormatter(_DEFAULT_FMT)
 
-_STDOUT_HANLDER = logging.StreamHandler(sys.stdout)
-_STDOUT_HANLDER.addFilter(_CONSOLE_FILTER)
-_STDOUT_HANLDER.addFilter(_RangeFilter(0, logging.ERROR - 1))
-_STDOUT_HANLDER.setFormatter(_CONSOLE_FORMATTER)
+_STDOUT_HANDLER = logging.StreamHandler(sys.stdout)
+_STDOUT_HANDLER.addFilter(_CONSOLE_FILTER)
+_STDOUT_HANDLER.addFilter(_RangeFilter(0, logging.ERROR - 1))
+_STDOUT_HANDLER.setFormatter(_CONSOLE_FORMATTER)
 
 _STDERR_HANDLER = logging.StreamHandler(sys.stderr)
 _STDERR_HANDLER.addFilter(_CONSOLE_FILTER)
@@ -151,7 +151,8 @@ def init_root(root_name: str) -> ModelLogger:
             statements. So use a descriptive name for your program, with no spaces in it. Subsequent loggers should
             include this name, then a dot, and then the model-specific name.
 
-    Returns: The root ModelLogger object.
+    Returns:
+        ModelLogger: The root ModelLogger object.
 
     """
     logging.setLoggerClass(ModelLogger)
@@ -160,7 +161,7 @@ def init_root(root_name: str) -> ModelLogger:
     root.setLevel(1)  # Log everything
 
     root.handlers.clear()  # Remove any existing handlers
-    root.addHandler(_STDOUT_HANLDER)
+    root.addHandler(_STDOUT_HANDLER)
     root.addHandler(_STDERR_HANDLER)
 
     return root

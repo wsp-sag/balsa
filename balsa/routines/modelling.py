@@ -5,32 +5,35 @@ from six import iteritems
 
 
 def tlfd(values, bin_start=0, bin_end=200, bin_step=2, weights=None, intrazonal=None, label_type='MULTI',
-                 include_top=False):
+         include_top=False):
     """
     Generates a Trip Length Frequency Distribution (i.e. a histogram) from given data. Produces a "pretty" Pandas object
     suitable for charting.
 
     Args:
-        values (ndarray or Series): Vector of trip lengths, with a length  of "N". Can be provided from a table of
-            trips, or from a matrix (in "tall" format).
-        bin_start (int): The minimum bin value, in the same units as `values`. Default is 0.
-        bin_end (int): The maximum bin value, in the same units as `values`. Defaults to 200. Values over this limit
-            are either ignored, or counted under a separate category (see `include top`)
-        bin_step (int): The size of each bin, in the same unit as `values`. Default is 2.
-        weights (ndarray, Series, or None: Optional vector of weights to use of length "N", to produce a weighted
-            histogram.
-        intrazonal (ndarray, Seires, or None): Optional boolean vector indicating which values are considered
-            "intrazonal". When specified, prepends an "intrazonal" category to the front of the histogram.
-        label_type (str): String indicating the format of the returned index. Options are:
-            - "MULTI": The returned index will be a 2-level MultiIndex ['from', 'to'];
-            - "TEXT": The returned index will be text-based: "0 to 2";
-            - "BOTTOM": The returned index will be the bottom of each bin; and
-            - "TOP": The returned index will be the top of each bin.
-        include_top (bool): If True, the function will count all values (and weights, if provided) above the `bin_top`,
-            and add them to the returned Series. This bin is described as going from `bin_top` to `inf`.
+        values (Union[numpy.ndarray, pandas.Series]): A vector of trip lengths, with a length  of "N". Can be provided
+            from a table of trips, or from a matrix (in "tall" format).
+        bin_start (int): Defaults is ``0``. The minimum bin value, in the same units as ``values``.
+        bin_end (int): Defaults to ``200``. The maximum bin value, in the same units as ``values``. Values over this
+            limit are either ignored, or counted under a separate category (see ``include_top``)
+        bin_step (int): Default is ``2``. The size of each bin, in the same unit as ``values``.
+        weights (Union[numpy.ndarray, pandas.Series], optional): Defaults to ``None``. A vector of weights to use of
+            length "N", to produce a weighted histogram.
+        intrazonal (Union[numpy.ndarray, pandas.Series], optional): Defaults to ``None``. A boolean vector indicating
+            which values are considered "intrazonal". When specified, prepends an ``intrazonal`` category to the front
+            of the histogram.
+        label_type (str, optional): Defaults to ``'MULTI'``. The format of the returned index. Options are:
+            - ``MULTI``: The returned index will be a 2-level MultiIndex ['from', 'to'];
+            - ``TEXT``: The returned index will be text-based: "0 to 2";
+            - ``BOTTOM``: The returned index will be the bottom of each bin; and
+            - ``TOP``: The returned index will be the top of each bin.
+        include_top (bool, optional): Defaults to ``False``. If True, the function will count all values (and weights,
+            if provided) above the `bin_top`, and add them to the returned Series. This bin is described as going from
+            `bin_top` to `inf`.
 
     Returns:
-        Series: The weighted or unweighted histogram, depending on the options configured above.
+        pandas.Series:
+            The weighted or unweighted histogram, depending on the options configured above.
 
     """
     bins = list(range(bin_start, bin_end + bin_step, bin_step))
@@ -140,7 +143,7 @@ def _check_vectors(description: str, *vectors):
     return common_index, retval
 
 
-def distance_matrix(x0, y0, tall=False, method='euclidean', labels0=None, x1=None, y1=None, labels1=None, **kwargs):
+def distance_matrix(x0, y0, tall=False, method='EUCLIDEAN', labels0=None, x1=None, y1=None, labels1=None, **kwargs):
     """
     Fastest method of computing a distance matrix from vectors of coordinates, using the NumExpr package. Supports
     several equations for computing distances.
@@ -150,33 +153,40 @@ def distance_matrix(x0, y0, tall=False, method='euclidean', labels0=None, x1=Non
     will be the 2D product of the first and second vector (vector0 * vector1).
 
     Args:
-        x0 (ndarray or Series): Vector of x-coordinates, of length N0. Can be a Series to specify labels.
-        y0 (ndarray or Series): Vector of y-coordinates, of length N0. Can be a Series to specify labels.
-        tall (bool): If True, returns a vector whose shape is N0 x N1. Otherwise, returns a matrix whose shape is
-            (N0, N1).
-        method (str): Specifies the method by which to compute distance. Valid options are:
-            'EUCLIDEAN': Computes straight-line, 'as-the-crow flies' distance.
-            'MANHATTAN': Computes the Manhattan distance
-            'HAVERSINE': Computes distance based on lon/lat.
-        labels0 (Index-like): Override set of labels to use if x0 and y0 are both raw Numpy arrays
-        x1 (ndarray or Series): Optional second vector of x-coordinates, of length N1. Can be a Series to specify labels
-        y1 (ndarray or Series): Optional second vector of y-coordinates, of length N1. Can be a Series to specify labels
-        labels1 (Index-like): Override set of labels to use if x1 and y1 are both raw Numpy arrays
-
+        x0 (Union[numpy.ndarray, pandas.Series]): Vector of x-coordinates, of length N0. Can be a Series to specify labels.
+        y0 (Union[numpy.ndarray, pandas.Series]): Vector of y-coordinates, of length N0. Can be a Series to specify labels.
+        tall (bool, optional): Defaults to ``False``. If True, returns a vector whose shape is N0 x N1. Otherwise,
+            returns a matrix whose shape is (N0, N1).
+        method (str, optional): Defaults to ``'EUCLIDEAN'``. Specifies the method by which to compute distance. Valid
+            options are:
+            ``'EUCLIDEAN'``: Computes straight-line, 'as-the-crow flies' distance.
+            ``'MANHATTAN'``: Computes the Manhattan distance
+            ``'HAVERSINE'``: Computes distance based on lon/lat.
+        labels0 (pandas.Index-like, optional): Defaults to ``None``. Override set of labels to use if x0 and y0 are both raw
+            Numpy arrays
+        x1 (Union[numpy.ndarray, pandas.Series], optional): Defaults to ``None``. A second vector of x-coordinates, of length
+            N1. Can be a Series to specify labels
+        y1 (Union[numpy.ndarray, pandas.Series], optional): Defaults to ``None``. A second vector of y-coordinates, of length
+            N1. Can be a Series to specify labels
+        labels1 (pandas.Index-like): Override set of labels to use if x1 and y1 are both raw Numpy arrays
         **kwargs: Additional scalars to pass into the evaluation context
-            coord_unit (float): Factor applies directly to the result, defaulting to 1.0 (no conversion). Useful when
-                the coordinates are provided in one unit (e.g. m) and the desired result is in a different unit (e.g.
-                km). Only used for Euclidean or Manhattan distance
-            earth_radius_factor (float): Factor to convert from km to other units when using Haversine distance
+
+    Kwargs:
+        coord_unit (float):
+            Factor applies directly to the result, defaulting to 1.0 (no conversion). Useful when the coordinates are
+            provided in one unit (e.g. m) and the desired result is in a different unit (e.g. km). Only used for
+            Euclidean or Manhattan distance
+        earth_radius_factor (float):
+            Factor to convert from km to other units when using Haversine distance
 
     Returns:
-        Series: Returned when `tall=True`, and labels can be inferred (see note below). Will always be have 2-level
-            MultiIndex.
-        DataFrame: Returned when `tall=False` and labels can be inferred (see notes below).
-        ndarray: Returned when labels could not be inferred (see notes below). If `tall=True` the array will be
-            1-dimensional, with shape (N x N,). Otherwise, it will 2-dimensional with shape (N, N)
+        pandas.Series, pandas.DataFrame or numpy.ndarray:
+            A *Series* will be returned when ``tall=True``, and labels can be inferred and will always have 2-level
+            MultiIndex. A *DataFrame* will be returned when ``tall=False`` and labels can be inferred. A *ndarray* will
+            be returned when labels could not be inferred; if ``tall=True`` the array will be 1-dimensional, with shape
+            (N x N,). Otherwise, it will 2-dimensional with shape (N, N)
 
-    Notes:
+    Note:
         The type of the returned object depends on whether labels can be inferred from the arguments. This is always
         true when the `labels` argument is specified, and the returned value will use cross-product of the `labels`
         vector.
@@ -240,20 +250,25 @@ def distance_array(x0, y0, x1, y1, method='euclidean', **kwargs):
         y0: Y or Lat coordinate of first point
         x1: X or Lon coordinate of second point
         y1: Y or Lat coordinate of second point
-        method: method (str): Specifies the method by which to compute distance. Valid options are:
-            'EUCLIDEAN': Computes straight-line, 'as-the-crow flies' distance.
-            'MANHATTAN': Computes the Manhattan distance
-            'HAVERSINE': Computes distance based on lon/lat.
+        method (str, optional): Defaults to ``'EUCLIDEAN'``. Specifies the method by which to compute distance. Valid
+            options are:
+            ``'EUCLIDEAN'``: Computes straight-line, 'as-the-crow flies' distance.
+            ``'MANHATTAN'``: Computes the Manhattan distance
+            ``'HAVERSINE'``: Computes distance based on lon/lat.
         **kwargs: Additional scalars to pass into the evaluation context
-            coord_unit (float): Factor applies directly to the result, defaulting to 1.0 (no conversion). Useful when
-                the coordinates are provided in one unit (e.g. m) and the desired result is in a different unit (e.g.
-                km). Only used for Euclidean or Manhattan distance
-            earth_radius_factor (float): Factor to convert from km to other units when using Haversine distance
+
+    Kwargs:
+        coord_unit (float):
+            Factor applies directly to the result, defaulting to 1.0 (no conversion). Useful when the
+            coordinates are provided in one unit (e.g. m) and the desired result is in a different unit (e.g. km).
+            Only used for Euclidean or Manhattan distance
+        earth_radius_factor (float):
+            Factor to convert from km to other units when using Haversine distance
 
     Returns:
-        ndarray: Distance from the vectors of first points to the vectors of second points.
-        Series: Distance from the vectors of first points to the vectors of second points, when one or more coordinate
-            arrays are given as a Series object
+        numpy.ndarray or pandas.Series:
+            Distance from the vectors of first points to the vectors of second points. A Series is returned when one or
+            more coordinate arrays are given as a Series object
 
     """
 

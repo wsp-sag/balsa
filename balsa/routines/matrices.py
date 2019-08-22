@@ -11,48 +11,47 @@ EPS = 1.0e-7
 
 
 def matrix_balancing_1d(m, a, axis):
-    """ Balances a matrix using a single constraint.
+    """
+    Balances a matrix using a single constraint.
 
     Args:
-        m (numpy ndarray (M, M)): Matrix to be balanced
-        a (numpy ndarray (M)): Totals
+        m (numpy.ndarray): The matrix (a 2-dimensional ndarray) to be balanced
+        a (numpy.ndarray): The totals vector (a 1-dimensional ndarray) constraint
         axis (int): Direction to constrain (0 = along columns, 1 = along rows)
 
     Return:
-        w :  Numpy ndarray(..., M, M)
+        numpy.ndarray: A balanced matrix
+
     """
 
     assert axis in [0, 1], "axis must be either 0 or 1"
-    assert m.ndim == 2, "m must be a two-dimensional matrix"
-    assert a.ndim == 1, "a must be a two-dimensional matrix"
-    assert m.shape[axis] == a.shape[0], "axis %d of matrice 'm' and 'a' must be the same." % axis
+    assert m.ndim == 2, "`m` must be a two-dimensional matrix"
+    assert a.ndim == 1, "`a` must be an one-dimensional vector"
+    assert m.shape[axis] == a.shape[0], "axis %d of matrices 'm' and 'a' must be the same." % axis
 
     return _balance(m, a, axis)
 
 
-def matrix_balancing_2d(m, a, b, totals_to_use='raise', max_iterations=1000,
-                        rel_error=0.0001, n_procs=1):
-    """ Balances a two-dimensional matrix using iterative proportional fitting.
+def matrix_balancing_2d(m, a, b, totals_to_use='raise', max_iterations=1000, rel_error=0.0001, n_procs=1):
+    """
+    Balances a two-dimensional matrix using iterative proportional fitting.
 
     Args:
-        m (numpy ndarray (M, M): Matrix to be balanced
-        a (numpy ndarray (M)): Row totals
-        b (numpy ndarray (M)): Column totals
-        totals_to_use (str, optional):
-            Describes how to scale the row and column totals if their sums do not match
-            Must be one of ['rows', 'columns', 'average', 'raise']. Defaults to 'raise'
-              - rows: scales the columns totals so that their sums matches the row totals
-              - columns: scales the row totals so that their sums matches the colum totals
-              - average: scales both row and column totals to the average value of their sums
-              - raise: raises an Exception if the sums of the row and column totals do not match
-        max_iterations (int, optional): Maximum number of iterations, defaults to 1000
-        rel_error (float, optional): Relative error stopping criteria, defaults to 1e-4
-        n_procs (int, optional): Number of processors for parallel computation. Defaults to 1. (Not used)
+        m (numpy.ndarray): The matrix (a 2-dimensional ndarray) to be balanced
+        a (numpy.ndarray): The row totals (a 1-dimensional ndarray) to use for balancing
+        b (numpy.ndarray): The column totals (a 1-dimensional ndarray) to use for balancing
+        totals_to_use (str, optional): Defaults to ``'raise'``. Describes how to scale the row and column totals if
+            their sums do not match. Must be one of ['rows', 'columns', 'average', 'raise'].
+            - rows: scales the columns totals so that their sums matches the row totals
+            - columns: scales the row totals so that their sums matches the column totals
+            - average: scales both row and column totals to the average value of their sums
+            - raise: raises an Exception if the sums of the row and column totals do not match
+        max_iterations (int, optional): Defaults to ``1000``. Maximum number of iterations
+        rel_error (float, optional): Defaults to ``1.0E-4``. Relative error stopping criteria
+        n_procs (int, optional): Defaults to ``1``. Number of processors for parallel computation. (Not used)
 
     Return:
-        Numpy ndarray(M, M): balanced matrix
-        float: residual
-        int: n_iterations
+        Tuple[numpy.ndarray, float, int]: The balanced matrix, residual, and n_iterations
     """
     max_iterations = int(max_iterations)
     n_procs = int(n_procs)
@@ -127,15 +126,17 @@ def matrix_balancing_2d(m, a, b, totals_to_use='raise', max_iterations=1000,
 
 
 def _balance(matrix, tot, axis):
-    """ Balances a matrix using a single constraint.
+    """
+    Balances a matrix using a single constraint.
 
     Args:
-        matrix (numpy ndarray: Matrix to be balanced
-        tot (numpy ndarray): Totals
+        matrix (numpy.ndarray): The matrix to be balanced
+        tot (numpy.ndarray): The totals constraint
         axis (int): Direction to constrain (0 = along columns, 1 = along rows)
 
     Return:
-        w :  Numpy ndarray(..., M, M)
+        numpy.ndarray: The balanced matrix
+
     """
     sc = tot / (matrix.sum(axis) + EPS)
     sc = _np.nan_to_num(sc)  # replace divide by 0 errors from the prev. line
@@ -166,16 +167,17 @@ def _nbf_bucket_round(a_, decimals=0):
 
 
 def matrix_bucket_rounding(m, decimals=0):
-    """ Bucket rounds to the given number of decimals.
+    """
+    Bucket rounds to the given number of decimals.
 
     Args:
-        m (np.ndarray or pd.DataFrame): Matrix to be balanced
-        decimals (int, optional):
-            Number of decimal places to round to (default: 0). If decimals is negative,
-            it specifies the number of positions to the left of the decimal point.
+        m (Union[numpy.ndarray, pandas.DataFrame]): The matrix to be rounded
+        decimals (int, optional): Defaults to ``0``. Number of decimal places to round to. If decimals is negative, it
+            specifies the number of positions to the left of the decimal point.
 
     Return:
-        np.ndarray: rounded matrix
+        numpy.ndarray: The rounded matrix
+
     """
 
     # Test if matrix is Pandas DataFrame
@@ -203,18 +205,19 @@ def matrix_bucket_rounding(m, decimals=0):
 
 def split_zone_in_matrix(base_matrix, old_zone, new_zones, proportions):
     """
-    Takes a zone in a matrix (represented as a DataFrame) and splits it into several new zones,
-    prorating affected cells by a vector of proportions (one value for each new zone). The old
-    zone is removed.
+    Takes a zone in a matrix (as a DataFrame) and splits it into several new zones, prorating affected cells by a vector
+    of proportions (one value for each new zone). The old zone is removed.
 
     Args:
-        base_matrix: The matrix to re-shape, as a DataFrame
-        old_zone: Integer number of the original zone to split
-        new_zones: List of integers of the new zones to add
-        proportions: List of floats of proportions to split the original zone to. Must be the same
-            length as `new_zones` and sum to 1.0
+        base_matrix (pandas.DataFrame): The matrix to re-shape
+        old_zone (int): The original zone to split
+        new_zones (List[int]): The list of new zones to add
+        proportions (List[float]): The proportions to split the original zone to. The list must be the same length as
+            ``new_zones`` and sum to 1.0
 
-    Returns: Re-shaped DataFrame
+    Returns:
+        pandas.DataFrame: The re-shaped matrix
+
     """
 
     assert isinstance(base_matrix, _pd.DataFrame), "Base matrix must be a DataFrame"
@@ -277,7 +280,8 @@ def aggregate_matrix(matrix, groups=None, row_groups=None, col_groups=None, aggf
     Aggregates a matrix based on mappings provided for each axis, using a specified aggregation function.
 
     Args:
-        matrix: Matrix data to aggregate. DataFrames and Series with 2-level indices are supported
+        matrix (Union[pandas.DataFrame, pandas.Series]): Matrix data to aggregate. DataFrames and Series with 2-level
+            indices are supported
         groups: Syntactic sugar to specify both row_groups and col_groups to use the same grouping series.
         row_groups: Groups for the rows. If aggregating a DataFrame, this must match the index of the matrix. For a
             "tall" matrix, this series can match either the "full" index of the series, or it can match the first level
@@ -289,7 +293,9 @@ def aggregate_matrix(matrix, groups=None, row_groups=None, col_groups=None, aggf
             but it must be the same length as the DataFrame's columns, or the full length of the Series.
         aggfunc: The aggregation function to use. Default is sum.
 
-    Returns: The aggregated matrix, in the same type as was provided, e.g. Series -> Series, DataFrame -> DataFrame.
+    Returns:
+        pandas.Series or pandas.DataFrame:
+            The aggregated matrix, in the same type as was provided, e.g. Series -> Series, DataFrame -> DataFrame.
 
     Example:
 
@@ -413,24 +419,25 @@ def _aggregate_series(matrix, row_aggregator, col_aggregator, aggfunc):
 
 def fast_stack(frame, multi_index, deep_copy=True):
     """
-    Performs the same action as DataFrame.stack(), but provides better performance when the target stacked index is
-    known before hand. Useful in converting a lot of matrices from "wide" to "tall" format. The inverse of fast_unstack()
+    Performs the same action as ``DataFrame.stack()``, but provides better performance when the target stacked index is
+    known before hand. Useful in converting a lot of matrices from "wide" to "tall" format. The inverse of
+    ``fast_unstack()``.
 
     Notes:
-        This function does not check that the entries in the multi_index are compatible with the index and columns of the
-        source DataFrame, only that the lengths are compatible. It can therefore be used to assign a whole new set of
-        labels to the result.
+        This function does not check that the entries in the multi_index are compatible with the index and columns of
+        the source DataFrame, only that the lengths are compatible. It can therefore be used to assign a whole new set
+        of labels to the result.
 
     Args:
-        frame (DataFrame): DataFrame to stack.
-        multi_index (Index): The 2-level MultiIndex known ahead-of-time.
-        deep_copy (bool): Flag indicating if the returned Series should be a view of the underlying data
-            (deep_copy=False) or a copy of it (deep_copy=True). A deep copy takes a little longer to convert and takes
-            up more memory but preserves the original data of the DataFrame. The default value of True is recommended
-            for most uses.
+        frame (pandas.DataFrame): The DataFrame to stack.
+        multi_index (pandas.Index): The 2-level MultiIndex known ahead-of-time.
+        deep_copy (bool, optional): Defaults to ``True``. A flag indicating if the returned Series should be a view of
+            the underlying data (deep_copy=False) or a copy of it (deep_copy=True). A deep copy takes a little longer to
+            convert and takes up more memory but preserves the original data of the DataFrame. The default value of True
+            is recommended for most uses.
 
     Returns:
-        Series: The stacked data.
+        pandas.Series: The stacked data.
 
     """
 
@@ -447,9 +454,9 @@ def fast_stack(frame, multi_index, deep_copy=True):
 
 def fast_unstack(series, index, columns, deep_copy=True):
     """
-    Performs the same action as DataFrame.unstack(), but provides better performance when the target unstacked index and
-    columns are known before hand. Useful in converting a lot of matrices from "tall" to "wide" format. The inverse of
-    fast_stack().
+    Performs the same action as ``DataFrame.unstack()``, but provides better performance when the target unstacked index
+    and columns are known before hand. Useful in converting a lot of matrices from "tall" to "wide" format. The inverse
+    of ``fast_stack()``.
 
     Notes:
         This function does not check that the entries in index and columns are compatible with the MultiIndex of the
@@ -457,16 +464,16 @@ def fast_unstack(series, index, columns, deep_copy=True):
         labels to the result.
 
     Args:
-        series (Series): Series with 2-level MultiIndex to stack()
-        index (Index): The row index known ahead-of-time
-        columns (Index): The columns index known ahead-of-time.
-        deep_copy (bool): Flag indicating if the returned DataFrame should be a view of the underlying data
-            (deep_copy=False) or a copy of it (deep_copy=True). A deep copy takes a little longer to convert and takes
-            up more memory but preserves the original data of the Series. The default value of True is recommended
-            for most uses.
+        series (pandas.Series): The Series with 2-level MultiIndex to unstack
+        index (pandas.Index): The row index known ahead-of-time
+        columns (pandas.Index): The columns index known ahead-of-time.
+        deep_copy (bool): Defaults to ``True``. A flag indicating if the returned DataFrame should be a view of the
+            underlying data (deep_copy=False) or a copy of it (deep_copy=True). A deep copy takes a little longer to
+            convert and takes up more memory but preserves the original data of the Series. The default value of True is
+            recommended for most uses.
 
     Returns:
-        DataFrame: The unstacked data
+        pandas.DataFrame: The unstacked data
 
     """
 
@@ -496,7 +503,7 @@ def _check_disaggregation_input(mapping: Series, proportions: Series) -> _np.nda
     return proportions.values / parent_totals
 
 
-def disaggregate_matrix(matrix, mapping=None, proportions=None,row_mapping=None, row_proportions=None,
+def disaggregate_matrix(matrix, mapping=None, proportions=None, row_mapping=None, row_proportions=None,
                         col_mapping=None, col_proportions=None):
     """
     Split multiple rows and columns in a matrix all at once. The cells in the matrix MUST be numeric, but the row and
