@@ -1,9 +1,3 @@
-"""
-General IO routines
-===================
-
-"""
-
 import numpy as np
 import pandas as pd
 from contextlib import contextmanager
@@ -22,11 +16,12 @@ def coerce_matrix(matrix, allow_raw=True, force_square=True):
 
     Args:
         matrix:
-        allow_raw:
-        force_square:
+        allow_raw (bool, optional): Defaults to ``True``.
+        force_square (bool, optional): Defaults to ``True``.
 
     Returns:
-        2D ndarray of type float32
+        numpy.ndarray:
+            A 2D ndarray of type float32
     """
     if isinstance(matrix, pd.DataFrame):
         if force_square:
@@ -56,11 +51,13 @@ def expand_array(a, n, axis=None):
     Expands an array across all dimensions by a set amount
 
     Args:
-        a: The array to expand
-        n: The (non-negative) number of items to expand by.
-        axis (int or None): The axis to expand along, or None to exapnd along all axes
+        a (numpy.ndarray): The array to expand
+        n (numpy.ndarray): The (non-negative) number of items to expand by.
+        axis (int, optional): Defaults to ``None``. The axis to expand along, or None to expand along all axes.
 
-    Returns: The expanded array
+    Returns:
+        numpy.ndarray:
+            The expanded array
     """
 
     if axis is None: new_shape = [dim + n for dim in a.shape]
@@ -82,14 +79,15 @@ def expand_array(a, n, axis=None):
 def open_file(file_handle, **kwargs):
     """
     Context manager for opening files provided as several different types. Supports a file handler as a str, unicode,
-    pathlib.Path, or an already-opened handler.
+    ``pathlib.Path``, or an already-opened handler.
 
     Args:
-        file_handle (str or unicode or Path or File): The item to be opened or is already open.
-        **kwargs: Keyword args passed to open. Usually mode='w'.
+        file_handle (Union[str, unicode, Path, File]): The item to be opened or is already open.
+        **kwargs: Keyword args passed to ``open()``. Usually mode='w'.
 
     Yields:
-        File: The opened file handler. Automatically closed once out of context.
+        File:
+            The opened file handler. Automatically closed once out of context.
 
     """
     opened = False

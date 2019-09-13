@@ -1,11 +1,3 @@
-"""
-FORTRAN optimized format
-========================
-
-For working with .bin files commonly used by certain legacy FORTRAN applications.
-
-"""
-
 import pandas as pd
 import numpy as np
 
@@ -29,21 +21,21 @@ def read_fortran_rectangle(file, n_columns, zones=None, tall=False, reindex_rows
     must be known, since the format does not self-specify.
 
     Args:
-        file(str or File or Path): The file to read.
+        file(Union[str, File, Path]): The file to read.
         n_columns (int): The number of columns in the matrix.
-        zones (None or int or pandas.Index): An Index or Iterable will be interpreted as the zone labels for the matrix
-            rows and columns; returning a DataFrame or Series (depending on `tall`). If an integer is provided, the
-            returned ndarray will be truncated to this 'number of zones'.
-        tall (bool): If true, a 'tall' version of the matrix will be returned.
-        reindex_rows (bool): If true, and zones is an Index, the returned DataFrame will be reindexed to fill-in any
-            missing rows.
-        fill_value: The value to pass to pandas.reindex()
+        zones (Union[int, pandas.Index], optional): Defaults to ``None``. An Index or Iterable will be interpreted as
+            the zone labels for the matrix rows and columns; returning a DataFrame or Series (depending on `tall`). If
+            an integer is provided, the returned ndarray will be truncated to this 'number of zones'.
+        tall (bool, optional): Defaults to ``False``. If true, a 'tall' version of the matrix will be returned.
+        reindex_rows (bool, optional): Defaults to ``False``. If true, and zones is an Index, the returned DataFrame
+            will be reindexed to fill-in any missing rows.
+        fill_value (optional): Defaults to ``None``. The value to pass to ``pandas.reindex()``
 
     Returns:
-        ndarray or DataFrame or Series
+        numpy.ndarray, pandas.DataFrame or pandas.Series
 
     Raises:
-        AssertionError if the shape is not valid.
+        AssertionError: if the shape is not valid.
     """
     with open_file(file, mode='rb') as reader:
         n_columns = int(n_columns)
@@ -88,21 +80,21 @@ def read_fortran_square(file, zones=None, tall=False):
     """
     Reads a FORTRAN-friendly .bin file (a.k.a. 'simple binary format') which is known to be square.
 
-    This file format is an array of 4-bytes, where each row is prefaced by an integer referring to the 1-based positional
-    index that FORTRAN uses. The rest of the data are in 4-byte floats. To read this, the number of columns present
-    must be known, since the format does not self-specify. This method can infer the shape if it is square.
+    This file format is an array of 4-bytes, where each row is prefaced by an integer referring to the 1-based
+    positional index that FORTRAN uses. The rest of the data are in 4-byte floats. To read this, the number of columns
+    present must be known, since the format does not self-specify. This method can infer the shape if it is square.
 
     Args:
-        file (str or File or Path): The file to read.
-        zones (Index or int or None): An Index or Iterable will be interpreted as the zone labels for the matrix rows
-            and columns; returning a DataFrame or Series (depending on `tall`). If an integer is provided, the returned
-            ndarray will be truncated to this 'number of zones'. Otherwise, the returned ndarray will be size to the
-            maximum number of zone dimensioned by the Emmebank.
-        tall (bool):  If True, a 1D data structure will be returned. If `zone_index` is provided, a Series will be
-            returned, otherwise a 1D ndarray.
+        file (Union[str, File, Path]): The file to read.
+        zones (Union[pandas.Index, int], optional): Defaults to ``None``. An Index or Iterable will be interpreted as
+            the zone labels for the matrix rows and columns; returning a DataFrame or Series (depending on ``tall``).
+            If an integer is provided, the returned ndarray will be truncated to this 'number of zones'. Otherwise, the
+            returned ndarray will be size to the maximum number of zone dimensioned by the Emmebank.
+        tall (bool, optional): Defaults to ``False``. If True, a 1D data structure will be returned. If ``zone_index``
+            is provided, a Series will be returned, otherwise a 1D ndarray.
 
     Returns:
-        DataFrame or ndarray
+        pandas.DataFrame, pandas.Series or numpy.ndarray
 
     """
     with open_file(file, mode='rb') as reader:
@@ -144,14 +136,14 @@ def to_fortran(matrix, file, n_columns=None, min_index=1, force_square=True):
     Reads a FORTRAN-friendly .bin file (a.k.a. 'simple binary format'), in a square format.
 
     Args:
-        matrix (DataFrame or Series or ndarray): The matrix to write to disk. If a Series is given, it MUST have a
-            MultiIndex with exactly 2 levels to unstack.
-        file (basestring or File): The path or file handler to write to.
-        n_columns (int): Optionally specify a desired "width" of the matrix file. For example, n_columns=4000 on a
-            matrix 3500x3500 will pad the width with 500 extra columns containing 0. If None if provided or if the
-            number of columns <= the width of the given matrix, no padding will be performed.
-        min_index (int): The lowest numbered row. Used when slicing matrices
-        force_square (bool):
+        matrix (Union[pandas.DataFrame, pandas.Series, numpy.ndarray]): The matrix to write to disk. If a Series is
+            given, it MUST have a MultiIndex with exactly 2 levels to unstack.
+        file (Union[basestring, File]): The path or file handler to write to.
+        n_columns (int, optional): Defaults to ``None``. Specifies a desired "width" of the matrix file. For example,
+            ``n_columns=4000`` on a 3500x3500 matrix will pad the width with 500 extra columns containing 0. If ``None``
+            is provided or the value is <= the width of the given matrix, no padding will be performed.
+        min_index (int, optional): Defaults to ``1``. The lowest numbered row. Used when slicing matrices
+        force_square (bool, optional): Defaults to ``True``.
 
     """
     assert min_index >= 1

@@ -56,9 +56,11 @@ class ConfigValue(object):
         Args:
             type_ (type): The type (e.g. int, float, etc.) to try to cast
 
-        Returns: The value cast as type
+        Returns:
+            The value cast as type
 
-        Raises: ConfigTypeError if the casting could not be performed.
+        Raises:
+            ConfigTypeError: if the casting could not be performed.
 
         """
 
@@ -170,22 +172,22 @@ class Config(object):
     (beginning with '//') stripped out. Keys in the JSON file which conform to Python variable names (e.g.
     "my_attribute" but not "My Attribute") become *attributes* of the Config object (e.g. instance.my_attribute).
 
-    Value attributes (e.g. `value` in `{"key": value}`) are stored as ConfigValue objects to facilitate type conversion
-    and checking. So to access the raw value, write "instance.my_attribute.value" or, to convert it to a specified type,
-    write "instance.my_attribute.as_bool()".
+    Value attributes (e.g. ``value`` in ``{"key": value}``) are stored as ConfigValue objects to facilitate type
+    conversion and checking. So to access the raw value, write "instance.my_attribute.value" or, to convert it to a
+    specified type, write ``instance.my_attribute.as_bool()``.
 
     This all facilitates "pretty" error message generation, to provide the end-user with as much information about the
     source of an error as these are common when specifying a model.
 
-    A Config can be constructed from three static methods:
-        - from_file() to construct from a JSON file on-disk
-        - from_string() to construct from a JSON-formatted string in-memory
-        - from_dict() to construct from a dictionary in-memory
+    A `Config` can be constructed from three static methods:
 
-    Notes:
-        - Config implements __contains__ for testing if a name is 'in' the set of attributes.
-        - To use __getitem__, __setitem__ (like a Dictionary), use the `as_dict()` method to convert to a dictionary
-            representation. This also exposes dictionary iteration methods.
+    - ``from_file()`` to construct from a JSON file on-disk
+    - ``from_string()`` to construct from a JSON-formatted string in-memory
+    - ``from_dict()`` to construct from a dictionary in-memory
+
+    Note:
+        - Config implements ``__contains__`` for testing if a name is 'in' the set of attributes.
+        - To use ``__getitem__``, ``__setitem__`` (like a Dictionary), use the ``as_dict()`` method to convert to a dictionary representation. This also exposes dictionary iteration methods.
     """
 
     def __init__(self, config_dict, name=None, parent=None, file_=None):
@@ -219,13 +221,13 @@ class Config(object):
 
     @property
     def name(self):
-        """ Short name of each part of the config. For non-root Configs, this will be the name of the attribute used
-        to access this Config from the parent. """
+        """Short name of each part of the config. For non-root Configs, this will be the name of the attribute used
+        to access this Config from the parent."""
         return self._name
 
     @property
     def parent(self):
-        """ Pointer to the parent of non-root Configs."""
+        """Pointer to the parent of non-root Configs."""
         return self._parent
 
     @property
@@ -257,10 +259,13 @@ class Config(object):
         Converts this entry to a primitive dictionary, using specified types for the keys and values.
 
         Args:
-            key_type (type): The type to which the keys will be cast, or None to ignore casting.
-            value_type (type): The type to which the values will be cast, or None to ignore casting.
+            key_type (type, optional): Defaults to ``None``. The type to which the keys will be cast, or None to ignore
+                casting.
+            value_type (type, optional): Defaults to ``None``. The type to which the values will be cast, or None to
+                ignore casting.
 
-        Returns: dict
+        Returns:
+            dict: A dictionary containing the entry's keys and values
 
         """
 
@@ -323,7 +328,7 @@ class Config(object):
             Config: The Config object representing the JSON file.
 
         Raises:
-            ConfigParseError if there's a problem parsing the JSON file
+            ConfigParseError: if there's a problem parsing the JSON file
 
         """
         with open_file(fp, mode='r') as reader:
@@ -347,10 +352,11 @@ class Config(object):
             root_name (str): Optional root name for display purposes.
 
         Returns:
-            Config: The Config object representing the JSON file.
+            Config:
+                The Config object representing the JSON file.
 
         Raises:
-            ConfigParseError if there's a problem parsing the JSON file
+            ConfigParseError: if there's a problem parsing the JSON file
 
         """
         sio = StringIO(s)
@@ -367,11 +373,12 @@ class Config(object):
         Converts a raw dictionary to a Config object.
 
         Args:
-            dict_ (dict): The
+            dict_ (dict): The dictionary to create a Config from
             file_name:
             root_name:
 
         Returns:
+            Config
 
         """
         return Config(dict_, name=root_name, file_=file_name)

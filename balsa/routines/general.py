@@ -31,16 +31,17 @@ def reindex_series(series, target_series, source_levels=None, target_levels=None
 
 def align_categories(iterable):
     """
-    Pre-processing step for pandas.concat() which attempts to align any Categorical series in the sequence to using the
-    same set of categories. It passes through the sequence twice: once to accumulate the complete set of all categories
-    used in the sequence; and a second time to modify the sequence's contents to use this full set. The contents of the
-    sequence are modified in-place.
+    Pre-processing step for ``pd.concat()`` which attempts to align any Categorical series in the sequence to using
+    the same set of categories. It passes through the sequence twice: once to accumulate the complete set of all
+    categories used in the sequence; and a second time to modify the sequence's contents to use this full set. The
+    contents of the sequence are modified in-place.
 
-    Notes:
-        The resulting categories will be lex-sorted (based on the sorted() builtin)
+    Note:
+        The resulting categories will be lex-sorted (based on the ``sorted()`` builtin)
 
     Args:
-        iterable: Any iterable of Series or DataFrame objects (anything that is acceptable to pandas.concat())
+        iterable (Union[pandas.Series, pandas.DataFrame]): Any iterable of Series or DataFrame objects (anything that is
+            acceptable to ``pandas.concat()``)
 
     """
     iterable_type = None
@@ -109,11 +110,11 @@ def sum_df_sequence(seq, fill_value=0):
     the same indexes and columns but might be missing a few values.
 
     Args:
-        seq (Iterable[DataFrame]): Any iterable of DataFrame type, ordered or unordered.
-        fill_value: The value fo use for missing cells. Preferably a number to avoid erros.
+        seq (Iterable[pandas.DataFrame]): Any iterable of DataFrame type, ordered or unordered.
+        fill_value: Defaults to ``0``. The value to use for missing cells. Preferably a number to avoid errors.
 
     Returns:
-        DataFrame: The sum over all items in seq.
+        pandas.DataFrame: The sum over all items in seq.
 
     """
     common_index = Index([])
