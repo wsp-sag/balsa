@@ -5,7 +5,7 @@ import sys
 from contextlib import contextmanager
 import traceback as tb
 
-_DEFAULT_FMT = "%(asctime)s %(levelname)s %(name)s -> %(message)s"
+_DEFAULT_FMT = "%(asctime)s %(levelname)s %(name)s ➔ %(message)s"
 _COLOUR_CODES = {'red': 31, 'green': 32, 'gold': 33, 'yellow': 33, 'blue': 34}
 
 # region Custom levels
@@ -176,7 +176,7 @@ def log_to_file(file_name: str, name, *, append=False):
     root = logging.getLogger(name)
 
     write_mode = 'a' if append else 'w'
-    handler = logging.FileHandler(file_name, mode=write_mode)
+    handler = logging.FileHandler(file_name, mode=write_mode, encoding='utf-8')
     handler.setFormatter(logging.Formatter(_DEFAULT_FMT))
     handler.addFilter(_RangeFilter(0, 100))
 
