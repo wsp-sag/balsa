@@ -1,3 +1,5 @@
+from typing import Tuple, Optional, Union
+
 import pandas as pd
 import numpy as np
 import numexpr as ne
@@ -288,3 +290,67 @@ def distance_array(x0, y0, x1, y1, method='euclidean', **kwargs):
         return pd.Series(result_array, index=labels)
 
     return result_array
+
+
+def indexers_for_map_matrix(row_labels, col_labels, superset, check=True):
+    if check:
+        assert np.all(row_labels.isin(superset))
+        assert np.all(col_labels.isin(superset))
+
+    row_offsets = superset.get_indexer(row_labels)
+    col_offsets = superset.get_indexer(col_labels)
+
+    return row_offsets, col_offsets
+
+
+def map_to_matrix(values, super_labels, fill_value=0, row_col_labels=None, row_col_offsets=None, out=None,
+                  grouper_func='sum', out_operand='+'):
+
+    # TODO: Check that `values` dtype is numeric, or at least, add-able
+
+    if row_col_labels is not None:
+        row_labels, col_labels = row_col_labels
+        assert len(row_labels) == len(values)
+        assert len(col_labels) == len(values)
+    else:
+        assert values.index.nlevels == 2
+        row_labels = values.index.get_level_values(0)
+        col_labels = values.index.get_level_values(1)
+
+    if row_col_offsets is None:
+        row_offsets, col_offsets = indexers_for_map_matrix(row_labels, col_labels, super_labels)
+    else:
+        row_offsets, col_offsets = row_col_offsets
+        assert row_offsets.min() >= 0
+        assert row_offsets.max() < len(super_labels)
+        assert col_offsets.min() >= 0
+        assert col_offsets.max() < len(super_labels)
+
+    if out is not None:
+        if isinstance(out, pd.DataFrame):
+            assert out.index.equals(super_labels)
+            assert out.columns.equals(super_labels)
+            out = out.values  # Get the raw array from inside the frame
+        elif isinstance(out, np.ndarray):
+            nrows, ncols = out.shape
+            assert nrows >= (row_offsets.max() - 1)
+            assert ncols >= (col_offsets.max() - 1)
+        else:
+            raise TypeError(type(out))
+        out_is_new = False
+    else:
+        out = np.full([len(super_labels)] * 2, fill_value=fill_value, dtype=values.dtype)
+        out_is_new = True
+
+    aggregated: pd.Series = values.groupby([row_offsets, col_offsets]).aggregate(func=grouper_func)
+    xs, ys = aggregated.index.get_level_values(0), aggregated.index.get_level_values(1)
+    if out_is_new:
+        out[xs, ys] = aggregated.values
+    else:
+        out_name = '__OUT__'
+        other_name = '__OTHER__'
+        ld = {out_name: out[xs, ys], other_name: aggregated.values}
+        ne.evaluate("{0} = {0} {1} {2}".format(out_name, out_operand, other_name), local_dict=ld)
+
+    out = pd.DataFrame(out, index=super_labels, columns=super_labels)
+    return out
