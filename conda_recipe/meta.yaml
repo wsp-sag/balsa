@@ -1,21 +1,26 @@
 package:
-  name: balsa
-  version: "0.6.1"
+  name: wsp-balsa
+  version: "1.0"
 
 source:
-  path: "../"
+  path: ../
 
 build:
   number: auto
+  noarch: python
 
 requirements:
   build:
     - python
     - setuptools
   run:
-    - "pandas >=0.22"
-    - "numba >=0.33"
-    - "numexpr >=2.6"
-    - "astor >=0.5"
-    - "six >=1.10"
+    - pandas>=0.21,<0.24
+    - numpy>=1.15
+    - numba>=0.35
+    - numexpr>=2.6
+    - six>=1.10
+    - matplotlib>=3.0
 
+about:
+  home: https://github.com/wsp-sag/balsa
+  summary: A collection of Python functions and tools to facilitate travel demand forecasting applications and analyses
