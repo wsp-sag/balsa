@@ -9,7 +9,9 @@ setup(
         'numpy>=1.15',
         'numba>=0.35',
         'numexpr>=2.6',
-        'six>=1.10',
-        'matplotlib>=3.0'
-    ]
+        'six>=1.10'
+    ],
+    extras_require={
+        'plotting': 'matplotlib>=3.0'
+    }
 )
