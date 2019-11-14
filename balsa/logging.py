@@ -63,7 +63,7 @@ class _SwitchFormatter(logging.Formatter):
 class _JsonFormatter(logging.Formatter):
 
     def format(self, record):
-        keys = ["levelname", "name", "msg", "created"]
+        keys = ["levelname", "name", "msg", "created", "levelno"]
         to_json = {key: getattr(record, key) for key in keys}
 
         to_json['asctime'] = self.formatTime(record)
@@ -98,7 +98,7 @@ def init_root(root_name, stream_format=LogFormats.FANCY, log_debug=True):
     if log_debug:
         root_logger.setLevel(1)
     else:
-        root_logger.setLevel(logging.INFO)
+        root_logger.setLevel(_REPORT_LEVEL)
 
     if isinstance(stream_format, str):
         try:
