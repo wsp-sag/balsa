@@ -107,61 +107,43 @@ def init_root(root_name, stream_format=LogFormats.FANCY, log_debug=True):
             pass
 
     if stream_format == LogFormats.FANCY:
-        stdout_formatter, stderr_formatter = _prep_fancy_formatter()
+        stdout_formatter = _prep_fancy_formatter()
     elif stream_format == LogFormats.BASIC:
-        stdout_formatter, stderr_formatter = _prep_basic_formatter()
+        stdout_formatter = logging.Formatter(_FMT_STRING.format(arrow=_ASCII_ARROW))
     elif stream_format == LogFormats.JSON:
-        stdout_formatter, stderr_formatter = _prep_json_formatter()
+        stdout_formatter = _JsonFormatter()
     else:
-        stdout_formatter, stderr_formatter = _custom_formatter(stream_format)
+        stdout_formatter = logging.Formatter(stream_format)
 
     stdout_handler = logging.StreamHandler(sys.stdout)
-    stdout_handler.addFilter(_RangeFilter(0, logging.WARNING + 1))
+    stdout_handler.addFilter(_RangeFilter(0, 100))
     stdout_handler.setFormatter(stdout_formatter)
-
-    stderr_handler = logging.StreamHandler(sys.stderr)
-    stderr_handler.addFilter(_RangeFilter(logging.ERROR, 100))
-    stderr_handler.setFormatter(stderr_formatter)
 
     root_logger.handlers.clear()
     root_logger.addHandler(stdout_handler)
-    root_logger.addHandler(stderr_handler)
 
     return root_logger
-
-
-def _prep_json_formatter():
-    base_formatter = _JsonFormatter()
-    return base_formatter, base_formatter
-
-
-def _prep_basic_formatter():
-    base_formatter = logging.Formatter(_FMT_STRING.format(arrow=_ASCII_ARROW))
-    return base_formatter, base_formatter
 
 
 def _prep_fancy_formatter():
     raw_fmt = _FMT_STRING.format(arrow=_UNC_ARROW)
     fmt_string = ''.join(["\x1b[{colour}m", raw_fmt, "\x1b[0m"])
 
-    info_formatter = logging.Formatter(fmt_string.format(colour=0))  # Black colour
+    debug_formatter = logging.Formatter(fmt_string.format(colour=37))  # Grey colour
+    info_formatter = logging.Formatter(fmt_string.format(colour=0))  # Default colour
     report_formatter = logging.Formatter(fmt_string.format(colour=32))  # Green colour
     tip_formatter = logging.Formatter(fmt_string.format(colour=34))  # Blue colour
     warn_formatter = logging.Formatter(fmt_string.format(colour=31))  # Red colour
+    error_formatter = logging.Formatter(fmt_string.format(colour=41))  # Red BG colour
+    critical_formatter = logging.Formatter(fmt_string.format(colour="1m\x1b[41"))  # Bold on red BG
 
     switch_formatter = _SwitchFormatter(raw_fmt, {
         logging.INFO: info_formatter, logging.WARNING: warn_formatter, _TIP_LEVEL: tip_formatter,
-        _REPORT_LEVEL: report_formatter
+        _REPORT_LEVEL: report_formatter, logging.DEBUG: debug_formatter, logging.ERROR: error_formatter,
+        logging.CRITICAL: critical_formatter
     })
 
-    error_critical_formatter = logging.Formatter(raw_fmt)
-
-    return switch_formatter, error_critical_formatter
-
-
-def _custom_formatter(fmt):
-    base_formatter = logging.Formatter(fmt)
-    return base_formatter, base_formatter
+    return switch_formatter
 
 
 def get_model_logger(name):
