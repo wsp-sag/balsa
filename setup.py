@@ -2,6 +2,9 @@ from setuptools import setup, find_packages
 
 setup(
     name='wsp-balsa',
+    author='wsp',
+    maintatiner='Peter Kucirek',
+    maintainer_email='peter.kucirek@wsp.com',
     version='1.0',
     packages=find_packages(),
     install_requires=[
