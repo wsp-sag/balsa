@@ -52,5 +52,4 @@ The following code block provides the commands to install Balsa using Conda.
 
 ## Documentation
 
-HTML documentation is available upon request - until we can find a suitable hosting
-service. Just email peter.kucirek@wsp.com to request.
+HTML documentation is available upon request. 
