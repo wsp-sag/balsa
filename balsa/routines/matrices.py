@@ -340,7 +340,7 @@ def aggregate_matrix(matrix, groups=None, row_groups=None, col_groups=None, aggf
         ``new_matrix = aggregate_matrix(matrix, groups=groups)``
 
         new_matrix:
-        
+
         +-------+----+----+----+
         |       | A  | B  | C  |
         +=======+====+====+====+
