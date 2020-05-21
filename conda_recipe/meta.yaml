@@ -1,6 +1,6 @@
 package:
   name: wsp-balsa
-  version: "1.0.0"
+  version: "1.1.0"
 
 source:
   path: ../
@@ -14,12 +14,12 @@ requirements:
     - python
     - setuptools
   run:
-    - pandas>=0.21,<0.24
-    - numpy>=1.15
-    - numba>=0.35
-    - numexpr>=2.6
-    - six>=1.10
-    - matplotlib>=3.0
+    - pandas >=0.21
+    - numpy >=1.15
+    - numba >=0.35
+    - numexpr >=2.6
+    - six >=1.10
+    - matplotlib >=3.0
 
 about:
   home: https://github.com/wsp-sag/balsa

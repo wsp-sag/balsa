@@ -1,16 +1,10 @@
-from __future__ import division, absolute_import, print_function, unicode_literals
-
 from keyword import kwlist
-
 from pandas import DataFrame, Series, Index, MultiIndex
-from six import iteritems
-import six
-import re
-import tokenize
+from typing import Union, List, Dict, Iterable
 
 
-def reindex_series(series, target_series, source_levels=None, target_levels=None, fill_value=None):
-
+def reindex_series(series: Series, target_series: Series, source_levels: List[int] = None,
+                   target_levels: List[int] = None, fill_value: Union[int, float] = None) -> Series:
     # Make shallow copies of the source and target series in case their indexes need to be changed
     series = series.copy(deep=False)
     target_series = target_series.copy(deep=False)
@@ -29,9 +23,8 @@ def reindex_series(series, target_series, source_levels=None, target_levels=None
     return reindexed
 
 
-def align_categories(iterable):
-    """
-    Pre-processing step for ``pd.concat()`` which attempts to align any Categorical series in the sequence to using
+def align_categories(iterable: Union[Series, DataFrame]):
+    """Pre-processing step for ``pd.concat()`` which attempts to align any Categorical series in the sequence to using
     the same set of categories. It passes through the sequence twice: once to accumulate the complete set of all
     categories used in the sequence; and a second time to modify the sequence's contents to use this full set. The
     contents of the sequence are modified in-place.
@@ -42,14 +35,16 @@ def align_categories(iterable):
     Args:
         iterable (Union[pandas.Series, pandas.DataFrame]): Any iterable of Series or DataFrame objects (anything that is
             acceptable to ``pandas.concat()``)
-
     """
     iterable_type = None
     for item in iterable:
         if iterable_type is None:
-            if isinstance(item, DataFrame): iterable_type = DataFrame
-            elif isinstance(item, Series): iterable_type = Series
-            else: raise TypeError(type(item))
+            if isinstance(item, DataFrame):
+                iterable_type = DataFrame
+            elif isinstance(item, Series):
+                iterable_type = Series
+            else:
+                raise TypeError(type(item))
         else:
             assert isinstance(item, iterable_type)
 
@@ -59,10 +54,8 @@ def align_categories(iterable):
         column_categories = _enumerate_frame_categories(iterable)
         _align_frame_categories(iterable, column_categories)
 
-    return
 
-
-def _align_series_categories(series_list):
+def _align_series_categories(series_list: Series):
     all_categories = set()
     for series in series_list:
         if not hasattr(series, 'cat'):
@@ -77,11 +70,12 @@ def _align_series_categories(series_list):
         series.cat.reorder_categories(sorted_categories, inplace=True)
 
 
-def _enumerate_frame_categories(frames):
+def _enumerate_frame_categories(frames: DataFrame) -> Dict[str, set]:
     column_categories = {}
     for frame in frames:
         for col_name, series in frame.items():
-            if not hasattr(series, 'cat'): continue
+            if not hasattr(series, 'cat'):
+                continue
             categories = set(series.cat.categories)
 
             if col_name not in column_categories:
@@ -91,11 +85,12 @@ def _enumerate_frame_categories(frames):
     return column_categories
 
 
-def _align_frame_categories(frames, column_categories):
-    for col_name, all_categories in iteritems(column_categories):
+def _align_frame_categories(frames: DataFrame, column_categories: Dict[str, set]):
+    for col_name, all_categories in column_categories.items():
         sorted_categories = sorted(all_categories)
         for frame in frames:
-            if col_name not in frame: continue
+            if col_name not in frame:
+                continue
             s = frame[col_name]
             missing_categories = all_categories.difference(s.cat.categories)
             if missing_categories:
@@ -103,19 +98,17 @@ def _align_frame_categories(frames, column_categories):
             s.cat.reorder_categories(sorted_categories, inplace=True)
 
 
-def sum_df_sequence(seq, fill_value=0):
-    """
-    Sums over a sequence of DataFrames, even if they have different indexes or columns, filling in 0 (or a value of your
-    choice) for missing rows or columns. Useful when you have a sequence of DataFrames which are supposed to have
+def sum_df_sequence(seq: Iterable[DataFrame], fill_value: Union[int, float] = 0) -> DataFrame:
+    """Sums over a sequence of DataFrames, even if they have different indexes or columns, filling in 0 (or a value of
+    your choice) for missing rows or columns. Useful when you have a sequence of DataFrames which are supposed to have
     the same indexes and columns but might be missing a few values.
 
     Args:
         seq (Iterable[pandas.DataFrame]): Any iterable of DataFrame type, ordered or unordered.
-        fill_value: Defaults to ``0``. The value to use for missing cells. Preferably a number to avoid errors.
+        fill_value (Union[int, float], optional): Defaults to ``0``. The value to use for missing cells.
 
     Returns:
         pandas.DataFrame: The sum over all items in seq.
-
     """
     common_index = Index([])
     common_columns = Index([])
@@ -134,32 +127,14 @@ def sum_df_sequence(seq, fill_value=0):
     return accumulator
 
 
-if six.PY3:
-    def is_identifier(name):
-        """
-        Tests that the name is a valid Python variable name and does not collide with reserved keywords
+def is_identifier(name: str) -> bool:
+    """Tests that the name is a valid Python variable name and does not collide with reserved keywords
 
-        Args:
-            name (str): Name to test
+    Args:
+        name (str): Name to test
 
-        Returns:
-            bool: If the name is 'Pythonic'
+    Returns:
+        bool: If the name is 'Pythonic'
+    """
 
-        """
-
-        return name.isidentifier() and name not in kwlist
-else:
-    def is_identifier(name):
-        """
-        Tests that the name is a valid Python variable name and does not collide with reserved keywords
-
-        Args:
-            name (str): Name to test
-
-        Returns:
-            bool: If the name is 'Pythonic'
-
-        """
-
-        return bool(re.match(tokenize.Name + '$', name)) and name not in kwlist
-
+    return name.isidentifier() and name not in kwlist

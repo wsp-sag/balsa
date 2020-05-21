@@ -3,12 +3,13 @@ from setuptools import setup, find_packages
 setup(
     name='wsp-balsa',
     author='wsp',
-    maintatiner='Peter Kucirek',
-    maintainer_email='peter.kucirek@wsp.com',
-    version='1.0',
+    maintatiner='Brian Cheung',
+    maintainer_email='brian.cheung@wsp.com',
+    version='1.1',
     packages=find_packages(),
+    python_requires='>=3.5',
     install_requires=[
-        'pandas>=0.21, <0.24',
+        'pandas>=0.21',
         'numpy>=1.15',
         'numba>=0.35',
         'numexpr>=2.6',

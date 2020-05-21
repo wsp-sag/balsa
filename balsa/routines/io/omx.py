@@ -8,7 +8,7 @@ wrapper functions that produce Pandas DataFrames and Series directly from OMX fi
 
 import numpy as np
 import pandas as pd
-from six import iteritems, itervalues, iterkeys
+from typing import Union, Iterable, Dict
 
 from ..matrices import fast_unstack
 
@@ -17,9 +17,12 @@ try:
 except ImportError:
     omx = None
 
+MATRIX_TYPES = Union[pd.DataFrame, pd.Series, np.ndarray]
+
 if omx is not None:
 
-    def read_omx(file, matrices=None, mapping=None, raw=False, tall=False, squeeze=True):
+    def read_omx(file: str, matrices: Iterable[str] = None, mapping: str = None, raw: bool = False,
+                 tall: bool = False, squeeze: bool = True) -> Union[MATRIX_TYPES, Dict[str, MATRIX_TYPES]]:
         """
         Reads Open Matrix (OMX) files. An OMX file can contain multiple matrices, so this function
         typically returns a Dict.
@@ -77,9 +80,9 @@ if omx is not None:
             return return_value
 
 
-    def to_omx(file, matrices, zone_index=None, title='', descriptions=None, attrs=None, mapping='zone_numbers'):
-        """
-        Creates a new (or overwrites an old) OMX file with a collection of matrices.
+    def to_omx(file: str, matrices: Dict[str, MATRIX_TYPES], zone_index: pd.Index = None, title: str = '',
+               descriptions: Dict[str, str] = None, attrs: Dict[str, dict] = None, mapping: str = 'zone_numbers'):
+        """Creates a new (or overwrites an old) OMX file with a collection of matrices.
 
         Args:
             file: OMX to write.
@@ -96,15 +99,15 @@ if omx is not None:
         matrices, zone_index = _prep_matrix_dict(matrices, zone_index)
 
         if descriptions is None:
-            descriptions = {name: '' for name in iterkeys(matrices)}
+            descriptions = {name: '' for name in matrices.keys()}
         if attrs is None:
-            attrs = {name: None for name in iterkeys(matrices)}
+            attrs = {name: None for name in matrices.keys()}
 
         file = str(file)  # Converts from Path
         with omx.open_file(file, mode='w', title=title) as omx_file:
             omx_file.create_mapping(mapping, zone_index.tolist())
 
-            for name, array in iteritems(matrices):
+            for name, array in matrices.items():
                 description = descriptions[name]
                 attr = attrs[name]
 
@@ -131,12 +134,14 @@ if omx is not None:
         return checked, zone_index
 
     def _check_types(matrices):
-        gen = iter(itervalues(matrices))
+        gen = iter(matrices.values())
         first = next(gen)
 
         item_type = 'RAW'
-        if isinstance(first, pd.Series): item_type = 'SERIES'
-        elif isinstance(first, pd.DataFrame): item_type = 'FRAME'
+        if isinstance(first, pd.Series):
+            item_type = 'SERIES'
+        elif isinstance(first, pd.DataFrame):
+            item_type = 'FRAME'
 
         msg = "All items must be the same type"
 
@@ -151,7 +156,7 @@ if omx is not None:
         return item_type
 
     def _check_raw_matrices(matrices):
-        gen = iter(iteritems(matrices))
+        gen = iter(matrices.items())
         name, matrix = next(gen)
 
         n_dim = len(matrix.shape)
@@ -183,7 +188,7 @@ if omx is not None:
         return retval, n
 
     def _check_matrix_series(matrices):
-        gen = iter(iteritems(matrices))
+        gen = iter(matrices.items())
         name, matrix = next(gen)
 
         tall_index = matrix.index
@@ -200,7 +205,7 @@ if omx is not None:
         return retval, zone_index
 
     def _check_matrix_frames(matrices):
-        gen = iter(iteritems(matrices))
+        gen = iter(matrices.items())
         name, matrix = next(gen)
 
         zone_index = matrix.index

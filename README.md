@@ -13,11 +13,11 @@ Balsa is owned and published by WSP Canada's Systems Analytics for Policy group.
 - Management of JSON configuration files, including comments.
 - and more!
 
-Balsa is compatible with Python 2.7 and 3.5+
+Balsa is compatible with Python 3.5+
 
 ## Current Status
 
-*Version 1.0* is the latest release of balsa.
+*Version 1.1* is the latest release of balsa.
 
 **For TRESO users:** TRESO is only compatible with the [`v0.5.0`](https://github.com/wsp-sag/balsa/tree/v0.5.0) release of balsa.
 

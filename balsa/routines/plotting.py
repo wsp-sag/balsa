@@ -1,30 +1,32 @@
-import pandas as pd
-import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib.axes import Axes
-from matplotlib.ticker import FormatStrFormatter, StrMethodFormatter, FuncFormatter
+from matplotlib.ticker import FuncFormatter
+import numpy as np
+import pandas as pd
+from pathlib import Path
+from typing import Callable, Tuple, Union, List, Dict, Any
 
 
-def convergence_boxplot(targets, results, filter_func, adjust_target=True, percentage=True, band=None,
-                        simple_labels=True, ax=None, fp=None, title=None):
-    """
-    Measures convergence of constrained location-choice models (such as work-location choice). Can be used to
-    produce multiple boxplots for different sub-sets of zones, usually based on size.
+def convergence_boxplot(targets: pd.DataFrame, results: pd.DataFrame, filter_func: Callable[[pd.Series], pd.Series],
+                        adjust_target: bool = True, percentage: bool = True, band: Tuple[float, float] = None,
+                        simple_labels: bool = True, ax: Axes = None, fp: Path = None, title: str = None) -> Axes:
+    """Measures convergence of constrained location-choice models (such as work-location choice). Can be used to
+    produce multiple box plots for different sub-sets of zones, usually based on size.
 
     Args:
-        targets:
-        results:
-        filter_func:
-        adjust_target:
-        percentage:
-        band:
-        simple_labels:
-        ax:
-        fp:
-        title:
+        targets (pandas.DataFrame):
+        results (pandas.DataFrame):
+        filter_func (Callable[[pandas.Series], pandas.Series]):
+        adjust_target (bool, optional):
+        percentage (bool, optional):
+        band (Tuple[float, float], optional):
+        simple_labels (bool, optional):
+        ax (Axes, optional):
+        fp (Path, optional):
+        title (str, optional):
 
     Returns:
-
+        matplotlib.Axes
     """
 
     assert results.columns.equals(targets.columns)
@@ -53,7 +55,8 @@ def convergence_boxplot(targets, results, filter_func, adjust_target=True, perce
         target_sums.append(target_vector.sum())
 
         err = model_vector - target_vector
-        if percentage: err /= target_vector
+        if percentage:
+            err /= target_vector
 
         unlabelled_zones[:m, i] = err.values
 
@@ -84,7 +87,8 @@ def convergence_boxplot(targets, results, filter_func, adjust_target=True, perce
             ax.axhline(lower, color='black', linewidth=1, alpha=0.5)
             ax.axhline(upper, color='black', linewidth=1, alpha=0.5)
 
-        if title: ax.set_title(title)
+        if title:
+            ax.set_title(title)
 
         if fp is not None:
             plt.savefig(str(fp))
@@ -92,18 +96,18 @@ def convergence_boxplot(targets, results, filter_func, adjust_target=True, perce
         return ax
 
 
-def location_summary(model, target, ensemble_names, title='', fp=None, dpi=150, district_name='Ensemble'):
-    """
-    Creates a compound plot showing total attractions to specified locations
+def location_summary(model: pd.DataFrame, target: pd.DataFrame, ensemble_names: pd.Series, title: str = '',
+                     fp: Path = None, dpi: int = 150, district_name: str = 'Ensemble') -> Axes:
+    """Creates a compound plot showing total attractions to specified locations
 
     Args:
-        model:
-        target:
-        ensemble_names:
-        title:
-        fp:
-        dpi:
-        district_name:
+        model (pandas.DataFrame):
+        target (pandas.DataFrame):
+        ensemble_names (pandas.Series):
+        title (str, optional):
+        fp (Path, optional):
+        dpi (int, optional):
+        district_name (str, optional):
 
     Returns:
         matplotlib.Axes
@@ -164,20 +168,20 @@ def location_summary(model, target, ensemble_names, title='', fp=None, dpi=150, 
     return ax
 
 
-def trumpet_diagram(counts, model_volume, categories=None, category_colours=None, category_markers=None,
-                    label_format=None, title='', y_bounds=(-2, 2), ax=None, x_label="Count volume", legend=True,
-                    **kwargs):
-    """
-    Plots a auto volumes "trumpet" diagram of relative error vs. target count, and will draw min/max error curves based
-    on FHWA guidelines. Can be used to plot different categories of count locations.
+def trumpet_diagram(counts: pd.Series, model_volume: pd.Series, categories: Union[pd.Series, List[pd.Series]] = None,
+                    category_colours: Dict[Union[Any, tuple]] = None, category_markers: Dict[Union[Any, tuple]] = None,
+                    label_format: str = None, title: str = '', y_bounds: Tuple[float, float] = (-2, 2), ax: Axes = None,
+                    x_label: str = "Count volume", legend: bool = True, **kwargs) -> Axes:
+    """Plots an auto volumes "trumpet" diagram of relative error vs. target count, and will draw min/max error curves
+    based on FHWA guidelines. Can be used to plot different categories of count locations.
 
     Args:
-        counts (pandas.Series): Target counts. Each item represents a different count location. Index does not need to be
-            unique.
+        counts (pandas.Series): Target counts. Each item represents a different count location. Index does not need to
+            be unique.
         model_volume (pandas.Series): Modelled volumes for each location. The index must match the counts Series.
-        categories (Union[pandas.Series, List[pandas.Series]], optional): Defaults to ``None``. Optional classification of each
-            count location. Must match the index of the count Series. Can be provided as a List of Series (which all
-            must match the count index) to enable tuple-based categorization.
+        categories (Union[pandas.Series, List[pandas.Series]], optional): Defaults to ``None``. Optional classification
+            of each count location. Must match the index of the count Series. Can be provided as a List of Series (which
+            all must match the count index) to enable tuple-based categorization.
         category_colours (Dict[Union[str, tuple], str], optional): Defaults to ``None``. Mapping of each category to a
             colour, specified as a hex string. Only used when categories are provided. Missing categories revert to
             ``None``, using the default colour for the style.
@@ -199,7 +203,6 @@ def trumpet_diagram(counts, model_volume, categories=None, category_colours=None
     Returns:
         matplotlib.Axes:
             The Axes object generated from the plot. For most use cases, this is not really needed.
-
     """
 
     assert model_volume.index.equals(counts.index)
@@ -207,17 +210,22 @@ def trumpet_diagram(counts, model_volume, categories=None, category_colours=None
     n_categories = 0
     if categories is not None:
         if isinstance(categories, list):
-            for s in categories: assert s.index.equals(model_volume.index)
-            if label_format is None: label_format = '-'.join(['%s'] * len(categories))
+            for s in categories:
+                assert s.index.equals(model_volume.index)
+            if label_format is None:
+                label_format = '-'.join(['%s'] * len(categories))
             categories = pd.MultiIndex.from_arrays(categories)
             n_categories = len(categories.unique())
         else:
             assert categories.index.equals(model_volume.index)
             n_categories = categories.nunique()
 
-        if category_colours is None: category_colours = {}
-        if category_markers is None: category_markers = {}
-    if label_format is None: label_format = "%s"
+        if category_colours is None:
+            category_colours = {}
+        if category_markers is None:
+            category_markers = {}
+    if label_format is None:
+        label_format = "%s"
 
     df = pd.DataFrame({'Model Volume': model_volume, 'Count Volume': counts})
     df['Error'] = df['Model Volume'] - df['Count Volume']
@@ -252,6 +260,7 @@ def trumpet_diagram(counts, model_volume, categories=None, category_colours=None
     ax.set_title(title)
     ax.set_ylabel("Relative Error")
     ax.set_xlabel(x_label)
-    if legend: ax.legend()
+    if legend:
+        ax.legend()
 
     return ax

@@ -1,16 +1,14 @@
-from typing import Tuple, Optional, Union
-
-import pandas as pd
-import numpy as np
 import numexpr as ne
-from six import iteritems
+import numpy as np
+import pandas as pd
+from typing import Union, Tuple, Dict, Any, Iterable
 
 
-def tlfd(values, bin_start=0, bin_end=200, bin_step=2, weights=None, intrazonal=None, label_type='MULTI',
-         include_top=False):
-    """
-    Generates a Trip Length Frequency Distribution (i.e. a histogram) from given data. Produces a "pretty" Pandas object
-    suitable for charting.
+def tlfd(values: Union[np.ndarray, pd.Series], bin_start: int = 0, bin_end: int = 200, bin_step: int = 2,
+         weights: Union[np.ndarray, pd.Series] = None, intrazonal: Union[np.ndarray, pd.Series] = None,
+         label_type: str = 'MULTI', include_top: bool = False) -> pd.Series:
+    """Generates a Trip Length Frequency Distribution (i.e. a histogram) from given data. Produces a "pretty" Pandas
+    object suitable for charting.
 
     Args:
         values (Union[numpy.ndarray, pandas.Series]): A vector of trip lengths, with a length  of "N". Can be provided
@@ -40,6 +38,7 @@ def tlfd(values, bin_start=0, bin_end=200, bin_step=2, weights=None, intrazonal=
     """
     bins = list(range(bin_start, bin_end + bin_step, bin_step))
 
+    iz_total = None
     if intrazonal is not None:
         if weights is not None:
             iz_total = weights.loc[intrazonal].sum()
@@ -55,8 +54,10 @@ def tlfd(values, bin_start=0, bin_end=200, bin_step=2, weights=None, intrazonal=
         hist, _ = np.histogram(values, bins=bins)
 
     new_len = len(hist)
-    if intrazonal is not None: new_len += 1
-    if include_top: new_len += 1
+    if intrazonal is not None:
+        new_len += 1
+    if include_top:
+        new_len += 1
     new_hist = np.zeros(shape=new_len, dtype=hist.dtype)
     lower_index = 0
     upper_index = new_len
@@ -84,9 +85,9 @@ def tlfd(values, bin_start=0, bin_end=200, bin_step=2, weights=None, intrazonal=
     elif label_type == 'BOTTOM':
         index = pd.Index(bins[:-1])
     elif label_type == 'TEXT':
-        s0 = pd.Series(bins[:-1], dtype=str).astype(str)
-        s1 = pd.Series(bins[1:], dtype=str).astype(str)
-        index = pd.Index(s0 + ' to ' + s1)
+        s0 = pd.Series(bins[:-1]).astype(str)
+        s1 = pd.Series(bins[1:]).astype(str)
+        index = pd.Index(s0.str.cat(s1, sep=' to '))
     else:
         raise NotImplementedError(label_type)
 
@@ -95,7 +96,7 @@ def tlfd(values, bin_start=0, bin_end=200, bin_step=2, weights=None, intrazonal=
     return new_hist
 
 
-def _get_distance_equation(method):
+def _get_distance_equation(method: str) -> str:
     if method.lower() == 'euclidean':
         expr = "sqrt((x0 - x1)**2 + (y0 - y1) ** 2) * coord_unit"
     elif method.lower() == 'manhattan':
@@ -114,15 +115,16 @@ def _get_distance_equation(method):
     return expr
 
 
-def _prepare_distance_kwargs(kwargs):
+def _prepare_distance_kwargs(kwargs: Dict[str, Any]):
     defaults = {'coord_unit': 1.0, 'earth_radius_factor': 1.0, 'pi': np.pi}
-    for key, val in iteritems(defaults):
+    for key, val in defaults.items():
         if key not in kwargs:
             kwargs[key] = val
 
 
 def _check_vectors(description: str, *vectors):
-    if len(vectors) < 1: return []
+    if len(vectors) < 1:
+        return []
 
     first = vectors[0]
     retval = []
@@ -145,7 +147,11 @@ def _check_vectors(description: str, *vectors):
     return common_index, retval
 
 
-def distance_matrix(x0, y0, tall=False, method='EUCLIDEAN', labels0=None, x1=None, y1=None, labels1=None, **kwargs):
+def distance_matrix(x0: Union[np.ndarray, pd.Series], y0: Union[np.ndarray, pd.Series], tall: bool = False,
+                    method: str = 'EUCLIDEAN', labels0: Union[Iterable, pd.Index] = None,
+                    x1: Union[np.ndarray, pd.Series] = None, y1: Union[np.ndarray, pd.Series] = None,
+                    labels1: Union[np.ndarray, pd.Series] = None,
+                    **kwargs) -> Union[pd.Series, pd.DataFrame, np.ndarray]:
     """
     Fastest method of computing a distance matrix from vectors of coordinates, using the NumExpr package. Supports
     several equations for computing distances.
@@ -155,8 +161,10 @@ def distance_matrix(x0, y0, tall=False, method='EUCLIDEAN', labels0=None, x1=Non
     will be the 2D product of the first and second vector (vector0 * vector1).
 
     Args:
-        x0 (Union[numpy.ndarray, pandas.Series]): Vector of x-coordinates, of length N0. Can be a Series to specify labels.
-        y0 (Union[numpy.ndarray, pandas.Series]): Vector of y-coordinates, of length N0. Can be a Series to specify labels.
+        x0 (Union[numpy.ndarray, pandas.Series]): Vector of x-coordinates, of length N0. Can be a Series to specify
+            labels.
+        y0 (Union[numpy.ndarray, pandas.Series]): Vector of y-coordinates, of length N0. Can be a Series to specify
+            labels.
         tall (bool, optional): Defaults to ``False``. If True, returns a vector whose shape is N0 x N1. Otherwise,
             returns a matrix whose shape is (N0, N1).
         method (str, optional): Defaults to ``'EUCLIDEAN'``. Specifies the method by which to compute distance. Valid
@@ -164,12 +172,12 @@ def distance_matrix(x0, y0, tall=False, method='EUCLIDEAN', labels0=None, x1=Non
             ``'EUCLIDEAN'``: Computes straight-line, 'as-the-crow flies' distance.
             ``'MANHATTAN'``: Computes the Manhattan distance
             ``'HAVERSINE'``: Computes distance based on lon/lat.
-        labels0 (pandas.Index-like, optional): Defaults to ``None``. Override set of labels to use if x0 and y0 are both raw
-            Numpy arrays
-        x1 (Union[numpy.ndarray, pandas.Series], optional): Defaults to ``None``. A second vector of x-coordinates, of length
-            N1. Can be a Series to specify labels
-        y1 (Union[numpy.ndarray, pandas.Series], optional): Defaults to ``None``. A second vector of y-coordinates, of length
-            N1. Can be a Series to specify labels
+        labels0 (pandas.Index-like, optional): Defaults to ``None``. Override set of labels to use if x0 and y0 are both
+            raw Numpy arrays
+        x1 (Union[numpy.ndarray, pandas.Series], optional): Defaults to ``None``. A second vector of x-coordinates, of
+            length N1. Can be a Series to specify labels
+        y1 (Union[numpy.ndarray, pandas.Series], optional): Defaults to ``None``. A second vector of y-coordinates, of
+            length N1. Can be a Series to specify labels
         labels1 (pandas.Index-like): Override set of labels to use if x1 and y1 are both raw Numpy arrays
         **kwargs: Additional scalars to pass into the evaluation context
 
@@ -195,18 +203,19 @@ def distance_matrix(x0, y0, tall=False, method='EUCLIDEAN', labels0=None, x1=Non
 
         Otherwise, the function will try and infer the labels from the `x` and `y` objects, if one or both of them are
         provided as Series.
-
     """
 
     second_coords = x1 is not None and y1 is not None
 
     descr = "first coordinate" if second_coords else "coordinate"
     temp_labels, (x_array0, y_array0) = _check_vectors(descr, x0, y0)
-    if labels0 is None: labels0 = temp_labels
+    if labels0 is None:
+        labels0 = temp_labels
 
     if second_coords:
         temp_labels, (x_array1, y_array1) = _check_vectors("second coordinate", x1, y1)
-        if labels1 is None: labels1 = temp_labels
+        if labels1 is None:
+            labels1 = temp_labels
     else:
         x_array1 = x_array0[...]
         y_array1 = y_array0[...]
@@ -232,7 +241,8 @@ def distance_matrix(x0, y0, tall=False, method='EUCLIDEAN', labels0=None, x1=Non
 
     if tall:
         raw_matrix.shape = n0 * n1
-        if not labelled_result: return raw_matrix
+        if not labelled_result:
+            return raw_matrix
 
         mi = pd.MultiIndex.from_product([labels0, labels1])
         return pd.Series(raw_matrix, index=mi)
@@ -242,7 +252,9 @@ def distance_matrix(x0, y0, tall=False, method='EUCLIDEAN', labels0=None, x1=Non
     return pd.DataFrame(raw_matrix, index=labels0, columns=labels1)
 
 
-def distance_array(x0, y0, x1, y1, method='euclidean', **kwargs):
+def distance_array(x0: Union[np.ndarray, pd.Series], y0: Union[np.ndarray, pd.Series],
+                   x1: Union[np.ndarray, pd.Series], y1: Union[np.ndarray, pd.Series], method: str = 'euclidean',
+                   **kwargs) -> Union[np.ndarray, pd.Series]:
     """
     Fast method to compute distance between 2 (x, y) points, represented by 4 separate arrays, using the NumExpr
     package. Supports several equations for computing distances
@@ -271,7 +283,6 @@ def distance_array(x0, y0, x1, y1, method='euclidean', **kwargs):
         numpy.ndarray or pandas.Series:
             Distance from the vectors of first points to the vectors of second points. A Series is returned when one or
             more coordinate arrays are given as a Series object
-
     """
 
     labels, (x0, y0, x1, y1) = _check_vectors("coordinate", x0, y0, x1, y1)
@@ -292,7 +303,8 @@ def distance_array(x0, y0, x1, y1, method='euclidean', **kwargs):
     return result_array
 
 
-def indexers_for_map_matrix(row_labels, col_labels, superset, check=True):
+def indexers_for_map_matrix(row_labels: pd.Series, col_labels: pd.Series, superset: pd.Index,
+                            check: bool = True) -> Tuple[np.ndarray, np.ndarray]:
     if check:
         assert np.all(row_labels.isin(superset))
         assert np.all(col_labels.isin(superset))
@@ -303,8 +315,10 @@ def indexers_for_map_matrix(row_labels, col_labels, superset, check=True):
     return row_offsets, col_offsets
 
 
-def map_to_matrix(values, super_labels, fill_value=0, row_col_labels=None, row_col_offsets=None, out=None,
-                  grouper_func='sum', out_operand='+'):
+def map_to_matrix(values: pd.Series, super_labels: pd.Index, fill_value: float = 0,
+                  row_col_labels: Tuple[pd.Series, pd.Series] = None,
+                  row_col_offsets: Tuple[np.ndarray, np.ndarray] = None, out: Union[pd.DataFrame, np.ndarray] = None,
+                  grouper_func: str = 'sum', out_operand: str = '+') -> pd.DataFrame:
 
     # TODO: Check that `values` dtype is numeric, or at least, add-able
 

@@ -100,8 +100,7 @@ def best_intermediate_zones(access_table: DataFrame, egress_table: DataFrame, co
                             intermediate_name: str = "intermediate_zone", maximize=True,
                             availability_column: str = "available", null_index=0
                             ) -> Union[DataFrame, Dict[int, DataFrame]]:
-    """
-    Numba-accelerated.
+    """Numba-accelerated.
 
     Triple-index operation for two matrices, finding the most- or least-cost intermediate zones. Takes an access matrix
     of the shape (O, I) and an egress matrix of the shape (I, D) to produce a combined matrix of the shape (O, D), with
@@ -147,7 +146,6 @@ def best_intermediate_zones(access_table: DataFrame, egress_table: DataFrame, co
         Dict[int, DataFrame]: If k > 1. The keys represent the ranks, so result[1] is the best intermediate zone,
             result[2] is the second-best, etc. The value DataFrames are in the same format as if k == 1, just with
             different intermediate zones chosen.
-
     """
 
     # Check inputs

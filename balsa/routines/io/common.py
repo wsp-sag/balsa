@@ -1,27 +1,22 @@
+from contextlib import contextmanager
+from io import FileIO
 import numpy as np
 import pandas as pd
-from contextlib import contextmanager
-
-from six import string_types
-
-try:
-    from pathlib import Path
-except ImportError:
-    Path = None
+from pathlib import Path
+from typing import Union
 
 
-def coerce_matrix(matrix, allow_raw=True, force_square=True):
-    """
-    Infers a NumPy array from given input
+def coerce_matrix(matrix: Union[np.ndarray, pd.DataFrame, pd.Series], allow_raw: bool = True,
+                  force_square: bool = True) -> np.ndarray:
+    """Infers a NumPy array from given input
 
     Args:
-        matrix:
+        matrix (Union[numpy.ndarray, pandas.DataFrame, pandas.Series]):
         allow_raw (bool, optional): Defaults to ``True``.
         force_square (bool, optional): Defaults to ``True``.
 
     Returns:
-        numpy.ndarray:
-            A 2D ndarray of type float32
+        numpy.ndarray: A 2D ndarray of type float32
     """
     if isinstance(matrix, pd.DataFrame):
         if force_square:
@@ -46,9 +41,8 @@ def coerce_matrix(matrix, allow_raw=True, force_square=True):
     return matrix
 
 
-def expand_array(a, n, axis=None):
-    """
-    Expands an array across all dimensions by a set amount
+def expand_array(a: np.ndarray, n: np.ndarray, axis: int = None) -> np.ndarray:
+    """Expands an array across all dimensions by a set amount
 
     Args:
         a (numpy.ndarray): The array to expand
@@ -56,11 +50,11 @@ def expand_array(a, n, axis=None):
         axis (int, optional): Defaults to ``None``. The axis to expand along, or None to expand along all axes.
 
     Returns:
-        numpy.ndarray:
-            The expanded array
+        numpy.ndarray: The expanded array
     """
 
-    if axis is None: new_shape = [dim + n for dim in a.shape]
+    if axis is None:
+        new_shape = [dim + n for dim in a.shape]
     else:
         new_shape = []
         for i, dim in enumerate(a.shape):
@@ -76,22 +70,20 @@ def expand_array(a, n, axis=None):
 
 
 @contextmanager
-def open_file(file_handle, **kwargs):
-    """
-    Context manager for opening files provided as several different types. Supports a file handler as a str, unicode,
+def open_file(file_handle: Union[str, Path, FileIO], **kwargs):
+    """Context manager for opening files provided as several different types. Supports a file handler as a str, unicode,
     ``pathlib.Path``, or an already-opened handler.
 
     Args:
-        file_handle (Union[str, unicode, Path, File]): The item to be opened or is already open.
+        file_handle (Union[str, Path, FileIO]): The item to be opened or is already open.
         **kwargs: Keyword args passed to ``open()``. Usually mode='w'.
 
     Yields:
         File:
             The opened file handler. Automatically closed once out of context.
-
     """
     opened = False
-    if isinstance(file_handle, string_types):
+    if isinstance(file_handle, str):
         f = open(file_handle, **kwargs)
         opened = True
     elif Path is not None and isinstance(file_handle, Path):
