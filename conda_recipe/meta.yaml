@@ -25,7 +25,6 @@ requirements:
 about:
   home: https://github.com/wsp-sag/balsa
   license: MIT
-  license_file: LICENSE
   summary: Python tools for travel demand forecasting applications and analyses
 
 extra:
