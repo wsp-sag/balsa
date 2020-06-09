@@ -1,6 +1,8 @@
+{% set data = load_setup_py_data() %}
+
 package:
   name: wsp-balsa
-  version: "1.1.0"
+  version: {{ data.get('version') }}
 
 source:
   path: ../
@@ -10,17 +12,23 @@ build:
   noarch: python
 
 requirements:
-  build:
+  host:
     - python
-    - setuptools
   run:
+    - python
     - pandas >=0.21
     - numpy >=1.15
     - numba >=0.35
     - numexpr >=2.6
     - six >=1.10
-    - matplotlib >=3.0
 
 about:
   home: https://github.com/wsp-sag/balsa
-  summary: A collection of Python functions and tools to facilitate travel demand forecasting applications and analyses
+  license: MIT
+  license_file: LICENSE
+  summary: Python tools for travel demand forecasting applications and analyses
+
+extra:
+  maintainers:
+    - Brian Cheung
+    - Peter Kucirek
