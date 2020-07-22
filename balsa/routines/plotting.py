@@ -4,7 +4,7 @@ from matplotlib.ticker import FuncFormatter
 import numpy as np
 import pandas as pd
 from pathlib import Path
-from typing import Callable, Tuple, Union, List, Dict, Any
+from typing import Callable, Tuple, Union, List, Dict
 
 
 def convergence_boxplot(targets: pd.DataFrame, results: pd.DataFrame, filter_func: Callable[[pd.Series], pd.Series],
@@ -169,9 +169,10 @@ def location_summary(model: pd.DataFrame, target: pd.DataFrame, ensemble_names: 
 
 
 def trumpet_diagram(counts: pd.Series, model_volume: pd.Series, categories: Union[pd.Series, List[pd.Series]] = None,
-                    category_colours: Dict[Union[Any, tuple]] = None, category_markers: Dict[Union[Any, tuple]] = None,
-                    label_format: str = None, title: str = '', y_bounds: Tuple[float, float] = (-2, 2), ax: Axes = None,
-                    x_label: str = "Count volume", legend: bool = True, **kwargs) -> Axes:
+                    category_colours: Dict[Union[str, tuple], str] = None,
+                    category_markers: Dict[Union[str, tuple], str] = None, label_format: str = None, title: str = '',
+                    y_bounds: Tuple[float, float] = (-2, 2), ax: Axes = None, x_label: str = "Count volume",
+                    legend: bool = True, **kwargs) -> Axes:
     """Plots an auto volumes "trumpet" diagram of relative error vs. target count, and will draw min/max error curves
     based on FHWA guidelines. Can be used to plot different categories of count locations.
 
