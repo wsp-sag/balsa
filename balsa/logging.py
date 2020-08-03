@@ -1,10 +1,7 @@
-from __future__ import division, absolute_import, print_function, unicode_literals
-
 import logging
 import sys
 from contextlib import contextmanager
 import traceback as tb
-import six
 from json import dumps as json_to_str
 from enum import Enum
 
@@ -51,7 +48,7 @@ class _SwitchFormatter(logging.Formatter):
             return logging.Formatter(item) if isinstance(item, str) else item
 
         self._default = make_formatter(default_format)
-        self._formats = {lvl: make_formatter(f) for lvl, f in six.iteritems(level_formats)}
+        self._formats = {lvl: make_formatter(f) for lvl, f in level_formats.items()}
 
     def format(self, record):
         level = record.levelno
@@ -72,9 +69,7 @@ class _JsonFormatter(logging.Formatter):
 
 
 class ModelLogger(logging.Logger):
-    """
-    Extends the standard Python Logger object, adding additional logging statements such as ``.report()``.
-    """
+    """Extends the standard Python Logger object, adding additional logging statements such as ``.report()``"""
 
     def report(self, msg, *args, **kwargs):
         """Report useful model statistics or results to the user. Distinct from ``.info()`` which provides status
