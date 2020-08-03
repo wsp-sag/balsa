@@ -33,9 +33,11 @@ def _update_heap(utilities: ndarray, zones: ndarray, new_u: float, new_zone: int
     top = len(utilities)
     while i < top:
         current_u = utilities[i]
-        if new_u < current_u: break
+        if new_u < current_u:
+            break
         i += 1
-    if i <= 0: return
+    if i <= 0:
+        return
     for j in range(i - 1):
         utilities[j] = utilities[j + 1]
         zones[j] = zones[j + 1]
@@ -71,7 +73,8 @@ def _nbf_twopart_worker(access_utils: ndarray, egress_utils: ndarray, result_uti
 
             # In general, for problems where (n_origins * n_destinations) >> k, most values will not be in the top k.
             # So quickly check against the lowest utility in the heap to avoid calling the updater func
-            if interim_util < util_heap[0] or interim_util == _NEG_INF: continue
+            if interim_util < util_heap[0] or interim_util == _NEG_INF:
+                continue
             _update_heap(util_heap, zones_heap, interim_util, interim_zone)
 
         result_utils[origin_zone, destination_zone, :] = util_heap
@@ -100,8 +103,7 @@ def best_intermediate_zones(access_table: DataFrame, egress_table: DataFrame, co
                             intermediate_name: str = "intermediate_zone", maximize=True,
                             availability_column: str = "available", null_index=0
                             ) -> Union[DataFrame, Dict[int, DataFrame]]:
-    """
-    Numba-accelerated.
+    """Numba-accelerated.
 
     Triple-index operation for two matrices, finding the most- or least-cost intermediate zones. Takes an access matrix
     of the shape (O, I) and an egress matrix of the shape (I, D) to produce a combined matrix of the shape (O, D), with
@@ -116,7 +118,7 @@ def best_intermediate_zones(access_table: DataFrame, egress_table: DataFrame, co
 
     When constructing the result tables, columns in the access and egress tables are "carried forward" such that the
     results columns will be the union of columns in the input tables. Columns in one table only will be carried forward
-    unmodified and retain their dtype. Columns in both tables will be added together, and thus MUST be numeric.
+    unmodified and retain their data type. Columns in both tables will be added together, and thus MUST be numeric.
 
     In the specified cost column, a value of `-inf` (or `inf` when minimizing) is respected as the sentinel value for
     unavailable. (O, I) or (I, D) interchanges with this sentinel value will not be considered.
@@ -147,12 +149,12 @@ def best_intermediate_zones(access_table: DataFrame, egress_table: DataFrame, co
         Dict[int, DataFrame]: If k > 1. The keys represent the ranks, so result[1] is the best intermediate zone,
             result[2] is the second-best, etc. The value DataFrames are in the same format as if k == 1, just with
             different intermediate zones chosen.
-
     """
 
     # Check inputs
     k = max(1, k)
-    if n_threads is None: n_threads = cpu_count()
+    if n_threads is None:
+        n_threads = cpu_count()
     origins, intermediates, destinations = _validate_access_egress_tables(access_table, egress_table)
     n_origins, n_intermediate, n_destinations = len(origins), len(intermediates), len(destinations)
 
@@ -176,8 +178,10 @@ def best_intermediate_zones(access_table: DataFrame, egress_table: DataFrame, co
         ])
         for start, stop in breaks
     ]
-    for t in threads: t.start()
-    for t in threads: t.join()
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join()
 
     # Construct composite result tables
     if other_columns:

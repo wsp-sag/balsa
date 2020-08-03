@@ -1,5 +1,10 @@
 # Balsa (wsp-balsa)
 
+[![Conda Latest Release](https://anaconda.org/wsp_sap/wsp-balsa/badges/version.svg)](https://anaconda.org/wsp_sap/wsp-balsa)
+[![Conda Last Updated](https://anaconda.org/wsp_sap/wsp-balsa/badges/latest_release_date.svg)](https://anaconda.org/wsp_sap/wsp-balsa)
+[![Platforms](https://anaconda.org/wsp_sap/wsp-balsa/badges/platforms.svg)](https://anaconda.org/wsp_sap/wsp-balsa)
+[![License](https://anaconda.org/wsp_sap/wsp-balsa/badges/license.svg)](https://github.com/wsp-sag/balsa/blob/master/LICENSE)
+
 Balsa is a collection of functions and tools for Python to facilitate travel demand forecasting applications and analyses. It is designed to work the the “scientific stack” of Python, namely NumPy, Pandas, and Matplotlib; which are optimized for speed and usability. Most of balsa consists of standalone functions - for input/output, for analysis, etc. - as well as a few lightweight class-based data structures for specific applications.
 
 Balsa is owned and published by WSP Canada's Systems Analytics for Policy group.
@@ -13,25 +18,27 @@ Balsa is owned and published by WSP Canada's Systems Analytics for Policy group.
 - Management of JSON configuration files, including comments.
 - and more!
 
-Balsa is compatible with Python 2.7 and 3.5+
-
-## Current Status
-
-*Version 1.0* is the latest release of balsa.
-
-**For TRESO users:** TRESO is only compatible with the [`v0.5.0`](https://github.com/wsp-sag/balsa/tree/v0.5.0) release of balsa.
+Balsa is compatible with Python 3.5+
 
 ## Installation
 
+> **For TRESO users:** TRESO is only compatible with the [`v0.6.1`](https://github.com/wsp-sag/balsa/releases/tag/v0.6.1) release of Balsa, which can only be installed directly from GitHub using `pip`.
+
+### With `conda`
+
+Balsa can be installed with conda by running the following command:
+
+```batch
+conda install -c wsp_sap wsp-balsa
+```
+
 ### With `pip`
 
-As a private package, Balsa **is not hosted on PyPI or other services that do not permit private code**. Currently the best way to install Balsa is using `pip` to install directly from GitHub:
+Balsa can be installed directly from GitHub using `pip` by running the following command:
 
 ```batch
 pip install git+https://github.com/wsp-sag/balsa.git
 ```
-
-Git will prompt you to login to your account (also works with 2FA) before installing. This requires you to download and install a [standalone Git client](https://git-scm.com/downloads) to communicate with GitHub.
 
 > **Windows Users:** It is recommended to install Balsa from inside an activated Conda environment. Balsa uses several packages (NumPy, Pandas, etc.) that will otherwise not install correctly from `pip` otherwise. For example:
 
@@ -40,20 +47,6 @@ C:\> conda activate base
 
 (base) C:\> pip install git+https://github.com/wsp-sag/balsa.git
 ...
-```
-
-### With `conda`
-
-Balsa can be installed with Conda, but requires you to install it from a local Conda channel. This can be done by using [conda-build](https://github.com/conda/conda-build), which will create a Conda package for Balsa (that has been cloned from GitHub onto your machine) and set up a local Conda channel (i.e. `conda-bld`) in your Conda installation folder. conda-build must be installed in your base Conda environment. Once the Conda package is built, you can install it to your Conda environment of choice using `conda install`.
-
-The following code block provides the commands to install Balsa using Conda.
-
-```batch
-(base) C:\> conda build "<path to local balsa repository folder>/conda_recipe"
-
-...
-
-(base) C:\> conda install -c "<path to your conda installation folder>/conda-bld" wsp-balsa
 ```
 
 ## Documentation

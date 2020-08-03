@@ -1,18 +1,15 @@
-from __future__ import division as _division
-
-import multiprocessing as _mp
-import numba as _nb
-import numpy as _np
-import pandas as _pd
-from pandas import Series, DataFrame, Index
-import numexpr as _ne
+from multiprocessing import cpu_count
+import numba as nb
+import numexpr as ne
+import numpy as np
+import pandas as pd
+from typing import Tuple, Union, List, Callable, Iterable
 
 EPS = 1.0e-7
 
 
-def matrix_balancing_1d(m, a, axis):
-    """
-    Balances a matrix using a single constraint.
+def matrix_balancing_1d(m: np.ndarray, a: np.ndarray, axis: int) -> np.ndarray:
+    """Balances a matrix using a single constraint.
 
     Args:
         m (numpy.ndarray): The matrix (a 2-dimensional ndarray) to be balanced
@@ -21,23 +18,24 @@ def matrix_balancing_1d(m, a, axis):
 
     Return:
         numpy.ndarray: A balanced matrix
-
     """
 
     assert axis in [0, 1], "axis must be either 0 or 1"
     assert m.ndim == 2, "`m` must be a two-dimensional matrix"
     assert a.ndim == 1, "`a` must be an one-dimensional vector"
-    assert m.shape[axis] == a.shape[0], "axis %d of matrices 'm' and 'a' must be the same." % axis
+    assert np.all(m.shape[axis] == a.shape[0]), "axis %d of matrices 'm' and 'a' must be the same." % axis
 
     return _balance(m, a, axis)
 
 
-def matrix_balancing_2d(m, a, b, totals_to_use='raise', max_iterations=1000, rel_error=0.0001, n_procs=1):
-    """
-    Balances a two-dimensional matrix using iterative proportional fitting.
+def matrix_balancing_2d(m: Union[np.ndarray, pd.DataFrame], a: np.ndarray, b: np.ndarray, totals_to_use: str = 'raise',
+                        max_iterations: int = 1000, rel_error: float = 0.0001,
+                        n_procs: int = 1) -> Tuple[Union[np.ndarray, pd.DataFrame], float, int]:
+    """Balances a two-dimensional matrix using iterative proportional fitting.
 
     Args:
-        m (numpy.ndarray): The matrix (a 2-dimensional ndarray) to be balanced
+        m (Union[numpy.ndarray, pandas.DataFrame]): The matrix (a 2-dimensional ndarray) to be balanced. If a DataFrame
+            is supplied, the output will be returned as a DataFrame.
         a (numpy.ndarray): The row totals (a 1-dimensional ndarray) to use for balancing
         b (numpy.ndarray): The column totals (a 1-dimensional ndarray) to use for balancing
         totals_to_use (str, optional): Defaults to ``'raise'``. Describes how to scale the row and column totals if
@@ -51,21 +49,22 @@ def matrix_balancing_2d(m, a, b, totals_to_use='raise', max_iterations=1000, rel
         n_procs (int, optional): Defaults to ``1``. Number of processors for parallel computation. (Not used)
 
     Return:
-        Tuple[numpy.ndarray, float, int]: The balanced matrix, residual, and n_iterations
+        Tuple[Union[numpy.ndarray, pandas.DataFrame], float, int]: The balanced matrix, residual, and n_iterations
     """
     max_iterations = int(max_iterations)
     n_procs = int(n_procs)
 
     # Test if matrix is Pandas DataFrame
     data_type = ''
-    if isinstance(m, _pd.DataFrame):
+    m_pd = None
+    if isinstance(m, pd.DataFrame):
         data_type = 'pd'
         m_pd = m
         m = m_pd.values
 
-    if isinstance(a, _pd.Series) or isinstance(a, _pd.DataFrame):
+    if isinstance(a, pd.Series) or isinstance(a, pd.DataFrame):
         a = a.values
-    if isinstance(b, _pd.Series) or isinstance(b, _pd.DataFrame):
+    if isinstance(b, pd.Series) or isinstance(b, pd.DataFrame):
         b = b.values
 
     # ##################################################################################
@@ -85,23 +84,23 @@ def matrix_balancing_2d(m, a, b, totals_to_use='raise', max_iterations=1000, rel
     assert totals_to_use in valid_totals_to_use, "totals_to_use must be one of %s" % valid_totals_to_use
     assert max_iterations >= 1, "max_iterations must be integer >= 1"
     assert 0 < rel_error < 1.0, "rel_error must be float between 0.0 and 1.0"
-    assert 1 <= n_procs <= _mp.cpu_count(), \
-        "n_procs must be integer between 1 and the number of processors (%d) " % _mp.cpu_count()
+    assert 1 <= n_procs <= cpu_count(), \
+        "n_procs must be integer between 1 and the number of processors (%d) " % cpu_count()
     if n_procs > 1:
         raise NotImplementedError("Multiprocessing capability is not implemented yet.")
 
     # Scale row and column totals, if required
     a_sum = a.sum()
     b_sum = b.sum()
-    if not _np.isclose(a_sum, b_sum):
+    if not np.isclose(a_sum, b_sum):
         if totals_to_use == 'rows':
-            b = _np.multiply(b, a_sum / b_sum)
+            b = np.multiply(b, a_sum / b_sum)
         elif totals_to_use == 'columns':
-            a = _np.multiply(a, b_sum / a_sum)
+            a = np.multiply(a, b_sum / a_sum)
         elif totals_to_use == 'average':
             avg_sum = 0.5 * (a_sum + b_sum)
-            a = _np.multiply(a, avg_sum / a_sum)
-            b = _np.multiply(b, avg_sum / b_sum)
+            a = np.multiply(a, avg_sum / a_sum)
+            b = np.multiply(b, avg_sum / b_sum)
         else:
             raise RuntimeError("a and b vector totals do not match.")
 
@@ -119,15 +118,14 @@ def matrix_balancing_2d(m, a, b, totals_to_use='raise', max_iterations=1000, rel
         i += 1
 
     if data_type == 'pd':
-        new_df = _pd.DataFrame(m, index=m_pd.index, columns=m_pd.columns)
+        new_df = pd.DataFrame(m, index=m_pd.index, columns=m_pd.columns)
         return new_df, err, i
     else:
         return m, err, i
 
 
-def _balance(matrix, tot, axis):
-    """
-    Balances a matrix using a single constraint.
+def _balance(matrix: np.ndarray, tot: np.ndarray, axis: int) -> np.ndarray:
+    """Balances a matrix using a single constraint.
 
     Args:
         matrix (numpy.ndarray): The matrix to be balanced
@@ -136,39 +134,37 @@ def _balance(matrix, tot, axis):
 
     Return:
         numpy.ndarray: The balanced matrix
-
     """
     sc = tot / (matrix.sum(axis) + EPS)
-    sc = _np.nan_to_num(sc)  # replace divide by 0 errors from the prev. line
+    sc = np.nan_to_num(sc)  # replace divide by 0 errors from the prev. line
     if axis:  # along rows
-        matrix = _np.multiply(matrix.T, sc).T
+        matrix = np.multiply(matrix.T, sc).T
     else:   # along columns
-        matrix = _np.multiply(matrix, sc)
+        matrix = np.multiply(matrix, sc)
     return matrix
 
 
 def _calc_error(m, a, b):
-    row_sum = _np.absolute(a - m.sum(1)).sum()
-    col_sum = _np.absolute(b - m.sum(0)).sum()
+    row_sum = np.absolute(a - m.sum(1)).sum()
+    col_sum = np.absolute(b - m.sum(0)).sum()
     return row_sum + col_sum
 
 
-@_nb.jit(_nb.float64[:, :](_nb.float64[:, :], _nb.int64))
+@nb.jit(nb.float64[:, :](nb.float64[:, :], nb.int64))
 def _nbf_bucket_round(a_, decimals=0):
     a = a_.ravel()
-    b = _np.copy(a)
+    b = np.copy(a)
 
     residual = 0
     for i in range(0, len(b)):
-        b[i] = _np.round(a[i] + residual, decimals)
+        b[i] = np.round(a[i] + residual, decimals)
         residual += a[i] - b[i]
 
     return b.reshape(a_.shape)
 
 
-def matrix_bucket_rounding(m, decimals=0):
-    """
-    Bucket rounds to the given number of decimals.
+def matrix_bucket_rounding(m: Union[np.ndarray, pd.DataFrame], decimals: int = 0) -> Union[np.ndarray, pd.DataFrame]:
+    """Bucket rounds to the given number of decimals.
 
     Args:
         m (Union[numpy.ndarray, pandas.DataFrame]): The matrix to be rounded
@@ -176,37 +172,36 @@ def matrix_bucket_rounding(m, decimals=0):
             specifies the number of positions to the left of the decimal point.
 
     Return:
-        numpy.ndarray: The rounded matrix
-
+        Union[numpy.ndarray, pandas.DataFrame]: The rounded matrix
     """
 
     # Test if matrix is Pandas DataFrame
     data_type = ''
-    if isinstance(m, _pd.DataFrame):
+    m_pd = None
+    if isinstance(m, pd.DataFrame):
         data_type = 'pd'
         m_pd = m
         m = m_pd.values
 
     decimals = int(decimals)
 
-    # I really can't think of a way to vectorize bucket rounding,
-    # so here goes the slow for loop
+    # I really can't think of a way to vectorize bucket rounding, so here goes the slow for loop
     b = _nbf_bucket_round(m, decimals)
 
     if decimals <= 0:
-        b = b.astype(_np.int32)
+        b = b.astype(np.int32)
 
     if data_type == 'pd':
-        new_df = _pd.DataFrame(b.reshape(m.shape), index=m_pd.index, columns=m_pd.columns)
+        new_df = pd.DataFrame(b.reshape(m.shape), index=m_pd.index, columns=m_pd.columns)
         return new_df
     else:
         return b.reshape(m.shape)
 
 
-def split_zone_in_matrix(base_matrix, old_zone, new_zones, proportions):
-    """
-    Takes a zone in a matrix (as a DataFrame) and splits it into several new zones, prorating affected cells by a vector
-    of proportions (one value for each new zone). The old zone is removed.
+def split_zone_in_matrix(base_matrix: pd.DataFrame, old_zone: int, new_zones: List[int],
+                         proportions: List[float]) -> pd.DataFrame:
+    """Takes a zone in a matrix (as a DataFrame) and splits it into several new zones, prorating affected cells by a
+    vector of proportions (one value for each new zone). The old zone is removed.
 
     Args:
         base_matrix (pandas.DataFrame): The matrix to re-shape
@@ -217,28 +212,28 @@ def split_zone_in_matrix(base_matrix, old_zone, new_zones, proportions):
 
     Returns:
         pandas.DataFrame: The re-shaped matrix
-
     """
 
-    assert isinstance(base_matrix, _pd.DataFrame), "Base matrix must be a DataFrame"
+    assert isinstance(base_matrix, pd.DataFrame), "Base matrix must be a DataFrame"
 
     old_zone = int(old_zone)
-    new_zones = _np.array(new_zones, dtype=_np.int32)
-    proportions = _np.array(proportions, dtype=_np.float64)
+    new_zones = np.array(new_zones, dtype=np.int32)
+    proportions = np.array(proportions, dtype=np.float64)
 
     assert len(new_zones) == len(proportions), "Proportion array must be the same length as the new zone array"
     assert len(new_zones.shape) == 1, "New zones must be a vector"
     assert base_matrix.index.equals(base_matrix.columns), "DataFrame is not a matrix"
-    assert _np.isclose(proportions.sum(), 1.0), "Proportions must sum to 1.0 "
+    assert np.isclose(proportions.sum(), 1.0), "Proportions must sum to 1.0 "
 
     n_new_zones = len(new_zones)
 
     intersection_index = base_matrix.index.drop(old_zone)
     new_index = intersection_index
-    for z in new_zones: new_index = new_index.insert(-1, z)
-    new_index = _pd.Index(sorted(new_index))
+    for z in new_zones:
+        new_index = new_index.insert(-1, z)
+    new_index = pd.Index(sorted(new_index))
 
-    new_matrix = _pd.DataFrame(0, index=new_index, columns=new_index, dtype=base_matrix.dtypes.iat[0])
+    new_matrix = pd.DataFrame(0, index=new_index, columns=new_index, dtype=base_matrix.dtypes.iat[0])
 
     # 1. Copy over the values from the regions of the matrix not being updated
     new_matrix.loc[intersection_index, intersection_index] = base_matrix
@@ -247,10 +242,10 @@ def split_zone_in_matrix(base_matrix, old_zone, new_zones, proportions):
     # This section (and the next) works with the underlying Numpy arrays, since they handle
     # broadcasting better than Pandas does
     original_row = base_matrix.loc[old_zone, intersection_index]
-    original_row = original_row.values[:] # Make a shallow copy to preserve shape of the original data
+    original_row = original_row.values[:]  # Make a shallow copy to preserve shape of the original data
     original_row.shape = 1, len(intersection_index)
     proportions.shape = n_new_zones, 1
-    result = _pd.DataFrame(original_row * proportions, index=new_zones, columns=intersection_index)
+    result = pd.DataFrame(original_row * proportions, index=new_zones, columns=intersection_index)
     new_matrix.loc[result.index, result.columns] = result
 
     # 3. Proprate the column corresponding to the dropped zone
@@ -258,40 +253,45 @@ def split_zone_in_matrix(base_matrix, old_zone, new_zones, proportions):
     original_column = original_column.values[:]
     original_column.shape = len(intersection_index), 1
     proportions.shape = 1, n_new_zones
-    result = _pd.DataFrame(original_column * proportions, index=intersection_index, columns=new_zones)
+    result = pd.DataFrame(original_column * proportions, index=intersection_index, columns=new_zones)
     new_matrix.loc[result.index, result.columns] = result
 
     # 4. Expand the old intrazonal
-    proportions_copy = proportions[:,:]
+    proportions_copy = proportions[:, :]
     proportions_copy.shape = 1, n_new_zones
     proportions.shape = n_new_zones, 1
 
     intrzonal_matrix = proportions * proportions_copy
     intrazonal_scalar = base_matrix.at[old_zone, old_zone]
 
-    result = _pd.DataFrame(intrazonal_scalar * intrzonal_matrix, index=new_zones, columns=new_zones)
+    result = pd.DataFrame(intrazonal_scalar * intrzonal_matrix, index=new_zones, columns=new_zones)
     new_matrix.loc[result.index, result.columns] = result
 
     return new_matrix
 
 
-def aggregate_matrix(matrix, groups=None, row_groups=None, col_groups=None, aggfunc=_np.sum):
-    """
-    Aggregates a matrix based on mappings provided for each axis, using a specified aggregation function.
+def aggregate_matrix(matrix: Union[pd.DataFrame, pd.Series], groups: Union[pd.Series, np.ndarray] = None,
+                     row_groups: Union[pd.Series, np.ndarray] = None, col_groups: Union[pd.Series, np.ndarray] = None,
+                     aggfunc: Callable[[Iterable[Union[int, float]]], Union[int, float]] = np.sum
+                     ) -> Union[pd.DataFrame, pd.Series]:
+    """Aggregates a matrix based on mappings provided for each axis, using a specified aggregation function.
 
     Args:
         matrix (Union[pandas.DataFrame, pandas.Series]): Matrix data to aggregate. DataFrames and Series with 2-level
             indices are supported
-        groups: Syntactic sugar to specify both row_groups and col_groups to use the same grouping series.
-        row_groups: Groups for the rows. If aggregating a DataFrame, this must match the index of the matrix. For a
-            "tall" matrix, this series can match either the "full" index of the series, or it can match the first level
-            of the matrix (it would be the same as if aggregating a DataFrame). Alternatively, an array can be provided,
-            but it must be the same length as the DataFrame's index, or the full length of the Series.
-        col_groups: Groups for the columns. If aggregating a DataFrame, this must match the columns of the matrix. For a
-            "tall" matrix, this series can match either the "full" index of the series, or it can match the second level
-            of the matrix (it would be the same as if aggregating a DataFrame). Alternatively, an array can be provided,
-            but it must be the same length as the DataFrame's columns, or the full length of the Series.
-        aggfunc: The aggregation function to use. Default is sum.
+        groups (Union[pandas.Series, numpy.ndarray], optional): Syntactic sugar to specify both row_groups and
+            col_groups to use the same grouping series.
+        row_groups (Union[pandas.Series, numpy.ndarray], optional): Groups for the rows. If aggregating a DataFrame,
+            this must match the index of the matrix. For a "tall" matrix, this series can match either the "full" index
+            of the series, or it can match the first level of the matrix (it would be the same as if aggregating a
+            DataFrame). Alternatively, an array can be provided, but it must be the same length as the DataFrame's
+            index, or the full length of the Series.
+        col_groups (Union[pandas.Series, numpy.ndarray], optional): Groups for the columns. If aggregating a DataFrame,
+            this must match the columns of the matrix. For a "tall" matrix, this series can match either the "full"
+            index of the series, or it can match the second level of the matrix (it would be the same as if aggregating
+            a DataFrame). Alternatively, an array can be provided, but it must be the same length as the DataFrame's
+            columns, or the full length of the Series.
+        aggfunc: The aggregation function to use. Default is np.sum.
 
     Returns:
         pandas.Series or pandas.DataFrame:
@@ -340,7 +340,7 @@ def aggregate_matrix(matrix, groups=None, row_groups=None, col_groups=None, aggf
         ``new_matrix = aggregate_matrix(matrix, groups=groups)``
 
         new_matrix:
-        
+
         +-------+----+----+----+
         |       | A  | B  | C  |
         +=======+====+====+====+
@@ -359,12 +359,12 @@ def aggregate_matrix(matrix, groups=None, row_groups=None, col_groups=None, aggf
     assert row_groups is not None, "Row groups must be specified"
     assert col_groups is not None, "Column groups must be specified"
 
-    if isinstance(matrix, _pd.DataFrame):
+    if isinstance(matrix, pd.DataFrame):
         row_groups = _prep_square_index(matrix.index, row_groups)
         col_groups = _prep_square_index(matrix.columns, col_groups)
 
         return _aggregate_frame(matrix, row_groups, col_groups, aggfunc)
-    elif isinstance(matrix, _pd.Series):
+    elif isinstance(matrix, pd.Series):
         assert matrix.index.nlevels == 2
 
         row_groups, col_groups = _prep_tall_index(matrix.index, row_groups, col_groups)
@@ -375,7 +375,7 @@ def aggregate_matrix(matrix, groups=None, row_groups=None, col_groups=None, aggf
 
 def _prep_tall_index(target_index, row_aggregator, col_aggregator):
 
-    if isinstance(row_aggregator, _pd.Series):
+    if isinstance(row_aggregator, pd.Series):
         if row_aggregator.index.equals(target_index):
             row_aggregator = row_aggregator.values
         else:
@@ -384,9 +384,9 @@ def _prep_tall_index(target_index, row_aggregator, col_aggregator):
             row_aggregator = reindexed.values
     else:
         assert len(row_aggregator) == len(target_index)
-        row_aggregator = _np.array(row_aggregator)
+        row_aggregator = np.array(row_aggregator)
 
-    if isinstance(col_aggregator, _pd.Series):
+    if isinstance(col_aggregator, pd.Series):
         if col_aggregator.index.equals(target_index):
             col_aggregator = col_aggregator.values
         else:
@@ -395,18 +395,18 @@ def _prep_tall_index(target_index, row_aggregator, col_aggregator):
             col_aggregator = reindexed.values
     else:
         assert len(col_aggregator) == len(target_index)
-        col_aggregator = _np.array(col_aggregator)
+        col_aggregator = np.array(col_aggregator)
 
     return row_aggregator, col_aggregator
 
 
 def _prep_square_index(index, aggregator):
-    if isinstance(aggregator, _pd.Series):
+    if isinstance(aggregator, pd.Series):
         assert aggregator.index.equals(index)
         return aggregator.values
     else:
         assert len(aggregator) == len(index)
-        return _np.array(aggregator)
+        return np.array(aggregator)
 
 
 def _aggregate_frame(matrix, row_aggregator, col_aggregator, aggfunc):
@@ -417,10 +417,9 @@ def _aggregate_series(matrix, row_aggregator, col_aggregator, aggfunc):
     return matrix.groupby([row_aggregator, col_aggregator]).aggregate(aggfunc)
 
 
-def fast_stack(frame, multi_index, deep_copy=True):
-    """
-    Performs the same action as ``DataFrame.stack()``, but provides better performance when the target stacked index is
-    known before hand. Useful in converting a lot of matrices from "wide" to "tall" format. The inverse of
+def fast_stack(frame: pd.DataFrame, multi_index: pd.MultiIndex, deep_copy: bool = True) -> pd.Series:
+    """Performs the same action as ``DataFrame.stack()``, but provides better performance when the target stacked index
+    is known before hand. Useful in converting a lot of matrices from "wide" to "tall" format. The inverse of
     ``fast_unstack()``.
 
     Notes:
@@ -430,7 +429,7 @@ def fast_stack(frame, multi_index, deep_copy=True):
 
     Args:
         frame (pandas.DataFrame): The DataFrame to stack.
-        multi_index (pandas.Index): The 2-level MultiIndex known ahead-of-time.
+        multi_index (pandas.MultiIndex): The 2-level MultiIndex known ahead-of-time.
         deep_copy (bool, optional): Defaults to ``True``. A flag indicating if the returned Series should be a view of
             the underlying data (deep_copy=False) or a copy of it (deep_copy=True). A deep copy takes a little longer to
             convert and takes up more memory but preserves the original data of the DataFrame. The default value of True
@@ -438,25 +437,23 @@ def fast_stack(frame, multi_index, deep_copy=True):
 
     Returns:
         pandas.Series: The stacked data.
-
     """
 
     assert multi_index.nlevels == 2, "Target index must be a MultiIndex with exactly 2 levels"
     assert len(multi_index) == len(frame.index) * len(frame.columns), "Target index and source index and columns do " \
                                                                       "not have compatible lengths"
 
-    array = _np.ascontiguousarray(frame.values)
+    array = np.ascontiguousarray(frame.values)
     array = array.copy() if deep_copy else array[:, :]
     array.shape = len(frame.index) * len(frame.columns)
 
-    return Series(array, index=multi_index)
+    return pd.Series(array, index=multi_index)
 
 
-def fast_unstack(series, index, columns, deep_copy=True):
-    """
-    Performs the same action as ``DataFrame.unstack()``, but provides better performance when the target unstacked index
-    and columns are known before hand. Useful in converting a lot of matrices from "tall" to "wide" format. The inverse
-    of ``fast_stack()``.
+def fast_unstack(series: pd.Series, index: pd.Index, columns: pd.Index, deep_copy: bool = True) -> pd.DataFrame:
+    """Performs the same action as ``DataFrame.unstack()``, but provides better performance when the target unstacked
+    index and columns are known before hand. Useful in converting a lot of matrices from "tall" to "wide" format. The
+    inverse of ``fast_stack()``.
 
     Notes:
         This function does not check that the entries in index and columns are compatible with the MultiIndex of the
@@ -473,8 +470,7 @@ def fast_unstack(series, index, columns, deep_copy=True):
             recommended for most uses.
 
     Returns:
-        pandas.DataFrame: The unstacked data
-
+        pandas.DataFrame: The unstacked dat
     """
 
     assert series.index.nlevels == 2, "Source Series must have an index with exactly 2 levels"
@@ -484,10 +480,10 @@ def fast_unstack(series, index, columns, deep_copy=True):
     array = series.values.copy() if deep_copy else series.values[:]
     array.shape = len(index), len(columns)
 
-    return DataFrame(array, index=index, columns=columns)
+    return pd.DataFrame(array, index=index, columns=columns)
 
 
-def _check_disaggregation_input(mapping: Series, proportions: Series) -> _np.ndarray:
+def _check_disaggregation_input(mapping: pd.Series, proportions: pd.Series) -> np.ndarray:
     assert mapping is not None
     assert proportions is not None
     assert mapping.index.equals(proportions.index)
@@ -503,25 +499,26 @@ def _check_disaggregation_input(mapping: Series, proportions: Series) -> _np.nda
     return proportions.values / parent_totals
 
 
-def disaggregate_matrix(matrix, mapping=None, proportions=None, row_mapping=None, row_proportions=None,
-                        col_mapping=None, col_proportions=None):
-    """
-    Split multiple rows and columns in a matrix all at once. The cells in the matrix MUST be numeric, but the row and
-    column labels do not.
+def disaggregate_matrix(matrix: pd.DataFrame, mapping: pd.Series = None, proportions: pd.Series = None,
+                        row_mapping: pd.Series = None, row_proportions: pd.Series = None, col_mapping: pd.Series = None,
+                        col_proportions: pd.Series = None) -> pd.DataFrame:
+    """ Split multiple rows and columns in a matrix all at once. The cells in the matrix MUST be numeric, but the row
+    and column labels do not.
 
     Args:
-        matrix: The input matrix to disaggregate
-        mapping: Dict-like Series of "New label" : "Old label". Sets both the row_mapping and col_mapping variables if
-            provided (resulting in a square matrix).
-        proportions: Dict-like Series of "New label": "Proportion of old label". Its index must match the index of
-            the mapping argument. Sets both the row_proportions and col_proportions arguments if provided.
-        row_mapping: Same as mapping, except applied only to the rows.
-        row_proportions: Same as proportions, except applied only to the rows
-        col_mapping: Same as mapping, except applied only to the columns.
-        col_proportions: Same as proportions, except applied only to the columns
+        matrix (pandas.DataFrame): The input matrix to disaggregate
+        mapping (pandas.Series, optional): Dict-like Series of "New label" : "Old label". Sets both the row_mapping and
+            col_mapping variables if provided (resulting in a square matrix).
+        proportions (pandas.Series, optional): Dict-like Series of "New label": "Proportion of old label". Its index
+            must match the index of the mapping argument. Sets both the row_proportions and col_proportions arguments
+            if provided.
+        row_mapping (pandas.Series, optional): Same as mapping, except applied only to the rows.
+        row_proportions (pandas.Series, optional): Same as proportions, except applied only to the rows
+        col_mapping (pandas.Series, optional): Same as mapping, except applied only to the columns.
+        col_proportions (pandas.Series, optional): Same as proportions, except applied only to the columns
 
     Returns:
-        An expanded DataFrame with the new indices. The new matrix will sum to the same total as the original.
+        pandas.DataFrame: An expanded DataFrame with the new indices. The new matrix will sum to the same total as the original.
 
     Examples:
 
@@ -591,16 +588,16 @@ def disaggregate_matrix(matrix, mapping=None, proportions=None, row_mapping=None
     new_cols = col_mapping.index
 
     # Get raw indexers for NumPy & lookup the value in each parent cell
-    row_indexer = matrix.index.get_indexer(row_mapping)[:, _np.newaxis]
-    col_indexer = matrix.columns.get_indexer(col_mapping)[_np.newaxis, :]
+    row_indexer = matrix.index.get_indexer(row_mapping)[:, np.newaxis]
+    col_indexer = matrix.columns.get_indexer(col_mapping)[np.newaxis, :]
     parent_cells = matrix.values[row_indexer, col_indexer]
 
     # Convert proportions to 2D vectors
-    row_proportions = row_proportions[:, _np.newaxis]
-    col_proportions = col_proportions[_np.newaxis, :]
+    row_proportions = row_proportions[:, np.newaxis]
+    col_proportions = col_proportions[np.newaxis, :]
 
     # Multiply each parent cell by its disaggregation proportion & return
-    result_matrix = _ne.evaluate("parent_cells * row_proportions * col_proportions")
+    result_matrix = ne.evaluate("parent_cells * row_proportions * col_proportions")
 
-    result_matrix = DataFrame(result_matrix, index=new_rows, columns=new_cols)
+    result_matrix = pd.DataFrame(result_matrix, index=new_rows, columns=new_cols)
     return result_matrix
