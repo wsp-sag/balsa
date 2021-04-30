@@ -9,6 +9,7 @@ source:
 
 build:
   noarch: python
+  script: python setup.py --quiet install --single-version-externally-managed --record record.txt
 
 requirements:
   host:
@@ -23,6 +24,7 @@ requirements:
 about:
   home: https://github.com/wsp-sag/balsa
   license: MIT
+  license_file: LICENSE
   summary: Python tools for travel demand forecasting applications and analyses
 
 extra:

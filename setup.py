@@ -5,15 +5,14 @@ from setuptools import setup, find_packages
 version = {}
 with open(path.join(path.dirname(path.realpath(__file__)), 'balsa', 'version.py')) as fp:
     exec(fp.read(), {}, version)
-version_string = safe_version(version['__version__'])
 
 setup(
     name='wsp-balsa',
-    version=version_string,
+    version=safe_version(version['__version__']),
     description='Python tools for travel demand forecasting applications and analyses',
     url='https://github.com/wsp-sag/balsa',
     author='WSP',
-    maintatiner='Brian Cheung',
+    maintainer='Brian Cheung',
     maintainer_email='brian.cheung@wsp.com',
     classifiers=[
         'License :: OSI Approved :: MIT License'

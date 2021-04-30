@@ -22,7 +22,7 @@ Balsa is compatible with Python 3.5+
 
 ## Installation
 
-> **For TRESO users:** TRESO is only compatible with the [`v0.6.1`](https://github.com/wsp-sag/balsa/releases/tag/v0.6.1) release of Balsa, which can only be installed directly from GitHub using `pip`.
+> **For TRESO v1.4 (and older) users:** TRESO is only compatible with the [`v0.6.1`](https://github.com/wsp-sag/balsa/releases/tag/v0.6.1) release of Balsa, which can only be installed directly from GitHub using `pip`.
 
 ### With `conda`
 
@@ -48,7 +48,3 @@ C:\> conda activate base
 (base) C:\> pip install git+https://github.com/wsp-sag/balsa.git
 ...
 ```
-
-## Documentation
-
-HTML documentation is available upon request.
