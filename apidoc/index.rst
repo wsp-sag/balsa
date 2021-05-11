@@ -9,18 +9,9 @@ The import statement for the ``wsp-balsa`` package is as follows:
 
    import balsa
 
-``wsp-balsa`` is published by the Systems Analytics for Policy group inside WSP Canada.
-
 .. toctree::
-   :maxdepth: 2
-   :caption: Contents:
+   :maxdepth: 3
+   :caption: Contents
 
-   modules/balsa.routines
-   modules/balsa.logging
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+   routines/index
+   logging/index

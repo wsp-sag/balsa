@@ -85,6 +85,7 @@ class ModelLogger(logging.Logger):
 
 
 def init_root(root_name, stream_format=LogFormats.FANCY, log_debug=True):
+    """Initialize a balsa logger"""
     logging.addLevelName(_TIP_LEVEL, 'TIP')
     logging.addLevelName(_REPORT_LEVEL, 'REPORT')
     logging.setLoggerClass(ModelLogger)
@@ -142,12 +143,14 @@ def _prep_fancy_formatter():
 
 
 def get_model_logger(name):
+    """Retrieve a balsa logger"""
     logging.setLoggerClass(ModelLogger)
     return logging.getLogger(name)
 
 
 @contextmanager
 def log_to_file(file_name: str, name, append=False, raw_ascii=False):
+    """A context mananger for collecting and saving logger messages to file"""
     root = logging.getLogger(name)
 
     write_mode = 'a' if append else 'w'

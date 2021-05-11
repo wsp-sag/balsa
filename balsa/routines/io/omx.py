@@ -1,11 +1,3 @@
-"""
-OMX format
-==========
-
-The Python library openmatrix already exists, but doesn't provide a lot of interoperability with Pandas. Balsa provides
-wrapper functions that produce Pandas DataFrames and Series directly from OMX files.
-"""
-
 import numpy as np
 import pandas as pd
 from typing import Union, Iterable, Dict

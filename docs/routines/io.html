@@ -1,0 +1,687 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>IO Utilities &#8212; wsp-balsa 1.2.0 documentation</title>
+    
+  <link href="../_static/css/theme.css" rel="stylesheet" />
+  <link href="../_static/css/index.c5995385ac14fb8791e8eb36b4908be2.css" rel="stylesheet" />
+
+    
+  <link rel="stylesheet"
+    href="../_static/vendor/fontawesome/5.13.0/css/all.min.css">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+
+    
+      
+
+    
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
+    
+  <link rel="preload" as="script" href="../_static/js/index.1c5a1a01449ed65a7b51.js">
+
+    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Modelling Utilities" href="modelling.html" />
+    <link rel="prev" title="General Utilities" href="general.html" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="docsearch:language" content="en" />
+    
+  </head>
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
+    
+    <div class="container-fluid" id="banner"></div>
+
+    
+    <nav class="navbar navbar-light navbar-expand-lg bg-light fixed-top bd-navbar" id="navbar-main"><div class="container-xl">
+
+  <div id="navbar-start">
+    
+    
+<a class="navbar-brand" href="../index.html">
+<p class="title">wsp-balsa</p>
+</a>
+
+    
+  </div>
+
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar-collapsible" aria-controls="navbar-collapsible" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+
+  
+  <div id="navbar-collapsible" class="col-lg-9 collapse navbar-collapse">
+    <div id="navbar-center" class="mr-auto">
+      
+      <div class="navbar-center-item">
+        <ul id="navbar-main-elements" class="navbar-nav">
+    <li class="toctree-l1 current active nav-item">
+ <a class="reference internal nav-link" href="index.html">
+  Routines
+ </a>
+</li>
+
+<li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="../logging/index.html">
+  Logging
+ </a>
+</li>
+
+    
+</ul>
+      </div>
+      
+    </div>
+
+    <div id="navbar-end">
+      
+      <div class="navbar-end-item">
+        <ul id="navbar-icon-links" class="navbar-nav" aria-label="Icon Links">
+      </ul>
+      </div>
+      
+    </div>
+  </div>
+</div>
+    </nav>
+    
+
+    <div class="container-xl">
+      <div class="row">
+          
+            
+            <!-- Only show if we have sidebars configured, else just a small margin  -->
+            <div class="col-12 col-md-3 bd-sidebar"><form class="bd-search d-flex align-items-center" action="../search.html" method="get">
+  <i class="icon fas fa-search"></i>
+  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
+</form><nav class="bd-links" id="bd-docs-nav" aria-label="Main navigation">
+  <div class="bd-toc-item active">
+    <ul class="current nav bd-sidenav">
+ <li class="toctree-l1">
+  <a class="reference internal" href="general.html">
+   General Utilities
+  </a>
+ </li>
+ <li class="toctree-l1 current active">
+  <a class="current reference internal" href="#">
+   IO Utilities
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="modelling.html">
+   Modelling Utilities
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="matrices.html">
+   Matrix Utilities
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="plotting.html">
+   Plotting Utilities
+  </a>
+ </li>
+</ul>
+
+  </div>
+</nav>
+            </div>
+            
+          
+
+          
+          <div class="d-none d-xl-block col-xl-2 bd-toc">
+            
+              
+              <div class="toc-item">
+                
+<div class="tocsection onthispage pt-5 pb-3">
+    <i class="fas fa-list"></i> On this page
+</div>
+
+<nav id="bd-toc-nav">
+    <ul class="visible nav section-nav flex-column">
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#matrices">
+   Matrices
+  </a>
+  <ul class="nav section-nav flex-column">
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#module-balsa.routines.io.common">
+     Common
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#module-balsa.routines.io.inro">
+     Inro (Emme) format
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#omx-format">
+     OMX format
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#module-balsa.routines.io.fortran">
+     Fortran format
+    </a>
+   </li>
+  </ul>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#module-balsa.routines.io.nwp">
+   Network Packages (NWP)
+  </a>
+ </li>
+</ul>
+
+</nav>
+              </div>
+              
+              <div class="toc-item">
+                
+              </div>
+              
+            
+          </div>
+          
+
+          
+          
+            
+          
+          <main class="col-12 col-md-9 col-xl-7 py-md-5 pl-md-5 pr-md-4 bd-content" role="main">
+              
+              <div>
+                
+  <div class="section" id="io-utilities">
+<h1>IO Utilities<a class="headerlink" href="#io-utilities" title="Permalink to this headline">¶</a></h1>
+<p>Routines for reading and writing demand modelling files, particularly matrices and TMG Toolbox network packages.</p>
+<div class="section" id="matrices">
+<h2>Matrices<a class="headerlink" href="#matrices" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="module-balsa.routines.io.common">
+<span id="common"></span><h3>Common<a class="headerlink" href="#module-balsa.routines.io.common" title="Permalink to this headline">¶</a></h3>
+<dl class="py function">
+<dt id="balsa.routines.io.common.coerce_matrix">
+<code class="sig-prename descclassname"><span class="pre">balsa.routines.io.common.</span></code><code class="sig-name descname"><span class="pre">coerce_matrix</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">matrix</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">,</span> </span><span class="pre">pandas.core.frame.DataFrame</span><span class="p"><span class="pre">,</span> </span><span class="pre">pandas.core.series.Series</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">allow_raw</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">bool</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force_square</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">bool</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">numpy.ndarray</span><a class="headerlink" href="#balsa.routines.io.common.coerce_matrix" title="Permalink to this definition">¶</a></dt>
+<dd><p>Infers a NumPy array from given input</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>matrix</strong> (<em>Union</em><em>[</em><em>numpy.ndarray</em><em>, </em><em>pandas.DataFrame</em><em>, </em><em>pandas.Series</em><em>]</em>) – </p></li>
+<li><p><strong>allow_raw</strong> (<em>bool</em><em>, </em><em>optional</em>) – Defaults to <code class="docutils literal notranslate"><span class="pre">True</span></code>.</p></li>
+<li><p><strong>force_square</strong> (<em>bool</em><em>, </em><em>optional</em>) – Defaults to <code class="docutils literal notranslate"><span class="pre">True</span></code>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A 2D ndarray of type float32</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>numpy.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="balsa.routines.io.common.expand_array">
+<code class="sig-prename descclassname"><span class="pre">balsa.routines.io.common.</span></code><code class="sig-name descname"><span class="pre">expand_array</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">numpy.ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">numpy.ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">axis</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">numpy.ndarray</span><a class="headerlink" href="#balsa.routines.io.common.expand_array" title="Permalink to this definition">¶</a></dt>
+<dd><p>Expands an array across all dimensions by a set amount</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>a</strong> (<em>numpy.ndarray</em>) – The array to expand</p></li>
+<li><p><strong>n</strong> (<em>numpy.ndarray</em>) – The (non-negative) number of items to expand by.</p></li>
+<li><p><strong>axis</strong> (<em>int</em><em>, </em><em>optional</em>) – Defaults to <code class="docutils literal notranslate"><span class="pre">None</span></code>. The axis to expand along, or None to expand along all axes.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The expanded array</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>numpy.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="balsa.routines.io.common.open_file">
+<code class="sig-prename descclassname"><span class="pre">balsa.routines.io.common.</span></code><code class="sig-name descname"><span class="pre">open_file</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_handle</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span> </span><span class="pre">pathlib.Path</span><span class="p"><span class="pre">,</span> </span><span class="pre">_io.FileIO</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#balsa.routines.io.common.open_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Context manager for opening files provided as several different types. Supports a file handler as a str, unicode,
+<code class="docutils literal notranslate"><span class="pre">pathlib.Path</span></code>, or an already-opened handler.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>file_handle</strong> (<em>Union</em><em>[</em><em>str</em><em>, </em><em>Path</em><em>, </em><em>FileIO</em><em>]</em>) – The item to be opened or is already open.</p></li>
+<li><p><strong>**kwargs</strong> – Keyword args passed to <code class="docutils literal notranslate"><span class="pre">open()</span></code>. Usually mode=’w’.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Yields</dt>
+<dd class="field-even"><p><em>File</em> –     The opened file handler. Automatically closed once out of context.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="module-balsa.routines.io.inro">
+<span id="inro-emme-format"></span><h3>Inro (Emme) format<a class="headerlink" href="#module-balsa.routines.io.inro" title="Permalink to this headline">¶</a></h3>
+<dl class="py function">
+<dt id="balsa.routines.io.inro.peek_mdf">
+<code class="sig-prename descclassname"><span class="pre">balsa.routines.io.inro.</span></code><code class="sig-name descname"><span class="pre">peek_mdf</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span> </span><span class="pre">_io.FileIO</span><span class="p"><span class="pre">,</span> </span><span class="pre">pathlib.Path</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">as_index</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">bool</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">pandas.core.indexes.base.Index</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><a class="headerlink" href="#balsa.routines.io.inro.peek_mdf" title="Permalink to this definition">¶</a></dt>
+<dd><p>Partially opens an MDF file to get the zone system of its rows and its columns.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>file</strong> (<em>Union</em><em>[</em><em>str</em><em>, </em><em>FileIO</em><em>, </em><em>Path</em><em>]</em>) – The file to read.</p></li>
+<li><p><strong>as_index</strong> (<em>bool</em><em>, </em><em>optional</em>) – Defaults to <code class="docutils literal notranslate"><span class="pre">True</span></code>. Set to <code class="docutils literal notranslate"><span class="pre">True</span></code> to return a pandas.Index object rather than
+List[int]</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>One item for each dimension. If <code class="docutils literal notranslate"><span class="pre">as_index=True</span></code>, the items will be pandas.Index objects, otherwise they will be List[int]</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>List[int] or List[pandas.Index]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="balsa.routines.io.inro.read_emx">
+<code class="sig-prename descclassname"><span class="pre">balsa.routines.io.inro.</span></code><code class="sig-name descname"><span class="pre">read_emx</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span> </span><span class="pre">_io.FileIO</span><span class="p"><span class="pre">,</span> </span><span class="pre">pathlib.Path</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">zones</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span> </span><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span> </span><span class="pre">pandas.core.indexes.base.Index</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tall</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">bool</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">,</span> </span><span class="pre">pandas.core.frame.DataFrame</span><span class="p"><span class="pre">,</span> </span><span class="pre">pandas.core.series.Series</span><span class="p"><span class="pre">]</span></span><a class="headerlink" href="#balsa.routines.io.inro.read_emx" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reads an “internal” Emme matrix (found in <cite>&lt;Emme Project&gt;/Database/emmemat</cite>); with an ‘.emx’ extension. This data
+format does not contain information about zones. Its size is determined by the dimensions of the Emmebank
+(<code class="docutils literal notranslate"><span class="pre">Emmebank.dimensions['centroids']</span></code>), regardless of the number of zones actually used in all scenarios.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>file</strong> (<em>Union</em><em>[</em><em>str</em><em>, </em><em>File</em><em>, </em><em>Path</em><em>]</em>) – The file to read.</p></li>
+<li><p><strong>zones</strong> (<em>Union</em><em>[</em><em>int</em><em>, </em><em>Iterable</em><em>[</em><em>int</em><em>]</em><em>, </em><em>pandas.Index</em><em>]</em><em>, </em><em>optional</em>) – Defaults to <code class="docutils literal notranslate"><span class="pre">None</span></code>. An Index or Iterable will be
+interpreted as the zone labels for the matrix rows and columns; returning a DataFrame or Series (depending
+on <code class="docutils literal notranslate"><span class="pre">tall</span></code>). If an integer is provided, the returned ndarray will be truncated to this ‘number of zones’.
+Otherwise, the returned ndarray will be size to the maximum number of zone dimensioned by the Emmebank.</p></li>
+<li><p><strong>tall</strong> (<em>bool</em><em>, </em><em>optional</em>) – Defaults to <code class="docutils literal notranslate"><span class="pre">False</span></code>. If True, a 1D data structure will be returned. If <code class="docutils literal notranslate"><span class="pre">zone_index</span></code>
+is provided, a Series will be returned, otherwise a 1D ndarray.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>numpy.ndarray, pandas.DataFrame, or pandas.Series.</p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<p>For a project with 20 zones:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">matrix</span> <span class="o">=</span> <span class="n">read_emx</span><span class="p">(</span><span class="s2">&quot;Database/emmemat/mf1.emx&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="nb">type</span><span class="p">(</span><span class="n">matrix</span><span class="p">),</span> <span class="n">matrix</span><span class="o">.</span><span class="n">shape</span>
+<span class="go">(numpy.ndarray, (20, 20))</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">matrix</span> <span class="o">=</span> <span class="n">read_emx</span><span class="p">(</span><span class="s2">&quot;Database/emmemat/mf1.emx&quot;</span><span class="p">,</span> <span class="n">zones</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="nb">type</span><span class="p">(</span><span class="n">matrix</span><span class="p">),</span> <span class="n">matrix</span><span class="o">.</span><span class="n">shape</span>
+<span class="go">(numpy.ndarray, (10, 10))</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">matrix</span> <span class="o">=</span> <span class="n">read_emx</span><span class="p">(</span><span class="s2">&quot;Database/emmemat/mf1.emx&quot;</span><span class="p">,</span> <span class="n">zones</span><span class="o">=</span><span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="nb">type</span><span class="p">(</span><span class="n">matrix</span><span class="p">),</span> <span class="n">matrix</span><span class="o">.</span><span class="n">shape</span>
+<span class="go">&lt;class &#39;pandas.core.frame.DataFrame&#39;&gt; (10, 10)</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">matrix</span> <span class="o">=</span> <span class="n">read_emx</span><span class="p">(</span><span class="s2">&quot;Database/emmemat/mf1.emx&quot;</span><span class="p">,</span> <span class="n">zones</span><span class="o">=</span><span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">),</span> <span class="n">tall</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="nb">type</span><span class="p">(</span><span class="n">matrix</span><span class="p">),</span> <span class="n">matrix</span><span class="o">.</span><span class="n">shape</span>
+<span class="go">&lt;class &#39;pandas.core.series.Series&#39;&gt; 100</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt id="balsa.routines.io.inro.read_mdf">
+<code class="sig-prename descclassname"><span class="pre">balsa.routines.io.inro.</span></code><code class="sig-name descname"><span class="pre">read_mdf</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span> </span><span class="pre">_io.FileIO</span><span class="p"><span class="pre">,</span> </span><span class="pre">pathlib.Path</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">raw</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">bool</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tall</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">bool</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">,</span> </span><span class="pre">pandas.core.frame.DataFrame</span><span class="p"><span class="pre">,</span> </span><span class="pre">pandas.core.series.Series</span><span class="p"><span class="pre">]</span></span><a class="headerlink" href="#balsa.routines.io.inro.read_mdf" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reads Emme’s official matrix “binary serialization” format, created using <code class="docutils literal notranslate"><span class="pre">inro.emme.matrix.MatrixData.save()</span></code>.
+There is no official extension for this type of file; ‘.mdf’ is recommended. ‘.emxd’ is also sometimes encountered.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>file</strong> (<em>Union</em><em>[</em><em>str</em><em>, </em><em>FileIO</em><em>, </em><em>Path</em><em>]</em>) – The file to read.</p></li>
+<li><p><strong>raw</strong> (<em>bool</em><em>, </em><em>optional</em>) – Defaults to <code class="docutils literal notranslate"><span class="pre">False</span></code>. If <code class="docutils literal notranslate"><span class="pre">True</span></code>, returns an unlabelled ndarray. Otherwise, a DataFrame
+will be returned.</p></li>
+<li><p><strong>tall</strong> (<em>bool</em><em>, </em><em>optional</em>) – Defaults to <code class="docutils literal notranslate"><span class="pre">False</span></code>. If <code class="docutils literal notranslate"><span class="pre">True</span></code>, a 1D data structure will be returned. If
+<code class="docutils literal notranslate"><span class="pre">raw=False</span></code>, a Series will be returned, otherwise a 1D ndarray.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The matrix stored in the file.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>numpy.ndarray, pandas.DataFrame, or pandas.Series</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="balsa.routines.io.inro.to_emx">
+<code class="sig-prename descclassname"><span class="pre">balsa.routines.io.inro.</span></code><code class="sig-name descname"><span class="pre">to_emx</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">matrix</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">pandas.core.frame.DataFrame</span><span class="p"><span class="pre">,</span> </span><span class="pre">pandas.core.series.Series</span><span class="p"><span class="pre">,</span> </span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span> </span><span class="pre">_io.FileIO</span><span class="p"><span class="pre">,</span> </span><span class="pre">pathlib.Path</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">emmebank_zones</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#balsa.routines.io.inro.to_emx" title="Permalink to this definition">¶</a></dt>
+<dd><p>Writes an “internal” Emme matrix (found in <cite>&lt;Emme Project&gt;/Database/emmemat</cite>); with an ‘.emx’ extension. The
+number of zones that the Emmebank is dimensioned for must be known in order for the file to be written correctly.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>matrix</strong> (<em>Union</em><em>[</em><em>pandas.DataFrame</em><em>, </em><em>pandas.Series</em><em>, </em><em>numpy.ndarray</em><em>]</em>) – The matrix to write to disk. If a Series is
+given, it MUST have a MultiIndex with exactly 2 levels to unstack.</p></li>
+<li><p><strong>file</strong> (<em>Union</em><em>[</em><em>basestring</em><em>, </em><em>File</em><em>]</em>) – The path or file handler to write to.</p></li>
+<li><p><strong>emmebank_zones</strong> (<em>int</em>) – The number of zones the target Emmebank is dimensioned for.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="balsa.routines.io.inro.to_mdf">
+<code class="sig-prename descclassname"><span class="pre">balsa.routines.io.inro.</span></code><code class="sig-name descname"><span class="pre">to_mdf</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">matrix</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">pandas.core.frame.DataFrame</span><span class="p"><span class="pre">,</span> </span><span class="pre">pandas.core.series.Series</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span> </span><span class="pre">_io.FileIO</span><span class="p"><span class="pre">,</span> </span><span class="pre">pathlib.Path</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#balsa.routines.io.inro.to_mdf" title="Permalink to this definition">¶</a></dt>
+<dd><p>Writes a matrix to Emme’s official “binary serialization” format, which can be loaded in Emme using
+<code class="docutils literal notranslate"><span class="pre">inro.emme.matrix.MatrixData.load()</span></code>. There is no official extension for this type of file; ‘.mdf’ is recommended.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>matrix</strong> (<em>Union</em><em>[</em><em>pandas.DataFrame</em><em>, </em><em>panda.Series</em><em>]</em>) – The matrix to write to disk. If a Series is given, it MUST have
+a MultiIndex with exactly 2 levels to unstack.</p></li>
+<li><p><strong>file</strong> (<em>Union</em><em>[</em><em>str</em><em>, </em><em>File</em><em>, </em><em>Path</em><em>]</em>) – The path or file handler to write to.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="omx-format">
+<h3>OMX format<a class="headerlink" href="#omx-format" title="Permalink to this headline">¶</a></h3>
+<p>The Python library openmatrix already exists, but doesn’t provide a lot of interoperability with Pandas. Balsa provides
+wrapper functions that produce Pandas DataFrames and Series directly from OMX files.</p>
+<span class="target" id="module-balsa.routines.io.omx"></span></div>
+<div class="section" id="module-balsa.routines.io.fortran">
+<span id="fortran-format"></span><h3>Fortran format<a class="headerlink" href="#module-balsa.routines.io.fortran" title="Permalink to this headline">¶</a></h3>
+<dl class="py function">
+<dt id="balsa.routines.io.fortran.read_fortran_rectangle">
+<code class="sig-prename descclassname"><span class="pre">balsa.routines.io.fortran.</span></code><code class="sig-name descname"><span class="pre">read_fortran_rectangle</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span> </span><span class="pre">_io.FileIO</span><span class="p"><span class="pre">,</span> </span><span class="pre">pathlib.Path</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_columns</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">zones</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span> </span><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span> </span><span class="pre">pandas.core.indexes.base.Index</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tall</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">bool</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reindex_rows</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">bool</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fill_value</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">,</span> </span><span class="pre">pandas.core.frame.DataFrame</span><span class="p"><span class="pre">,</span> </span><span class="pre">pandas.core.series.Series</span><span class="p"><span class="pre">]</span></span><a class="headerlink" href="#balsa.routines.io.fortran.read_fortran_rectangle" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reads a FORTRAN-friendly .bin file (a.k.a. ‘simple binary format’) which is known to NOT be square. Also works
+with square matrices.</p>
+<p>This file format is an array of 4-bytes, where each row is prefaced by an integer referring to the 1-based
+positional index that FORTRAN uses. The rest of the data are in 4-byte floats. To read this, the number of columns
+present must be known, since the format does not self-specify.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>file</strong> (<em>Union</em><em>[</em><em>str</em><em>, </em><em>FileIO</em><em>, </em><em>Path</em><em>]</em>) – The file to read.</p></li>
+<li><p><strong>n_columns</strong> (<em>int</em>) – The number of columns in the matrix.</p></li>
+<li><p><strong>zones</strong> (<em>Union</em><em>[</em><em>int</em><em>, </em><em>Iterable</em><em>[</em><em>int</em><em>]</em><em>, </em><em>pandas.Index</em><em>]</em><em>, </em><em>optional</em>) – Defaults to <code class="docutils literal notranslate"><span class="pre">None</span></code>. An Index or Iterable will be
+interpreted as the zone labels for the matrix rows and columns; returning a DataFrame or Series (depending
+on <cite>tall</cite>). If an integer is provided, the returned ndarray will be truncated to this ‘number of zones’.</p></li>
+<li><p><strong>tall</strong> (<em>bool</em><em>, </em><em>optional</em>) – Defaults to <code class="docutils literal notranslate"><span class="pre">False</span></code>. If true, a ‘tall’ version of the matrix will be returned.</p></li>
+<li><p><strong>reindex_rows</strong> (<em>bool</em><em>, </em><em>optional</em>) – Defaults to <code class="docutils literal notranslate"><span class="pre">False</span></code>. If true, and zones is an Index, the returned DataFrame
+will be reindexed to fill-in any missing rows.</p></li>
+<li><p><strong>fill_value</strong> (<em>optional</em>) – Defaults to <code class="docutils literal notranslate"><span class="pre">None</span></code>. The value to pass to <code class="docutils literal notranslate"><span class="pre">pandas.reindex()</span></code></p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>numpy.ndarray, pandas.DataFrame or pandas.Series</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><strong>AssertionError</strong> – if the shape is not valid.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="balsa.routines.io.fortran.read_fortran_square">
+<code class="sig-prename descclassname"><span class="pre">balsa.routines.io.fortran.</span></code><code class="sig-name descname"><span class="pre">read_fortran_square</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span> </span><span class="pre">_io.FileIO</span><span class="p"><span class="pre">,</span> </span><span class="pre">pathlib.Path</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">zones</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span> </span><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span> </span><span class="pre">pandas.core.indexes.base.Index</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tall</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">bool</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">,</span> </span><span class="pre">pandas.core.frame.DataFrame</span><span class="p"><span class="pre">,</span> </span><span class="pre">pandas.core.series.Series</span><span class="p"><span class="pre">]</span></span><a class="headerlink" href="#balsa.routines.io.fortran.read_fortran_square" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reads a FORTRAN-friendly .bin file (a.k.a. ‘simple binary format’) which is known to be square.</p>
+<p>This file format is an array of 4-bytes, where each row is prefaced by an integer referring to the 1-based
+positional index that FORTRAN uses. The rest of the data are in 4-byte floats. To read this, the number of columns
+present must be known, since the format does not self-specify. This method can infer the shape if it is square.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>file</strong> (<em>Union</em><em>[</em><em>str</em><em>, </em><em>FileIO</em><em>, </em><em>Path</em><em>]</em>) – The file to read.</p></li>
+<li><p><strong>zones</strong> (<em>int</em><em>, </em><em>Union</em><em>[</em><em>pandas.Index</em><em>, </em><em>Iterable</em><em>[</em><em>int</em><em>]</em><em>]</em><em>, </em><em>optional</em>) – Defaults to <code class="docutils literal notranslate"><span class="pre">None</span></code>. An Index or Iterable will be
+interpreted as the zone labels for the matrix rows and columns; returning a DataFrame or Series (depending
+on <code class="docutils literal notranslate"><span class="pre">tall</span></code>). If an integer is provided, the returned ndarray will be truncated to this ‘number of zones’.
+Otherwise, the returned ndarray will be size to the maximum number of zone dimensioned by the Emmebank.</p></li>
+<li><p><strong>tall</strong> (<em>bool</em><em>, </em><em>optional</em>) – Defaults to <code class="docutils literal notranslate"><span class="pre">False</span></code>. If True, a 1D data structure will be returned. If <code class="docutils literal notranslate"><span class="pre">zone_index</span></code>
+is provided, a Series will be returned, otherwise a 1D ndarray.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>numpy.ndarray, pandas.DataFrame, or pandas.Series</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="balsa.routines.io.fortran.to_fortran">
+<code class="sig-prename descclassname"><span class="pre">balsa.routines.io.fortran.</span></code><code class="sig-name descname"><span class="pre">to_fortran</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">matrix</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">,</span> </span><span class="pre">pandas.core.frame.DataFrame</span><span class="p"><span class="pre">,</span> </span><span class="pre">pandas.core.series.Series</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span> </span><span class="pre">_io.FileIO</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_columns</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_index</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force_square</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">bool</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#balsa.routines.io.fortran.to_fortran" title="Permalink to this definition">¶</a></dt>
+<dd><p>Writes a FORTRAN-friendly .bin file (a.k.a. ‘simple binary format’), in a square format.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>matrix</strong> (<em>Union</em><em>[</em><em>pandas.DataFrame</em><em>, </em><em>pandas.Series</em><em>, </em><em>numpy.ndarray</em><em>]</em>) – The matrix to write to disk. If a Series is
+given, it MUST have a MultiIndex with exactly 2 levels to unstack.</p></li>
+<li><p><strong>file</strong> (<em>Union</em><em>[</em><em>str</em><em>, </em><em>FileIO</em><em>]</em>) – The path or file handler to write to.</p></li>
+<li><p><strong>n_columns</strong> (<em>int</em><em>, </em><em>optional</em>) – Defaults to <code class="docutils literal notranslate"><span class="pre">None</span></code>. Specifies a desired “width” of the matrix file. For example,
+<code class="docutils literal notranslate"><span class="pre">n_columns=4000</span></code> on a 3500x3500 matrix will pad the width with 500 extra columns containing 0. If <code class="docutils literal notranslate"><span class="pre">None</span></code>
+is provided or the value is &lt;= the width of the given matrix, no padding will be performed.</p></li>
+<li><p><strong>min_index</strong> (<em>int</em><em>, </em><em>optional</em>) – Defaults to <code class="docutils literal notranslate"><span class="pre">1</span></code>. The lowest numbered row. Used when slicing matrices</p></li>
+<li><p><strong>force_square</strong> (<em>bool</em><em>, </em><em>optional</em>) – Defaults to <code class="docutils literal notranslate"><span class="pre">True</span></code>.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="module-balsa.routines.io.nwp">
+<span id="network-packages-nwp"></span><h2>Network Packages (NWP)<a class="headerlink" href="#module-balsa.routines.io.nwp" title="Permalink to this headline">¶</a></h2>
+<dl class="py function">
+<dt id="balsa.routines.io.nwp.read_nwp_base_network">
+<code class="sig-prename descclassname"><span class="pre">balsa.routines.io.nwp.</span></code><code class="sig-name descname"><span class="pre">read_nwp_base_network</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nwp_fp</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span> </span><span class="pre">pathlib.Path</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">pandas.core.frame.DataFrame</span><span class="p"><span class="pre">,</span> </span><span class="pre">pandas.core.frame.DataFrame</span><span class="p"><span class="pre">]</span></span><a class="headerlink" href="#balsa.routines.io.nwp.read_nwp_base_network" title="Permalink to this definition">¶</a></dt>
+<dd><p>A function to read the base network from a Network Package file (exported from Emme using the TMG Toolbox) into
+DataFrames.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>nwp_fp</strong> (<em>Union</em><em>[</em><em>str</em><em>, </em><em>Path</em><em>]</em>) – File path to the network package.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A tuple of DataFrames containing the nodes and links</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>Tuple[pd.DataFrame, pd.DataFrame]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="balsa.routines.io.nwp.read_nwp_exatts_list">
+<code class="sig-prename descclassname"><span class="pre">balsa.routines.io.nwp.</span></code><code class="sig-name descname"><span class="pre">read_nwp_exatts_list</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nwp_fp</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span> </span><span class="pre">pathlib.Path</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">pandas.core.frame.DataFrame</span><a class="headerlink" href="#balsa.routines.io.nwp.read_nwp_exatts_list" title="Permalink to this definition">¶</a></dt>
+<dd><p>A function to read the extra attributes present in a Network Package file (exported from Emme using the TMG
+Toolbox).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>nwp_fp</strong> (<em>Union</em><em>[</em><em>str</em><em>, </em><em>Path</em><em>]</em>) – File path to the network package.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>pd.DataFrame</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="balsa.routines.io.nwp.read_nwp_link_attributes">
+<code class="sig-prename descclassname"><span class="pre">balsa.routines.io.nwp.</span></code><code class="sig-name descname"><span class="pre">read_nwp_link_attributes</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nwp_fp</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span> </span><span class="pre">pathlib.Path</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attributes</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">pandas.core.frame.DataFrame</span><a class="headerlink" href="#balsa.routines.io.nwp.read_nwp_link_attributes" title="Permalink to this definition">¶</a></dt>
+<dd><p>A function to read link attributes from a Network Package file (exported from Emme using the TMG Toolbox).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>nwp_fp</strong> (<em>Union</em><em>[</em><em>str</em><em>, </em><em>Path</em><em>]</em>) – File path to the network package.</p></li>
+<li><p><strong>attributes</strong> (<em>Union</em><em>[</em><em>str</em><em>, </em><em>List</em><em>[</em><em>str</em><em>]</em><em>]</em><em>, </em><em>optional</em>) – Defaults to <code class="docutils literal notranslate"><span class="pre">None</span></code>. Names of link attributes to extract. Note
+that <code class="docutils literal notranslate"><span class="pre">'inode'</span></code> and <code class="docutils literal notranslate"><span class="pre">'jnode'</span></code> will be included by default.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>pd.DataFrame</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="balsa.routines.io.nwp.read_nwp_traffic_results">
+<code class="sig-prename descclassname"><span class="pre">balsa.routines.io.nwp.</span></code><code class="sig-name descname"><span class="pre">read_nwp_traffic_results</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nwp_fp</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span> </span><span class="pre">pathlib.Path</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">pandas.core.frame.DataFrame</span><a class="headerlink" href="#balsa.routines.io.nwp.read_nwp_traffic_results" title="Permalink to this definition">¶</a></dt>
+<dd><p>A function to read the traffic assignment results from a Network Package file (exported from Emme using the TMG
+Toolbox).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>nwp_fp</strong> (<em>Union</em><em>[</em><em>str</em><em>, </em><em>Path</em><em>]</em>) – File path to the network package.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>pd.DataFrame</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="balsa.routines.io.nwp.read_nwp_traffic_results_at_countpost">
+<code class="sig-prename descclassname"><span class="pre">balsa.routines.io.nwp.</span></code><code class="sig-name descname"><span class="pre">read_nwp_traffic_results_at_countpost</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nwp_fp</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span> </span><span class="pre">pathlib.Path</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">countpost_att</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">pandas.core.frame.DataFrame</span><a class="headerlink" href="#balsa.routines.io.nwp.read_nwp_traffic_results_at_countpost" title="Permalink to this definition">¶</a></dt>
+<dd><p>A function to read the traffic assignment results at countposts from a Network Package file (exported from Emme
+using the TMG Toolbox).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>nwp_fp</strong> (<em>Union</em><em>[</em><em>str</em><em>, </em><em>Path</em><em>]</em>) – File path to the network package.</p></li>
+<li><p><strong>countpost_att</strong> (<em>str</em>) – The name of the extra link attribute containing countpost identifiers. Results will be
+filtered using this attribute.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>pd.DataFrame</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="balsa.routines.io.nwp.read_nwp_transit_network">
+<code class="sig-prename descclassname"><span class="pre">balsa.routines.io.nwp.</span></code><code class="sig-name descname"><span class="pre">read_nwp_transit_network</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nwp_fp</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span> </span><span class="pre">pathlib.Path</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">pandas.core.frame.DataFrame</span><span class="p"><span class="pre">,</span> </span><span class="pre">pandas.core.frame.DataFrame</span><span class="p"><span class="pre">]</span></span><a class="headerlink" href="#balsa.routines.io.nwp.read_nwp_transit_network" title="Permalink to this definition">¶</a></dt>
+<dd><p>A function to read the transit network from a Network Package file (exported from Emme using the TMG Toolbox)
+into DataFrames.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>nwp_fp</strong> (<em>Union</em><em>[</em><em>str</em><em>, </em><em>Path</em><em>]</em>) – File path to the network package.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A tuple of DataFrames containing the transt lines and segments.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>Tuple[pd.DataFrame, pd.DataFrame]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="balsa.routines.io.nwp.read_nwp_transit_result_summary">
+<code class="sig-prename descclassname"><span class="pre">balsa.routines.io.nwp.</span></code><code class="sig-name descname"><span class="pre">read_nwp_transit_result_summary</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nwp_fp</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span> </span><span class="pre">pathlib.Path</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">pandas.core.frame.DataFrame</span><a class="headerlink" href="#balsa.routines.io.nwp.read_nwp_transit_result_summary" title="Permalink to this definition">¶</a></dt>
+<dd><p>A function to read and summarize the transit assignment boardings and max volumes from a Network Package file
+(exported from Emme using the TMG Toolbox) by operator and route.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Transit line names in Emme must adhere to the TMG NCS16 for this function to work properly.</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>nwp_fp</strong> (<em>Union</em><em>[</em><em>str</em><em>, </em><em>Path</em><em>]</em>) – File path to the network package.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>pd.DataFrame</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="balsa.routines.io.nwp.read_nwp_transit_segment_results">
+<code class="sig-prename descclassname"><span class="pre">balsa.routines.io.nwp.</span></code><code class="sig-name descname"><span class="pre">read_nwp_transit_segment_results</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nwp_fp</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span> </span><span class="pre">pathlib.Path</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">pandas.core.frame.DataFrame</span><a class="headerlink" href="#balsa.routines.io.nwp.read_nwp_transit_segment_results" title="Permalink to this definition">¶</a></dt>
+<dd><p>A function to read and summarize the transit segment boardings, alightings, and volumes from a Network Package
+file (exported from Emme using the TMG Toolbox).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>nwp_fp</strong> (<em>Union</em><em>[</em><em>str</em><em>, </em><em>Path</em><em>]</em>) – File path to the network package.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>pd.DataFrame</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="balsa.routines.io.nwp.read_nwp_transit_station_results">
+<code class="sig-prename descclassname"><span class="pre">balsa.routines.io.nwp.</span></code><code class="sig-name descname"><span class="pre">read_nwp_transit_station_results</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nwp_fp</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span> </span><span class="pre">pathlib.Path</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">station_line_nodes</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">pandas.core.frame.DataFrame</span><a class="headerlink" href="#balsa.routines.io.nwp.read_nwp_transit_station_results" title="Permalink to this definition">¶</a></dt>
+<dd><p>A function to read and summarize the transit boardings (on) and alightings (offs) at stations from a Network
+Package file (exported from Emme using the TMG Toolbox).</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Ensure that station nodes being specified are on the transit line itself and are not station centroids.</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>nwp_fp</strong> (<em>Union</em><em>[</em><em>str</em><em>, </em><em>Path</em><em>]</em>) – File path to the network package.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>pd.DataFrame</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+</div>
+
+
+              </div>
+              
+              
+              <div class='prev-next-bottom'>
+                
+    <a class='left-prev' id="prev-link" href="general.html" title="previous page">General Utilities</a>
+    <a class='right-next' id="next-link" href="modelling.html" title="next page">Modelling Utilities</a>
+
+              </div>
+              
+          </main>
+          
+
+      </div>
+    </div>
+  
+  <script src="../_static/js/index.1c5a1a01449ed65a7b51.js"></script>
+
+  <footer class="footer mt-5 mt-md-0">
+  <div class="container">
+    
+    <div class="footer-item">
+      <p class="copyright">
+    &copy; Copyright 2021, WSP Canada Inc..<br/>
+</p>
+    </div>
+    
+    <div class="footer-item">
+      <p class="sphinx-version">
+Created using <a href="http://sphinx-doc.org/">Sphinx</a> 3.5.4.<br/>
+</p>
+    </div>
+    
+  </div>
+</footer>
+  </body>
+</html>
