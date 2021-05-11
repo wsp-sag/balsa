@@ -7,7 +7,9 @@
 
 Balsa is a collection of functions and tools for Python to facilitate travel demand forecasting applications and analyses. It is designed to work the the “scientific stack” of Python, namely NumPy, Pandas, and Matplotlib; which are optimized for speed and usability. Most of balsa consists of standalone functions - for input/output, for analysis, etc. - as well as a few lightweight class-based data structures for specific applications.
 
-Balsa is owned and published by WSP Canada's Systems Analytics for Policy group.
+## Documentation
+
+Balsa documentation is available [here](https://wsp-sag.github.io/balsa/)
 
 ## Key features
 
