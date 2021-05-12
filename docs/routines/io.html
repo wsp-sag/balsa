@@ -38,6 +38,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="docsearch:language" content="en" />
     
+      
+      <link rel="icon" sizes="16x16" href="../_static/favicon-16x16.png">
+      
+    
+      
+      <link rel="icon" sizes="32x32" href="../_static/favicon-32x32.png">
+      
+    
+      
+      <link rel="apple-touch-icon" sizes="180x180" href="../_static/apple-touch-icon.png">
+      
+    
   </head>
   <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
     
@@ -49,9 +61,11 @@
   <div id="navbar-start">
     
     
+
 <a class="navbar-brand" href="../index.html">
-<p class="title">wsp-balsa</p>
+  <img src="../_static/logo.png" class="logo" alt="logo">
 </a>
+
 
     
   </div>
@@ -88,6 +102,12 @@
       
       <div class="navbar-end-item">
         <ul id="navbar-icon-links" class="navbar-nav" aria-label="Icon Links">
+        <li class="nav-item">
+          <a class="nav-link" href="https://github.com/wsp-sag/balsa" rel="noopener" target="_blank" title="GitHub">
+            <span><i class="fab fa-github-square"></i></span>
+            <label class="sr-only">GitHub</label>
+          </a>
+        </li>
       </ul>
       </div>
       
@@ -405,7 +425,52 @@ a MultiIndex with exactly 2 levels to unstack.</p></li>
 <h3>OMX format<a class="headerlink" href="#omx-format" title="Permalink to this headline">¶</a></h3>
 <p>The Python library openmatrix already exists, but doesn’t provide a lot of interoperability with Pandas. Balsa provides
 wrapper functions that produce Pandas DataFrames and Series directly from OMX files.</p>
-<span class="target" id="module-balsa.routines.io.omx"></span></div>
+<span class="target" id="module-balsa.routines.io.omx"></span><dl class="py function">
+<dt id="balsa.routines.io.omx.read_omx">
+<code class="sig-prename descclassname"><span class="pre">balsa.routines.io.omx.</span></code><code class="sig-name descname"><span class="pre">read_omx</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">matrices</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mapping</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">raw</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">bool</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tall</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">bool</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">squeeze</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">bool</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">pandas.core.frame.DataFrame</span><span class="p"><span class="pre">,</span> </span><span class="pre">pandas.core.series.Series</span><span class="p"><span class="pre">,</span> </span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">,</span> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span> </span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">pandas.core.frame.DataFrame</span><span class="p"><span class="pre">,</span> </span><span class="pre">pandas.core.series.Series</span><span class="p"><span class="pre">,</span> </span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><a class="headerlink" href="#balsa.routines.io.omx.read_omx" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reads Open Matrix (OMX) files. An OMX file can contain multiple matrices, so this function
+typically returns a Dict.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>file</strong> – OMX file from which to read. Cannot be an open file handler.</p></li>
+<li><p><strong>matrices</strong> – List of matrices to read from the file. If None, all matrices will be read.</p></li>
+<li><p><strong>mapping</strong> – The zone number mapping to use, if known in advance. If None, and the OMX file only contains
+one mapping, then that one is used. No mapping is read if raw is False.</p></li>
+<li><p><strong>raw</strong> – If True, matrices will be returned as raw Numpy arrays. Otherwise, Pandas objects are returned</p></li>
+<li><p><strong>tall</strong> – If True, matrices will be returned in 1D format (pd.Series if raw is False). Otherwise, a 2D object
+is returned.</p></li>
+<li><p><strong>squeeze</strong> – If True, and the file contains exactly one matrix, return that matrix instead of a Dict.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The matrix, or matrices contained in the OMX file.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="balsa.routines.io.omx.to_omx">
+<code class="sig-prename descclassname"><span class="pre">balsa.routines.io.omx.</span></code><code class="sig-name descname"><span class="pre">to_omx</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">matrices</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span> </span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">pandas.core.frame.DataFrame</span><span class="p"><span class="pre">,</span> </span><span class="pre">pandas.core.series.Series</span><span class="p"><span class="pre">,</span> </span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">zone_index</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">pandas.core.indexes.base.Index</span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">descriptions</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attrs</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span> </span><span class="pre">dict</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mapping</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">'zone_numbers'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#balsa.routines.io.omx.to_omx" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a new (or overwrites an old) OMX file with a collection of matrices.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>file</strong> – OMX to write.</p></li>
+<li><p><strong>matrices</strong> – Collection of matrices to write. MUST be a dict, to permit the encoding of matrix metadata,
+and must contain the same types: all Numpy arrays, all Series, or all DataFrames. Checking is done to
+ensure that all items have the same shape and labels.</p></li>
+<li><p><strong>zone_index</strong> – Override zone labels to use. Generally only useful if writing a dict of raw Numpy arrays.</p></li>
+<li><p><strong>title</strong> – The title saved in the OMX file.</p></li>
+<li><p><strong>descriptions</strong> – A dict of descriptions (one for each given matrix), or None to not use.</p></li>
+<li><p><strong>attrs</strong> – A dict of dicts (one for each given matrix), or None to not use</p></li>
+<li><p><strong>mapping</strong> – Name of the mapping internal to the OMX file</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
 <div class="section" id="module-balsa.routines.io.fortran">
 <span id="fortran-format"></span><h3>Fortran format<a class="headerlink" href="#module-balsa.routines.io.fortran" title="Permalink to this headline">¶</a></h3>
 <dl class="py function">
@@ -636,7 +701,10 @@ Package file (exported from Emme using the TMG Toolbox).</p>
 </div>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>nwp_fp</strong> (<em>Union</em><em>[</em><em>str</em><em>, </em><em>Path</em><em>]</em>) – File path to the network package.</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>nwp_fp</strong> (<em>Union</em><em>[</em><em>str</em><em>, </em><em>Path</em><em>]</em>) – File path to the network package.</p></li>
+<li><p><strong>station_line_nodes</strong> (<em>List</em><em>[</em><em>int</em><em>]</em>) – List of transit line nodes representing transit stops/stations</p></li>
+</ul>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>pd.DataFrame</p>

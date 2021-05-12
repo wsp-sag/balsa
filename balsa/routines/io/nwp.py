@@ -269,6 +269,7 @@ def read_nwp_transit_station_results(nwp_fp: Union[str, Path], station_line_node
 
     Args:
         nwp_fp (Union[str, Path]): File path to the network package.
+        station_line_nodes (List[int]): List of transit line nodes representing transit stops/stations
 
     Returns:
         pd.DataFrame

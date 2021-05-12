@@ -70,8 +70,34 @@ html_theme = 'pydata_sphinx_theme'
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-# html_static_path = ['_static']
+html_static_path = ['_static']
+
+html_logo = "_static/logo.png"
 
 html_theme_options = {
-    'collapse_navigation': True
+    'collapse_navigation': True,
+    "favicons": [
+        {
+            "rel": "icon",
+            "sizes": "16x16",
+            "href": "favicon-16x16.png",
+        },
+        {
+            "rel": "icon",
+            "sizes": "32x32",
+            "href": "favicon-32x32.png",
+        },
+        {
+            "rel": "apple-touch-icon",
+            "sizes": "180x180",
+            "href": "apple-touch-icon.png"
+        },
+    ],
+    "icon_links": [
+        {
+            "name": "GitHub",
+            "url": "https://github.com/wsp-sag/balsa",
+            "icon": "fab fa-github-square",
+        }
+    ]
 }
