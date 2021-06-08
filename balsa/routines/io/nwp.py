@@ -163,7 +163,7 @@ def read_nwp_traffic_results_at_countpost(nwp_fp: Union[str, Path], countpost_at
     if not countpost_att.startswith('@'):
         countpost_att = f'@{countpost_att}'
 
-    countpost_links = read_nwp_link_attributes(nwp_fp, countpost_att)
+    countpost_links = read_nwp_link_attributes(nwp_fp, attributes=countpost_att)
     countpost_links = countpost_links[countpost_links[countpost_att] > 0]
 
     results = read_nwp_traffic_results(nwp_fp)
