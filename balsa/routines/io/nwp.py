@@ -1,9 +1,28 @@
 import numpy as np
 import pandas as pd
+from pandas.api.types import is_string_dtype
 from pathlib import Path
 import re
 from typing import Hashable, List, Tuple, Union
 import zipfile
+
+EMME_ENG_UNITS = {
+    'p': 1E-12,
+    'n': 1E-9,
+    'u': 1E-6,
+    'm': 0.001,
+    'k': 1000.0,
+    'M': 1E6,
+    'G': 1E9,
+    'T': 1E12
+}
+
+
+def process_emme_eng_notation_series(s: pd.Series, *, to_dtype=float) -> pd.Series:  # TODO: create generic version...
+    """A function to convert Pandas Series containing values in Emme's engineering notation"""
+    values = s.str.replace('\D+', '.', regex=True).astype(to_dtype)
+    units = s.str.replace('[\d,.]+', '', regex=True).map(EMME_ENG_UNITS).fillna(1.0)
+    return values * units
 
 
 def read_nwp_base_network(nwp_fp: Union[str, Path]) -> Tuple[pd.DataFrame, pd.DataFrame]:
@@ -62,11 +81,14 @@ def read_nwp_base_network(nwp_fp: Union[str, Path]) -> Tuple[pd.DataFrame, pd.Da
             links.rename(columns={'typ': 'type'}, inplace=True)
         if 'lan' in links.columns:
             links.rename(columns={'lan': 'lanes'}, inplace=True)
-        dtypes = {
-            'length': float, 'modes': str, 'type': int, 'lanes': int, 'vdf': int, 'data1': float, 'data2': float,
-            'data3': float
-        }
-        links = links.astype(dtypes)
+
+        # Data type conversion
+        links = links.astype({'modes': str, 'type': int, 'lanes': int, 'vdf': int})  # simple type casting for non-float
+        for col in ['length', 'data1', 'data2', 'data3']:
+            if is_string_dtype(links[col]):  # these columns are usually string if values use Emme engineering notation
+                links[col] = process_emme_eng_notation_series(links[col])
+            else:
+                links[col] = links[col].astype(float)
 
     return nodes, links
 
