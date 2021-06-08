@@ -119,17 +119,8 @@ def read_nwp_exatts_list(nwp_fp: Union[str, Path], **kwargs) -> pd.DataFrame:
     return df
 
 
-def read_nwp_link_attributes(nwp_fp: Union[str, Path], *, attributes: Union[str, List[str]] = None) -> pd.DataFrame:
-    """A function to read link attributes from a Network Package file (exported from Emme using the TMG Toolbox).
-
-    Args:
-        nwp_fp (Union[str, Path]): File path to the network package.
-        attributes (Union[str, List[str]], optional): Defaults to ``None``. Names of link attributes to extract. Note
-            that ``'inode'`` and ``'jnode'`` will be included by default.
-
-    Returns:
-        pd.DataFrame
-    """
+def _base_read_nwp_att_data(nwp_fp: Union[str, Path], att_type: str, index_col: Union[str, List[str]],
+                        attributes: Union[str, List[str]] = None, **kwargs) -> pd.DataFrame:
     nwp_fp = Path(nwp_fp)
     assert nwp_fp.exists(), f'File `{nwp_fp.as_posix()}` not found.'
 
@@ -141,15 +132,70 @@ def read_nwp_link_attributes(nwp_fp: Union[str, Path], *, attributes: Union[str,
         else:
             raise RuntimeError
 
+    if 'quotechar' not in kwargs:
+        kwargs['quotechar'] = "'"
+
     with zipfile.ZipFile(nwp_fp) as zf:
-        df = pd.read_csv(zf.open('exatt_links.241'))
+        df = pd.read_csv(zf.open(f'exatt_{att_type}.241'), **kwargs)
         df.columns = df.columns.str.strip()
-        df.set_index(['inode', 'jnode'], inplace=True)
+        for col in df.columns:
+            if is_string_dtype(df[col]):
+                df[col] = df[col].str.strip()
+        df.set_index(index_col, inplace=True)
 
     if attributes is not None:
         df = df[attributes].copy()
 
     return df
+
+
+def read_nwp_node_attributes(nwp_fp: Union[str, Path], *, attributes: Union[str, List[str]] = None,
+                             **kwargs) -> pd.DataFrame:
+    """A function to read node attributes from a Network Package file (exported from Emme using the TMG Toolbox).
+
+    Args:
+        nwp_fp (Union[str, Path]): File path to the network package.
+        attributes (Union[str, List[str]], optional): Defaults to ``None``. Names of node attributes to extract. Note
+            that ``'inode'`` will be included by default.
+        **kwargs: Any valid keyword arguments used by ``pandas.read_csv()``.
+
+    Returns:
+        pd.DataFrame
+    """
+    return _base_read_nwp_att_data(nwp_fp, 'nodes', 'inode', attributes, **kwargs)
+
+
+def read_nwp_link_attributes(nwp_fp: Union[str, Path], *, attributes: Union[str, List[str]] = None,
+                             **kwargs) -> pd.DataFrame:
+    """A function to read link attributes from a Network Package file (exported from Emme using the TMG Toolbox).
+
+    Args:
+        nwp_fp (Union[str, Path]): File path to the network package.
+        attributes (Union[str, List[str]], optional): Defaults to ``None``. Names of link attributes to extract. Note
+            that ``'inode'`` and ``'jnode'`` will be included by default.
+        **kwargs: Any valid keyword arguments used by ``pandas.read_csv()``.
+
+    Returns:
+        pd.DataFrame
+    """
+    return _base_read_nwp_att_data(nwp_fp, 'links', ['inode', 'jnode'], attributes, **kwargs)
+
+
+def read_nwp_transit_line_attributes(nwp_fp: Union[str, Path], *, attributes: Union[str, List[str]] = None,
+                                     **kwargs) -> pd.DataFrame:
+    """A function to read transit line attributes from a Network Package file (exported from Emme using the TMG
+    Toolbox).
+
+    Args:
+        nwp_fp (Union[str, Path]): File path to the network package.
+        attributes (Union[str, List[str]], optional): Defaults to ``None``. Names of transit line attributes to extract.
+            Note that ``'line'`` will be included by default.
+        **kwargs: Any valid keyword arguments used by ``pandas.read_csv()``.
+
+    Returns:
+        pd.DataFrame
+    """
+    return _base_read_nwp_att_data(nwp_fp, 'transit_lines', 'line', attributes, **kwargs)
 
 
 def read_nwp_traffic_results(nwp_fp: Union[str, Path]) -> pd.DataFrame:
