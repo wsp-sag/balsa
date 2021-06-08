@@ -93,12 +93,13 @@ def read_nwp_base_network(nwp_fp: Union[str, Path]) -> Tuple[pd.DataFrame, pd.Da
     return nodes, links
 
 
-def read_nwp_exatts_list(nwp_fp: Union[str, Path]) -> pd.DataFrame:
+def read_nwp_exatts_list(nwp_fp: Union[str, Path], **kwargs) -> pd.DataFrame:
     """A function to read the extra attributes present in a Network Package file (exported from Emme using the TMG
     Toolbox).
 
     Args:
         nwp_fp (Union[str, Path]): File path to the network package.
+        **kwargs: Any valid keyword arguments used by ``pandas.read_csv()``.
 
     Returns:
         pd.DataFrame
@@ -106,8 +107,12 @@ def read_nwp_exatts_list(nwp_fp: Union[str, Path]) -> pd.DataFrame:
     nwp_fp = Path(nwp_fp)
     assert nwp_fp.exists(), f'File `{nwp_fp.as_posix()}` not found.'
 
+    kwargs['index_col'] = False
+    if 'quotechar' not in kwargs:
+        kwargs['quotechar'] = "'"
+
     with zipfile.ZipFile(nwp_fp) as zf:
-        df = pd.read_csv(zf.open('exatts.241'), index_col=False)
+        df = pd.read_csv(zf.open('exatts.241'), **kwargs)
         df.columns = df.columns.str.strip()
         df['type'] = df['type'].astype('category')
 
