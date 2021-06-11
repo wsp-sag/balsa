@@ -5,7 +5,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>IO Utilities &#8212; wsp-balsa 1.2.0 documentation</title>
+    <title>IO Utilities &#8212; wsp-balsa 1.2.1 documentation</title>
     
   <link href="../_static/css/theme.css" rel="stylesheet" />
   <link href="../_static/css/index.c5995385ac14fb8791e8eb36b4908be2.css" rel="stylesheet" />
@@ -554,6 +554,12 @@ is provided or the value is &lt;= the width of the given matrix, no padding will
 <div class="section" id="module-balsa.routines.io.nwp">
 <span id="network-packages-nwp"></span><h2>Network Packages (NWP)<a class="headerlink" href="#module-balsa.routines.io.nwp" title="Permalink to this headline">¶</a></h2>
 <dl class="py function">
+<dt id="balsa.routines.io.nwp.process_emme_eng_notation_series">
+<code class="sig-prename descclassname"><span class="pre">balsa.routines.io.nwp.</span></code><code class="sig-name descname"><span class="pre">process_emme_eng_notation_series</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="pre">s:</span> <span class="pre">pandas.core.series.Series</span></em>, <em class="sig-param"><span class="pre">*</span></em>, <em class="sig-param"><span class="pre">to_dtype=&lt;class</span> <span class="pre">'float'&gt;</span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">pandas.core.series.Series</span><a class="headerlink" href="#balsa.routines.io.nwp.process_emme_eng_notation_series" title="Permalink to this definition">¶</a></dt>
+<dd><p>A function to convert Pandas Series containing values in Emme’s engineering notation</p>
+</dd></dl>
+
+<dl class="py function">
 <dt id="balsa.routines.io.nwp.read_nwp_base_network">
 <code class="sig-prename descclassname"><span class="pre">balsa.routines.io.nwp.</span></code><code class="sig-name descname"><span class="pre">read_nwp_base_network</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nwp_fp</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span> </span><span class="pre">pathlib.Path</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">pandas.core.frame.DataFrame</span><span class="p"><span class="pre">,</span> </span><span class="pre">pandas.core.frame.DataFrame</span><span class="p"><span class="pre">]</span></span><a class="headerlink" href="#balsa.routines.io.nwp.read_nwp_base_network" title="Permalink to this definition">¶</a></dt>
 <dd><p>A function to read the base network from a Network Package file (exported from Emme using the TMG Toolbox) into
@@ -573,12 +579,15 @@ DataFrames.</p>
 
 <dl class="py function">
 <dt id="balsa.routines.io.nwp.read_nwp_exatts_list">
-<code class="sig-prename descclassname"><span class="pre">balsa.routines.io.nwp.</span></code><code class="sig-name descname"><span class="pre">read_nwp_exatts_list</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nwp_fp</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span> </span><span class="pre">pathlib.Path</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">pandas.core.frame.DataFrame</span><a class="headerlink" href="#balsa.routines.io.nwp.read_nwp_exatts_list" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname"><span class="pre">balsa.routines.io.nwp.</span></code><code class="sig-name descname"><span class="pre">read_nwp_exatts_list</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nwp_fp</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span> </span><span class="pre">pathlib.Path</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">pandas.core.frame.DataFrame</span><a class="headerlink" href="#balsa.routines.io.nwp.read_nwp_exatts_list" title="Permalink to this definition">¶</a></dt>
 <dd><p>A function to read the extra attributes present in a Network Package file (exported from Emme using the TMG
 Toolbox).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>nwp_fp</strong> (<em>Union</em><em>[</em><em>str</em><em>, </em><em>Path</em><em>]</em>) – File path to the network package.</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>nwp_fp</strong> (<em>Union</em><em>[</em><em>str</em><em>, </em><em>Path</em><em>]</em>) – File path to the network package.</p></li>
+<li><p><strong>**kwargs</strong> – Any valid keyword arguments used by <code class="docutils literal notranslate"><span class="pre">pandas.read_csv()</span></code>.</p></li>
+</ul>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>pd.DataFrame</p>
@@ -588,7 +597,7 @@ Toolbox).</p>
 
 <dl class="py function">
 <dt id="balsa.routines.io.nwp.read_nwp_link_attributes">
-<code class="sig-prename descclassname"><span class="pre">balsa.routines.io.nwp.</span></code><code class="sig-name descname"><span class="pre">read_nwp_link_attributes</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nwp_fp</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span> </span><span class="pre">pathlib.Path</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attributes</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">pandas.core.frame.DataFrame</span><a class="headerlink" href="#balsa.routines.io.nwp.read_nwp_link_attributes" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname"><span class="pre">balsa.routines.io.nwp.</span></code><code class="sig-name descname"><span class="pre">read_nwp_link_attributes</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nwp_fp</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span> </span><span class="pre">pathlib.Path</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attributes</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">pandas.core.frame.DataFrame</span><a class="headerlink" href="#balsa.routines.io.nwp.read_nwp_link_attributes" title="Permalink to this definition">¶</a></dt>
 <dd><p>A function to read link attributes from a Network Package file (exported from Emme using the TMG Toolbox).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -596,6 +605,26 @@ Toolbox).</p>
 <li><p><strong>nwp_fp</strong> (<em>Union</em><em>[</em><em>str</em><em>, </em><em>Path</em><em>]</em>) – File path to the network package.</p></li>
 <li><p><strong>attributes</strong> (<em>Union</em><em>[</em><em>str</em><em>, </em><em>List</em><em>[</em><em>str</em><em>]</em><em>]</em><em>, </em><em>optional</em>) – Defaults to <code class="docutils literal notranslate"><span class="pre">None</span></code>. Names of link attributes to extract. Note
 that <code class="docutils literal notranslate"><span class="pre">'inode'</span></code> and <code class="docutils literal notranslate"><span class="pre">'jnode'</span></code> will be included by default.</p></li>
+<li><p><strong>**kwargs</strong> – Any valid keyword arguments used by <code class="docutils literal notranslate"><span class="pre">pandas.read_csv()</span></code>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>pd.DataFrame</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="balsa.routines.io.nwp.read_nwp_node_attributes">
+<code class="sig-prename descclassname"><span class="pre">balsa.routines.io.nwp.</span></code><code class="sig-name descname"><span class="pre">read_nwp_node_attributes</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nwp_fp</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span> </span><span class="pre">pathlib.Path</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attributes</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">pandas.core.frame.DataFrame</span><a class="headerlink" href="#balsa.routines.io.nwp.read_nwp_node_attributes" title="Permalink to this definition">¶</a></dt>
+<dd><p>A function to read node attributes from a Network Package file (exported from Emme using the TMG Toolbox).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>nwp_fp</strong> (<em>Union</em><em>[</em><em>str</em><em>, </em><em>Path</em><em>]</em>) – File path to the network package.</p></li>
+<li><p><strong>attributes</strong> (<em>Union</em><em>[</em><em>str</em><em>, </em><em>List</em><em>[</em><em>str</em><em>]</em><em>]</em><em>, </em><em>optional</em>) – Defaults to <code class="docutils literal notranslate"><span class="pre">None</span></code>. Names of node attributes to extract. Note
+that <code class="docutils literal notranslate"><span class="pre">'inode'</span></code> will be included by default.</p></li>
+<li><p><strong>**kwargs</strong> – Any valid keyword arguments used by <code class="docutils literal notranslate"><span class="pre">pandas.read_csv()</span></code>.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -630,6 +659,26 @@ using the TMG Toolbox).</p>
 <li><p><strong>nwp_fp</strong> (<em>Union</em><em>[</em><em>str</em><em>, </em><em>Path</em><em>]</em>) – File path to the network package.</p></li>
 <li><p><strong>countpost_att</strong> (<em>str</em>) – The name of the extra link attribute containing countpost identifiers. Results will be
 filtered using this attribute.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>pd.DataFrame</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="balsa.routines.io.nwp.read_nwp_transit_line_attributes">
+<code class="sig-prename descclassname"><span class="pre">balsa.routines.io.nwp.</span></code><code class="sig-name descname"><span class="pre">read_nwp_transit_line_attributes</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nwp_fp</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span> </span><span class="pre">pathlib.Path</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attributes</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">pandas.core.frame.DataFrame</span><a class="headerlink" href="#balsa.routines.io.nwp.read_nwp_transit_line_attributes" title="Permalink to this definition">¶</a></dt>
+<dd><p>A function to read transit line attributes from a Network Package file (exported from Emme using the TMG
+Toolbox).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>nwp_fp</strong> (<em>Union</em><em>[</em><em>str</em><em>, </em><em>Path</em><em>]</em>) – File path to the network package.</p></li>
+<li><p><strong>attributes</strong> (<em>Union</em><em>[</em><em>str</em><em>, </em><em>List</em><em>[</em><em>str</em><em>]</em><em>]</em><em>, </em><em>optional</em>) – Defaults to <code class="docutils literal notranslate"><span class="pre">None</span></code>. Names of transit line attributes to extract.
+Note that <code class="docutils literal notranslate"><span class="pre">'line'</span></code> will be included by default.</p></li>
+<li><p><strong>**kwargs</strong> – Any valid keyword arguments used by <code class="docutils literal notranslate"><span class="pre">pandas.read_csv()</span></code>.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
