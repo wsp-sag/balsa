@@ -20,8 +20,8 @@ EMME_ENG_UNITS = {
 
 def process_emme_eng_notation_series(s: pd.Series, *, to_dtype=float) -> pd.Series:  # TODO: create generic version...
     """A function to convert Pandas Series containing values in Emme's engineering notation"""
-    values = s.str.replace('\D+', '.', regex=True).astype(to_dtype)
-    units = s.str.replace('[\d,.]+', '', regex=True).map(EMME_ENG_UNITS).fillna(1.0)
+    values = s.str.replace(r'\D+', '.', regex=True).astype(to_dtype)
+    units = s.str.replace(r'[\d,.]+', '', regex=True).map(EMME_ENG_UNITS).fillna(1.0)
     return values * units
 
 
@@ -120,7 +120,7 @@ def read_nwp_exatts_list(nwp_fp: Union[str, Path], **kwargs) -> pd.DataFrame:
 
 
 def _base_read_nwp_att_data(nwp_fp: Union[str, Path], att_type: str, index_col: Union[str, List[str]],
-                        attributes: Union[str, List[str]] = None, **kwargs) -> pd.DataFrame:
+                            attributes: Union[str, List[str]] = None, **kwargs) -> pd.DataFrame:
     nwp_fp = Path(nwp_fp)
     assert nwp_fp.exists(), f'File `{nwp_fp.as_posix()}` not found.'
 
@@ -325,7 +325,7 @@ def read_nwp_transit_result_summary(nwp_fp: Union[str, Path]) -> pd.DataFrame:
     with zipfile.ZipFile(nwp_fp) as zf:
         data_types = {'line': str, 'transit_boardings': float, 'transit_volume': float}
         df = pd.read_csv(zf.open('segment_results.csv'), usecols=data_types.keys(), dtype=data_types)
-        df['operator'] = (df['line'].str[:2]).str.replace('\d+', '')
+        df['operator'] = (df['line'].str[:2]).str.replace(r'\d+', '', regex=True)
         df['route'] = df['line'].str.replace(r'\D', '').astype(int)
         df = df.groupby(['operator', 'route']).agg({'transit_boardings': 'sum', 'transit_volume': 'max'})
         df.rename(columns={'transit_boardings': 'boardings', 'transit_volume': 'max_volume'}, inplace=True)
