@@ -1,0 +1,2 @@
+include versioneer.py
+include balsa/_version.py

@@ -23,7 +23,7 @@ var/
 *.egg-info/
 .installed.cfg
 *.egg
-setup.cfg
+# setup.cfg
 doc/_build
 doc/_static
 doc/_templates

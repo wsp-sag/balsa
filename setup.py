@@ -1,14 +1,11 @@
-from os import path
-from pkg_resources import safe_version
 from setuptools import setup, find_packages
 
-version = {}
-with open(path.join(path.dirname(path.realpath(__file__)), 'balsa', 'version.py')) as fp:
-    exec(fp.read(), {}, version)
+import versioneer
 
 setup(
     name='wsp-balsa',
-    version=safe_version(version['__version__']),
+    version=versioneer.get_version(),
+    cmdclass=versioneer.get_cmdclass(),
     description='Python tools for travel demand forecasting applications and analyses',
     url='https://github.com/wsp-sag/balsa',
     author='WSP',
