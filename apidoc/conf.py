@@ -20,10 +20,8 @@ from datetime import datetime
 from pathlib import Path
 from pkg_resources import parse_version
 
-version_ = {}
-with open(Path(__file__).resolve().parent.parent / 'balsa' / 'version.py') as fp:
-    exec(fp.read(), {}, version_)
-version_ = parse_version(version_['__version__'])
+import balsa
+version_ = parse_version(balsa.__version__)
 
 # -- Project information -----------------------------------------------------
 
