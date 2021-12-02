@@ -36,7 +36,8 @@ def read_nwp_base_network(nwp_fp: Union[str, Path]) -> Tuple[pd.DataFrame, pd.Da
         Tuple[pd.DataFrame, pd.DataFrame]: A tuple of DataFrames containing the nodes and links
     """
     nwp_fp = Path(nwp_fp)
-    assert nwp_fp.exists(), f'File `{nwp_fp.as_posix()}` not found.'
+    if not nwp_fp.exists():
+        raise FileNotFoundError(f'File `{nwp_fp.as_posix()}` not found.')
 
     header_nodes, header_links, last_line = None, None, None
     with zipfile.ZipFile(nwp_fp) as zf:
@@ -105,7 +106,8 @@ def read_nwp_exatts_list(nwp_fp: Union[str, Path], **kwargs) -> pd.DataFrame:
         pd.DataFrame
     """
     nwp_fp = Path(nwp_fp)
-    assert nwp_fp.exists(), f'File `{nwp_fp.as_posix()}` not found.'
+    if not nwp_fp.exists():
+        raise FileNotFoundError(f'File `{nwp_fp.as_posix()}` not found.')
 
     kwargs['index_col'] = False
     if 'quotechar' not in kwargs:
@@ -122,7 +124,8 @@ def read_nwp_exatts_list(nwp_fp: Union[str, Path], **kwargs) -> pd.DataFrame:
 def _base_read_nwp_att_data(nwp_fp: Union[str, Path], att_type: str, index_col: Union[str, List[str]],
                             attributes: Union[str, List[str]] = None, **kwargs) -> pd.DataFrame:
     nwp_fp = Path(nwp_fp)
-    assert nwp_fp.exists(), f'File `{nwp_fp.as_posix()}` not found.'
+    if not nwp_fp.exists():
+        raise FileNotFoundError(f'File `{nwp_fp.as_posix()}` not found.')
 
     if attributes is not None:
         if isinstance(attributes, Hashable):
@@ -209,7 +212,8 @@ def read_nwp_traffic_results(nwp_fp: Union[str, Path]) -> pd.DataFrame:
         pd.DataFrame
     """
     nwp_fp = Path(nwp_fp)
-    assert nwp_fp.exists(), f'File `{nwp_fp.as_posix()}` not found.'
+    if not nwp_fp.exists():
+        raise FileNotFoundError(f'File `{nwp_fp.as_posix()}` not found.')
 
     with zipfile.ZipFile(nwp_fp) as zf:
         df = pd.read_csv(zf.open('link_results.csv'), index_col=['i', 'j'])
@@ -231,7 +235,8 @@ def read_nwp_traffic_results_at_countpost(nwp_fp: Union[str, Path], countpost_at
         pd.DataFrame
     """
     nwp_fp = Path(nwp_fp)
-    assert nwp_fp.exists(), f'File `{nwp_fp.as_posix()}` not found.'
+    if not nwp_fp.exists():
+        raise FileNotFoundError(f'File `{nwp_fp.as_posix()}` not found.')
 
     if not countpost_att.startswith('@'):
         countpost_att = f'@{countpost_att}'
@@ -256,7 +261,8 @@ def read_nwp_transit_network(nwp_fp: Union[str, Path]) -> Tuple[pd.DataFrame, pd
         Tuple[pd.DataFrame, pd.DataFrame]: A tuple of DataFrames containing the transt lines and segments.
     """
     nwp_fp = Path(nwp_fp)
-    assert nwp_fp.exists(), f'File `{nwp_fp.as_posix()}` not found.'
+    if not nwp_fp.exists():
+        raise FileNotFoundError(f'File `{nwp_fp.as_posix()}` not found.')
 
     # Parse through transit line transaction file
     seg_cols = ['inode', 'dwt', 'ttf', 'us1', 'us2', 'us3']
@@ -320,7 +326,8 @@ def read_nwp_transit_result_summary(nwp_fp: Union[str, Path]) -> pd.DataFrame:
         pd.DataFrame
     """
     nwp_fp = Path(nwp_fp)
-    assert nwp_fp.exists(), f'File `{nwp_fp.as_posix()}` not found.'
+    if not nwp_fp.exists():
+        raise FileNotFoundError(f'File `{nwp_fp.as_posix()}` not found.')
 
     with zipfile.ZipFile(nwp_fp) as zf:
         data_types = {'line': str, 'transit_boardings': float, 'transit_volume': float}
@@ -348,7 +355,8 @@ def read_nwp_transit_station_results(nwp_fp: Union[str, Path], station_line_node
         pd.DataFrame
     """
     nwp_fp = Path(nwp_fp)
-    assert nwp_fp.exists(), f'File `{nwp_fp.as_posix()}` not found.'
+    if not nwp_fp.exists():
+        raise FileNotFoundError(f'File `{nwp_fp.as_posix()}` not found.')
 
     with zipfile.ZipFile(nwp_fp) as zf:
         results = pd.read_csv(zf.open('aux_transit_results.csv'), index_col=['i', 'j'], squeeze=True)
@@ -376,7 +384,8 @@ def read_nwp_transit_segment_results(nwp_fp: Union[str, Path]) -> pd.DataFrame:
         pd.DataFrame
     """
     nwp_fp = Path(nwp_fp)
-    assert nwp_fp.exists(), f'File `{nwp_fp.as_posix()}` not found.'
+    if not nwp_fp.exists():
+        raise FileNotFoundError(f'File `{nwp_fp.as_posix()}` not found.')
 
     _, segments = read_nwp_transit_network(nwp_fp)
     segments.set_index(['line', 'inode', 'jnode', 'loop'], inplace=True)
