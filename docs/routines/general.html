@@ -5,10 +5,10 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>General Utilities &#8212; wsp-balsa 1.2.1 documentation</title>
+    <title>General Utilities &#8212; wsp-balsa 1.2.2 documentation</title>
     
-  <link href="../_static/css/theme.css" rel="stylesheet" />
-  <link href="../_static/css/index.c5995385ac14fb8791e8eb36b4908be2.css" rel="stylesheet" />
+  <link href="../_static/css/theme.css" rel="stylesheet">
+  <link href="../_static/css/index.ff1ffe594081f20da1ef19478df9384b.css" rel="stylesheet">
 
     
   <link rel="stylesheet"
@@ -22,12 +22,12 @@
       
 
     
-    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/blank.css" />
     
-  <link rel="preload" as="script" href="../_static/js/index.1c5a1a01449ed65a7b51.js">
+  <link rel="preload" as="script" href="../_static/js/index.be7d3bbb2ef33a8344ce.js">
 
-    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
     <script src="../_static/jquery.js"></script>
     <script src="../_static/underscore.js"></script>
     <script src="../_static/doctools.js"></script>
@@ -36,7 +36,7 @@
     <link rel="next" title="IO Utilities" href="io.html" />
     <link rel="prev" title="Routines" href="index.html" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="docsearch:language" content="en" />
+    <meta name="docsearch:language" content="None">
     
       
       <link rel="icon" sizes="16x16" href="../_static/favicon-16x16.png">
@@ -49,6 +49,9 @@
       
       <link rel="apple-touch-icon" sizes="180x180" href="../_static/apple-touch-icon.png">
       
+    
+
+    <!-- Google Analytics -->
     
   </head>
   <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
@@ -192,8 +195,8 @@
   <div class="section" id="module-balsa.routines.general">
 <span id="general-utilities"></span><h1>General Utilities<a class="headerlink" href="#module-balsa.routines.general" title="Permalink to this headline">¶</a></h1>
 <dl class="py function">
-<dt id="balsa.routines.general.align_categories">
-<code class="sig-prename descclassname"><span class="pre">balsa.routines.general.</span></code><code class="sig-name descname"><span class="pre">align_categories</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">iterable</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">pandas.core.series.Series</span><span class="p"><span class="pre">,</span> </span><span class="pre">pandas.core.frame.DataFrame</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#balsa.routines.general.align_categories" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="balsa.routines.general.align_categories">
+<span class="sig-prename descclassname"><span class="pre">balsa.routines.general.</span></span><span class="sig-name descname"><span class="pre">align_categories</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">iterable</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">pandas.core.series.Series</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">pandas.core.frame.DataFrame</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#balsa.routines.general.align_categories" title="Permalink to this definition">¶</a></dt>
 <dd><p>Pre-processing step for <code class="docutils literal notranslate"><span class="pre">pd.concat()</span></code> which attempts to align any Categorical series in the sequence to using
 the same set of categories. It passes through the sequence twice: once to accumulate the complete set of all
 categories used in the sequence; and a second time to modify the sequence’s contents to use this full set. The
@@ -211,8 +214,8 @@ acceptable to <code class="docutils literal notranslate"><span class="pre">panda
 </dd></dl>
 
 <dl class="py function">
-<dt id="balsa.routines.general.is_identifier">
-<code class="sig-prename descclassname"><span class="pre">balsa.routines.general.</span></code><code class="sig-name descname"><span class="pre">is_identifier</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">bool</span><a class="headerlink" href="#balsa.routines.general.is_identifier" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="balsa.routines.general.is_identifier">
+<span class="sig-prename descclassname"><span class="pre">balsa.routines.general.</span></span><span class="sig-name descname"><span class="pre">is_identifier</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="headerlink" href="#balsa.routines.general.is_identifier" title="Permalink to this definition">¶</a></dt>
 <dd><p>Tests that the name is a valid Python variable name and does not collide with reserved keywords</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -228,8 +231,25 @@ acceptable to <code class="docutils literal notranslate"><span class="pre">panda
 </dd></dl>
 
 <dl class="py function">
-<dt id="balsa.routines.general.sum_df_sequence">
-<code class="sig-prename descclassname"><span class="pre">balsa.routines.general.</span></code><code class="sig-name descname"><span class="pre">sum_df_sequence</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">seq</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">pandas.core.frame.DataFrame</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fill_value</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">pandas.core.frame.DataFrame</span><a class="headerlink" href="#balsa.routines.general.sum_df_sequence" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="balsa.routines.general.sort_nicely">
+<span class="sig-prename descclassname"><span class="pre">balsa.routines.general.</span></span><span class="sig-name descname"><span class="pre">sort_nicely</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">l</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#balsa.routines.general.sort_nicely" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sort the given list of strings in the way that humans expect.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>l</strong> (<em>List</em><em>[</em><em>str</em><em>]</em>) – List of strings to sort.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The sorted list of strings</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>List[str]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="balsa.routines.general.sum_df_sequence">
+<span class="sig-prename descclassname"><span class="pre">balsa.routines.general.</span></span><span class="sig-name descname"><span class="pre">sum_df_sequence</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">seq</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">pandas.core.frame.DataFrame</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fill_value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">pandas.core.frame.DataFrame</span></span></span><a class="headerlink" href="#balsa.routines.general.sum_df_sequence" title="Permalink to this definition">¶</a></dt>
 <dd><p>Sums over a sequence of DataFrames, even if they have different indexes or columns, filling in 0 (or a value of
 your choice) for missing rows or columns. Useful when you have a sequence of DataFrames which are supposed to have
 the same indexes and columns but might be missing a few values.</p>
@@ -255,12 +275,23 @@ the same indexes and columns but might be missing a few values.</p>
               </div>
               
               
-              <div class='prev-next-bottom'>
-                
-    <a class='left-prev' id="prev-link" href="index.html" title="previous page">Routines</a>
-    <a class='right-next' id="next-link" href="io.html" title="next page">IO Utilities</a>
-
-              </div>
+              <!-- Previous / next buttons -->
+<div class='prev-next-area'> 
+    <a class='left-prev' id="prev-link" href="index.html" title="previous page">
+        <i class="fas fa-angle-left"></i>
+        <div class="prev-next-info">
+            <p class="prev-next-subtitle">previous</p>
+            <p class="prev-next-title">Routines</p>
+        </div>
+    </a>
+    <a class='right-next' id="next-link" href="io.html" title="next page">
+    <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">IO Utilities</p>
+    </div>
+    <i class="fas fa-angle-right"></i>
+    </a>
+</div>
               
           </main>
           
@@ -268,20 +299,19 @@ the same indexes and columns but might be missing a few values.</p>
       </div>
     </div>
   
-  <script src="../_static/js/index.1c5a1a01449ed65a7b51.js"></script>
-
-  <footer class="footer mt-5 mt-md-0">
+  <script src="../_static/js/index.be7d3bbb2ef33a8344ce.js"></script>
+<footer class="footer mt-5 mt-md-0">
   <div class="container">
     
     <div class="footer-item">
       <p class="copyright">
-    &copy; Copyright 2021, WSP Canada Inc..<br/>
+    &copy; Copyright 2021, WSP Canada Inc..<br>
 </p>
     </div>
     
     <div class="footer-item">
       <p class="sphinx-version">
-Created using <a href="http://sphinx-doc.org/">Sphinx</a> 3.5.4.<br/>
+Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.3.1.<br>
 </p>
     </div>
     

@@ -5,10 +5,10 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Logging &#8212; wsp-balsa 1.2.1 documentation</title>
+    <title>Logging &#8212; wsp-balsa 1.2.2 documentation</title>
     
-  <link href="../_static/css/theme.css" rel="stylesheet" />
-  <link href="../_static/css/index.c5995385ac14fb8791e8eb36b4908be2.css" rel="stylesheet" />
+  <link href="../_static/css/theme.css" rel="stylesheet">
+  <link href="../_static/css/index.ff1ffe594081f20da1ef19478df9384b.css" rel="stylesheet">
 
     
   <link rel="stylesheet"
@@ -22,12 +22,12 @@
       
 
     
-    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/blank.css" />
     
-  <link rel="preload" as="script" href="../_static/js/index.1c5a1a01449ed65a7b51.js">
+  <link rel="preload" as="script" href="../_static/js/index.be7d3bbb2ef33a8344ce.js">
 
-    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
     <script src="../_static/jquery.js"></script>
     <script src="../_static/underscore.js"></script>
     <script src="../_static/doctools.js"></script>
@@ -35,7 +35,7 @@
     <link rel="search" title="Search" href="../search.html" />
     <link rel="prev" title="Plotting Utilities" href="../routines/plotting.html" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="docsearch:language" content="en" />
+    <meta name="docsearch:language" content="None">
     
       
       <link rel="icon" sizes="16x16" href="../_static/favicon-16x16.png">
@@ -48,6 +48,9 @@
       
       <link rel="apple-touch-icon" sizes="180x180" href="../_static/apple-touch-icon.png">
       
+    
+
+    <!-- Google Analytics -->
     
   </head>
   <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
@@ -165,25 +168,25 @@
 <h1>Logging<a class="headerlink" href="#logging" title="Permalink to this headline">¶</a></h1>
 <p>Collection of classes and functions to configuration Python Logger objects, re-purposed to provide detailed status messages during model program execution.</p>
 <span class="target" id="module-balsa.logging"></span><dl class="py class">
-<dt id="balsa.logging.LogFormats">
-<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">balsa.logging.</span></code><code class="sig-name descname"><span class="pre">LogFormats</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#balsa.logging.LogFormats" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="balsa.logging.LogFormats">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">balsa.logging.</span></span><span class="sig-name descname"><span class="pre">LogFormats</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#balsa.logging.LogFormats" title="Permalink to this definition">¶</a></dt>
 <dd><p>An enumeration.</p>
 </dd></dl>
 
 <dl class="py class">
-<dt id="balsa.logging.ModelLogger">
-<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">balsa.logging.</span></code><code class="sig-name descname"><span class="pre">ModelLogger</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">level</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#balsa.logging.ModelLogger" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="balsa.logging.ModelLogger">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">balsa.logging.</span></span><span class="sig-name descname"><span class="pre">ModelLogger</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">level</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#balsa.logging.ModelLogger" title="Permalink to this definition">¶</a></dt>
 <dd><p>Extends the standard Python Logger object, adding additional logging statements such as <code class="docutils literal notranslate"><span class="pre">.report()</span></code></p>
 <dl class="py method">
-<dt id="balsa.logging.ModelLogger.report">
-<code class="sig-name descname"><span class="pre">report</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">msg</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#balsa.logging.ModelLogger.report" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="balsa.logging.ModelLogger.report">
+<span class="sig-name descname"><span class="pre">report</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">msg</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#balsa.logging.ModelLogger.report" title="Permalink to this definition">¶</a></dt>
 <dd><p>Report useful model statistics or results to the user. Distinct from <code class="docutils literal notranslate"><span class="pre">.info()</span></code> which provides status
 information. Printed in green when colours are available.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="balsa.logging.ModelLogger.tip">
-<code class="sig-name descname"><span class="pre">tip</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">msg</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#balsa.logging.ModelLogger.tip" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="balsa.logging.ModelLogger.tip">
+<span class="sig-name descname"><span class="pre">tip</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">msg</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#balsa.logging.ModelLogger.tip" title="Permalink to this definition">¶</a></dt>
 <dd><p>Provide a more significant status statement (e.g. new section of the model). Similar to <code class="docutils literal notranslate"><span class="pre">.info()</span></code>, but
 more emphasized. Printed in blue when colours are available.</p>
 </dd></dl>
@@ -191,20 +194,20 @@ more emphasized. Printed in blue when colours are available.</p>
 </dd></dl>
 
 <dl class="py function">
-<dt id="balsa.logging.get_model_logger">
-<code class="sig-prename descclassname"><span class="pre">balsa.logging.</span></code><code class="sig-name descname"><span class="pre">get_model_logger</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#balsa.logging.get_model_logger" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="balsa.logging.get_model_logger">
+<span class="sig-prename descclassname"><span class="pre">balsa.logging.</span></span><span class="sig-name descname"><span class="pre">get_model_logger</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#balsa.logging.get_model_logger" title="Permalink to this definition">¶</a></dt>
 <dd><p>Retrieve a balsa logger</p>
 </dd></dl>
 
 <dl class="py function">
-<dt id="balsa.logging.init_root">
-<code class="sig-prename descclassname"><span class="pre">balsa.logging.</span></code><code class="sig-name descname"><span class="pre">init_root</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="pre">root_name</span></em>, <em class="sig-param"><span class="pre">stream_format=&lt;LogFormats.FANCY:</span> <span class="pre">'FANCY'&gt;</span></em>, <em class="sig-param"><span class="pre">log_debug=True</span></em><span class="sig-paren">)</span><a class="headerlink" href="#balsa.logging.init_root" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="balsa.logging.init_root">
+<span class="sig-prename descclassname"><span class="pre">balsa.logging.</span></span><span class="sig-name descname"><span class="pre">init_root</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">root_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stream_format</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">LogFormats.FANCY</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_debug</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#balsa.logging.init_root" title="Permalink to this definition">¶</a></dt>
 <dd><p>Initialize a balsa logger</p>
 </dd></dl>
 
 <dl class="py function">
-<dt id="balsa.logging.log_to_file">
-<code class="sig-prename descclassname"><span class="pre">balsa.logging.</span></code><code class="sig-name descname"><span class="pre">log_to_file</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_name</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">append</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">raw_ascii</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#balsa.logging.log_to_file" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="balsa.logging.log_to_file">
+<span class="sig-prename descclassname"><span class="pre">balsa.logging.</span></span><span class="sig-name descname"><span class="pre">log_to_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">append</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">raw_ascii</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#balsa.logging.log_to_file" title="Permalink to this definition">¶</a></dt>
 <dd><p>A context mananger for collecting and saving logger messages to file</p>
 </dd></dl>
 
@@ -214,11 +217,16 @@ more emphasized. Printed in blue when colours are available.</p>
               </div>
               
               
-              <div class='prev-next-bottom'>
-                
-    <a class='left-prev' id="prev-link" href="../routines/plotting.html" title="previous page">Plotting Utilities</a>
-
-              </div>
+              <!-- Previous / next buttons -->
+<div class='prev-next-area'> 
+    <a class='left-prev' id="prev-link" href="../routines/plotting.html" title="previous page">
+        <i class="fas fa-angle-left"></i>
+        <div class="prev-next-info">
+            <p class="prev-next-subtitle">previous</p>
+            <p class="prev-next-title">Plotting Utilities</p>
+        </div>
+    </a>
+</div>
               
           </main>
           
@@ -226,20 +234,19 @@ more emphasized. Printed in blue when colours are available.</p>
       </div>
     </div>
   
-  <script src="../_static/js/index.1c5a1a01449ed65a7b51.js"></script>
-
-  <footer class="footer mt-5 mt-md-0">
+  <script src="../_static/js/index.be7d3bbb2ef33a8344ce.js"></script>
+<footer class="footer mt-5 mt-md-0">
   <div class="container">
     
     <div class="footer-item">
       <p class="copyright">
-    &copy; Copyright 2021, WSP Canada Inc..<br/>
+    &copy; Copyright 2021, WSP Canada Inc..<br>
 </p>
     </div>
     
     <div class="footer-item">
       <p class="sphinx-version">
-Created using <a href="http://sphinx-doc.org/">Sphinx</a> 3.5.4.<br/>
+Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.3.1.<br>
 </p>
     </div>
     
