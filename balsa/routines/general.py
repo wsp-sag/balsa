@@ -1,4 +1,5 @@
 from keyword import kwlist
+import re
 from pandas import DataFrame, Series, Index, MultiIndex
 from typing import Union, List, Dict, Iterable
 
@@ -138,3 +139,29 @@ def is_identifier(name: str) -> bool:
     """
 
     return name.isidentifier() and name not in kwlist
+
+
+def _tryint(s):
+    try:
+        return int(s)
+    except ValueError:
+        return s
+
+
+def _alphanum_key(s):
+    """Turn a string into a list of string and number chunks (eg. "z23a" -> ["z", 23, "a"])"""
+    return [_tryint(c) for c in re.split('([0-9]+)', s)]
+
+
+def sort_nicely(l: List[str]) -> List[str]:
+    """Sort the given list of strings in the way that humans expect.
+
+    Args:
+        l (List[str]): List of strings to sort.
+
+    Returns:
+        List[str]: The sorted list of strings
+    """
+    l = l.copy()
+    l.sort(key=_alphanum_key)
+    return l
