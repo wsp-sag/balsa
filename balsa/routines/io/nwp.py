@@ -359,7 +359,7 @@ def read_nwp_transit_station_results(nwp_fp: Union[str, Path], station_line_node
         raise FileNotFoundError(f'File `{nwp_fp.as_posix()}` not found.')
 
     with zipfile.ZipFile(nwp_fp) as zf:
-        results = pd.read_csv(zf.open('aux_transit_results.csv'), index_col=['i', 'j'], squeeze=True)
+        results = pd.read_csv(zf.open('aux_transit_results.csv'), index_col=['i', 'j']).squeeze('columns')
 
     station_results = pd.DataFrame(index=sorted(station_line_nodes))
     station_results.index.name = 'stn_node'
