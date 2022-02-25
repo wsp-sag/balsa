@@ -295,11 +295,11 @@ def read_nwp_transit_network(nwp_fp: Union[str, Path]) -> Tuple[pd.DataFrame, pd
     transit_segments = transit_segments[['line', 'inode', 'jnode', 'seg_seq', 'loop', 'dwt', 'ttf', 'us1', 'us2', 'us3']].copy()
     transit_segments['inode'] = transit_segments['inode'].astype(np.int64)
     transit_segments['jnode'] = transit_segments['jnode'].astype(np.int64)
-    transit_segments['dwt'] = transit_segments['dwt'].str.replace('dwt=', '')
-    transit_segments['ttf'] = transit_segments['ttf'].str.replace('ttf=', '').astype(int)
-    transit_segments['us1'] = transit_segments['us1'].str.replace('us1=', '').astype(float)
-    transit_segments['us2'] = transit_segments['us2'].str.replace('us2=', '').astype(float)
-    transit_segments['us3'] = transit_segments['us3'].str.replace('us3=', '').astype(float)
+    transit_segments['dwt'] = transit_segments['dwt'].str.replace('dwt=', '', regex=False)
+    transit_segments['ttf'] = transit_segments['ttf'].str.replace('ttf=', '', regex=False).astype(int)
+    transit_segments['us1'] = transit_segments['us1'].str.replace('us1=', '', regex=False).astype(float)
+    transit_segments['us2'] = transit_segments['us2'].str.replace('us2=', '', regex=False).astype(float)
+    transit_segments['us3'] = transit_segments['us3'].str.replace('us3=', '', regex=False).astype(float)
 
     # Create transit lines dataframe
     columns = ['line', 'mode', 'veh', 'headway', 'speed', 'description', 'data1', 'data2', 'data3']
@@ -333,7 +333,7 @@ def read_nwp_transit_result_summary(nwp_fp: Union[str, Path]) -> pd.DataFrame:
         data_types = {'line': str, 'transit_boardings': float, 'transit_volume': float}
         df = pd.read_csv(zf.open('segment_results.csv'), usecols=data_types.keys(), dtype=data_types)
         df['operator'] = (df['line'].str[:2]).str.replace(r'\d+', '', regex=True)
-        df['route'] = df['line'].str.replace(r'\D', '').astype(int)
+        df['route'] = df['line'].str.replace(r'\D', '', regex=True).astype(int)
         df = df.groupby(['operator', 'route']).agg({'transit_boardings': 'sum', 'transit_volume': 'max'})
         df.rename(columns={'transit_boardings': 'boardings', 'transit_volume': 'max_volume'}, inplace=True)
 
@@ -359,7 +359,7 @@ def read_nwp_transit_station_results(nwp_fp: Union[str, Path], station_line_node
         raise FileNotFoundError(f'File `{nwp_fp.as_posix()}` not found.')
 
     with zipfile.ZipFile(nwp_fp) as zf:
-        results = pd.read_csv(zf.open('aux_transit_results.csv'), index_col=['i', 'j'], squeeze=True)
+        results = pd.read_csv(zf.open('aux_transit_results.csv'), index_col=['i', 'j']).squeeze('columns')
 
     station_results = pd.DataFrame(index=sorted(station_line_nodes))
     station_results.index.name = 'stn_node'
