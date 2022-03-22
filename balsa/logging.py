@@ -132,7 +132,7 @@ def _prep_fancy_formatter():
     fmt_string = str(''.join(["\x1b[{colour}m", raw_fmt, "\x1b[0m"]))
 
     debug_formatter = logging.Formatter(fmt_string.format(colour=37))  # Grey colour
-    subproc_formatter = logging.Formatter(fmt_string.format(color=37))  # Grey colour
+    subproc_formatter = logging.Formatter(fmt_string.format(colour=37))  # Grey colour
     report_formatter = logging.Formatter(fmt_string.format(colour=32))  # Green colour
     info_formatter = logging.Formatter(fmt_string.format(colour=0))  # Default colour
     tip_formatter = logging.Formatter(fmt_string.format(colour=34))  # Blue colour
