@@ -11,8 +11,8 @@ except ImportError:
 
 MATRIX_TYPES = Union[pd.DataFrame, pd.Series, np.ndarray]
 
-if omx is not None:
 
+if omx is not None:
     def read_omx(file: str, matrices: Iterable[str] = None, mapping: str = None, raw: bool = False,
                  tall: bool = False, squeeze: bool = True) -> Union[MATRIX_TYPES, Dict[str, MATRIX_TYPES]]:
         """
@@ -107,6 +107,7 @@ if omx is not None:
 
         return
 
+
     def _prep_matrix_dict(matrices, desired_zone_index):
         collection_type = _check_types(matrices)
 
@@ -124,6 +125,7 @@ if omx is not None:
             assert desired_zone_index.equals(zone_index)
 
         return checked, zone_index
+
 
     def _check_types(matrices):
         gen = iter(matrices.values())
@@ -146,6 +148,7 @@ if omx is not None:
                 assert isinstance(item, np.ndarray), msg
 
         return item_type
+
 
     def _check_raw_matrices(matrices):
         gen = iter(matrices.items())
@@ -179,6 +182,7 @@ if omx is not None:
 
         return retval, n
 
+
     def _check_matrix_series(matrices):
         gen = iter(matrices.items())
         name, matrix = next(gen)
@@ -196,6 +200,7 @@ if omx is not None:
             retval[name] = matrix
         return retval, zone_index
 
+
     def _check_matrix_frames(matrices):
         gen = iter(matrices.items())
         name, matrix = next(gen)
@@ -209,7 +214,6 @@ if omx is not None:
             assert zone_index.equals(matrix.columns)
             retval[name] = matrix.values
         return retval, zone_index
-
 else:
     def read_omx(*args, **kwargs):
         raise NotImplementedError()
