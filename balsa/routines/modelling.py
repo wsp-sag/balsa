@@ -1,7 +1,8 @@
+from typing import Any, Dict, Iterable, Tuple, Union
+
 import numexpr as ne
 import numpy as np
 import pandas as pd
-from typing import Union, Tuple, Dict, Any, Iterable
 
 
 def tlfd(values: Union[np.ndarray, pd.Series], bin_start: int = 0, bin_end: int = 200, bin_step: int = 2,

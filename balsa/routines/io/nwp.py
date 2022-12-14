@@ -1,10 +1,11 @@
+import re
+import zipfile
+from pathlib import Path
+from typing import Hashable, List, Tuple, Union
+
 import numpy as np
 import pandas as pd
 from pandas.api.types import is_string_dtype
-from pathlib import Path
-import re
-from typing import Hashable, List, Tuple, Union
-import zipfile
 
 EMME_ENG_UNITS = {
     'p': 1E-12,

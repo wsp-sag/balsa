@@ -1,9 +1,10 @@
 from contextlib import contextmanager
 from io import FileIO
-import numpy as np
-import pandas as pd
 from pathlib import Path
 from typing import Union
+
+import numpy as np
+import pandas as pd
 
 
 def coerce_matrix(matrix: Union[np.ndarray, pd.DataFrame, pd.Series], allow_raw: bool = True,

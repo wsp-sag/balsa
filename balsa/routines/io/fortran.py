@@ -1,10 +1,11 @@
 from io import FileIO
+from pathlib import Path
+from typing import Iterable, Union
+
 import numpy as np
 import pandas as pd
-from pathlib import Path
-from typing import Union, Iterable
 
-from .common import coerce_matrix, open_file, expand_array
+from .common import coerce_matrix, expand_array, open_file
 
 
 def _infer_fortran_zones(n_words):

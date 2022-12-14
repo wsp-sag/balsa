@@ -1,10 +1,11 @@
 from io import FileIO
+from pathlib import Path
+from typing import Iterable, List, Union
+
 import numpy as np
 import pandas as pd
-from pathlib import Path
-from typing import Union, List, Iterable
 
-from .common import open_file, coerce_matrix
+from .common import coerce_matrix, open_file
 
 
 def read_mdf(file: Union[str, FileIO, Path], raw: bool = False, tall: bool = False

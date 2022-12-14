@@ -1,9 +1,12 @@
 from multiprocessing import cpu_count
 from threading import Thread
-from typing import Tuple, List, Dict, Union
+from typing import Dict, List, Tuple, Union
 
-from numpy import int16 as nshort, inf, ndarray, float32 as nfloat
 import numpy as np
+from numpy import float32 as nfloat
+from numpy import inf
+from numpy import int16 as nshort
+from numpy import ndarray
 from pandas import DataFrame, Index, MultiIndex
 
 try:

@@ -1,8 +1,9 @@
 from multiprocessing import cpu_count
+from typing import Callable, Iterable, List, Tuple, Union
+
 import numexpr as ne
 import numpy as np
 import pandas as pd
-from typing import Tuple, Union, List, Callable, Iterable
 
 try:
     import numba as nb

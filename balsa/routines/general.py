@@ -1,7 +1,8 @@
-from keyword import kwlist
 import re
-from pandas import DataFrame, Series, Index, MultiIndex
-from typing import Union, List, Dict, Iterable
+from keyword import kwlist
+from typing import Dict, Iterable, List, Union
+
+from pandas import DataFrame, Index, MultiIndex, Series
 
 
 def reindex_series(series: Series, target_series: Series, source_levels: List[int] = None,

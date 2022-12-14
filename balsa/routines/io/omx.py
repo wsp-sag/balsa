@@ -1,6 +1,7 @@
+from typing import Dict, Iterable, Union
+
 import numpy as np
 import pandas as pd
-from typing import Union, Iterable, Dict
 
 from ..matrices import fast_unstack
 

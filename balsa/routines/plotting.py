@@ -1,10 +1,11 @@
+from pathlib import Path
+from typing import Callable, Dict, List, Tuple, Union
+
+import numpy as np
+import pandas as pd
 from matplotlib import pyplot as plt
 from matplotlib.axes import Axes
 from matplotlib.ticker import FuncFormatter
-import numpy as np
-import pandas as pd
-from pathlib import Path
-from typing import Callable, Tuple, Union, List, Dict
 
 
 def convergence_boxplot(targets: pd.DataFrame, results: pd.DataFrame, filter_func: Callable[[pd.Series], pd.Series],
