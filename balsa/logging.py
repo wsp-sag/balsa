@@ -1,12 +1,13 @@
-from contextlib import contextmanager
-from enum import Enum
-from json import loads as parse_json, dumps as json_to_str
 import logging
-from logging import FileHandler, Formatter, Logger, LogRecord
-from pathlib import Path
 import sys
 import traceback as tb
-from typing import Any, Dict, Union
+from contextlib import contextmanager
+from enum import Enum
+from json import dumps as json_to_str
+from json import loads as parse_json
+from logging import FileHandler, Formatter, Logger, LogRecord
+from os import PathLike
+from typing import Any, Dict, Generator, Union
 
 try:
     from inro.modeller import logbook_write
@@ -31,7 +32,6 @@ _JSON_FORMAT = "JSON"
 
 
 class LogFormats(Enum):
-
     FANCY = _FANCY_FORMAT
     BASIC = _BASIC_FORMAT
     JSON = _JSON_FORMAT
@@ -128,7 +128,7 @@ class ModelLogger(Logger):
 
 
 def _prep_fancy_formatter():
-    raw_fmt = _FMT_STRING.format(arrow=_UNC_ARROW)
+    raw_fmt = _FMT_STRING.format(arrow=_ASCII_ARROW)
     fmt_string = str(''.join(["\x1b[{colour}m", raw_fmt, "\x1b[0m"]))
 
     debug_formatter = logging.Formatter(fmt_string.format(colour=37))  # Grey colour
@@ -153,14 +153,15 @@ def _prep_fancy_formatter():
 
 # region Helper Functions
 
-def init_root(root_name: str, *, stream_format: LogFormats = LogFormats.FANCY, log_debug: bool = True) -> Logger:
+def init_root(root_name: str, *, stream_format: Union[str, LogFormats] = LogFormats.FANCY,
+              log_debug: bool = True) -> ModelLogger:
     """Initialize a ModelLogger"""
     logging.addLevelName(_SUBPROC_ERR_LEVEL, 'SUBPROC_ERR')
     logging.addLevelName(_TIP_LEVEL, 'TIP')
     logging.addLevelName(_REPORT_LEVEL, 'REPORT')
     logging.addLevelName(_SUBPROC_LEVEL, 'SUBPROC')
     logging.setLoggerClass(ModelLogger)
-    root_logger = logging.getLogger(root_name)
+    root_logger: ModelLogger = logging.getLogger(root_name)  # Will return a ModelLogger based on the previous line
     root_logger.propagate = True
     if log_debug:
         root_logger.setLevel(1)
@@ -193,21 +194,22 @@ def init_root(root_name: str, *, stream_format: LogFormats = LogFormats.FANCY, l
     return root_logger
 
 
-def get_model_logger(name: str) -> Logger:
+def get_model_logger(name: str) -> ModelLogger:
     """Retrieve a ModelLogger"""
     logging.setLoggerClass(ModelLogger)
-    return logging.getLogger(name)
+    return logging.getLogger(name)  # Will return a ModelLogger based on the previous line
 
 
 @contextmanager
-def log_to_file(file_name: Union[str, Path], name: str, *, append: bool = False, raw_ascii: bool = False):
+def log_to_file(file_name: Union[str, PathLike], name: str, *, append: bool = False,
+                raw_ascii: bool = False) -> Generator:
     """Context manager for opening and closing a logfile. Cleans up its file handler on exit.
 
     This is especially important during batch runs, because loggers are module-based (e.g. global). Without the cleanup,
     old file handlers would stick around and get written to.
 
     Args:
-        file_name (Union[str, Path]): The filepath of the log file to write to
+        file_name (Union[str, PathLike]): The filepath of the log file to write to
         name (str): The name of the logger to write log records from
         append (bool, optional): Defaults to ``False``. Option to append new log records to an existing log file
         raw_ascii (bool, optional): Defaults to ``False``. Ensures log file only contains valid ASCII characters
