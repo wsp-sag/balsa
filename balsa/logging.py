@@ -128,7 +128,7 @@ class ModelLogger(Logger):
 
 
 def _prep_fancy_formatter():
-    raw_fmt = _FMT_STRING.format(arrow=_ASCII_ARROW)
+    raw_fmt = _FMT_STRING.format(arrow=_UNC_ARROW)
     fmt_string = str(''.join(["\x1b[{colour}m", raw_fmt, "\x1b[0m"]))
 
     debug_formatter = logging.Formatter(fmt_string.format(colour=37))  # Grey colour
