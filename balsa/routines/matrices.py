@@ -1,5 +1,6 @@
 from multiprocessing import cpu_count
 from typing import Callable, Iterable, List, Tuple, Union
+from warnings import warn
 
 import numexpr as ne
 import numpy as np
@@ -116,8 +117,7 @@ def matrix_balancing_2d(m: Union[np.ndarray, pd.DataFrame], a: np.ndarray, b: np
     i = 0
     while err > rel_error:
         if i > max_iterations:
-            # todo: convert to logger, if possible
-            print("Matrix balancing did not converge")
+            warn("Matrix balancing did not converge", RuntimeWarning)
             break
         m = _balance(m, a, 1)
         m = _balance(m, b, 0)
@@ -430,7 +430,7 @@ def _aggregate_series(matrix, row_aggregator, col_aggregator, aggfunc):
 
 def fast_stack(frame: pd.DataFrame, multi_index: pd.MultiIndex, deep_copy: bool = True) -> pd.Series:
     """Performs the same action as ``DataFrame.stack()``, but provides better performance when the target stacked index
-    is known before hand. Useful in converting a lot of matrices from "wide" to "tall" format. The inverse of
+    is known beforehand. Useful in converting a lot of matrices from "wide" to "tall" format. The inverse of
     ``fast_unstack()``.
 
     Notes:
@@ -463,7 +463,7 @@ def fast_stack(frame: pd.DataFrame, multi_index: pd.MultiIndex, deep_copy: bool 
 
 def fast_unstack(series: pd.Series, index: pd.Index, columns: pd.Index, deep_copy: bool = True) -> pd.DataFrame:
     """Performs the same action as ``DataFrame.unstack()``, but provides better performance when the target unstacked
-    index and columns are known before hand. Useful in converting a lot of matrices from "tall" to "wide" format. The
+    index and columns are known beforehand. Useful in converting a lot of matrices from "tall" to "wide" format. The
     inverse of ``fast_stack()``.
 
     Notes:
