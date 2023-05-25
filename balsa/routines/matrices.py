@@ -158,13 +158,13 @@ def _calc_error(m, a, b):
 
 
 if NUMBA_LOADED:
-    @nb.jit(nb.float64[:, :](nb.float64[:, :], nb.int64))
+    @nb.njit(nb.float64[:, :](nb.float64[:, :], nb.int64), cache=False, parallel=True)
     def _nbf_bucket_round(a_, decimals=0):
         a = a_.ravel()
         b = np.copy(a)
 
         residual = 0
-        for i in range(0, len(b)):
+        for i in nb.prange(0, len(b)):
             b[i] = np.round(a[i] + residual, decimals)
             residual += a[i] - b[i]
 
