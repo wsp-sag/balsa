@@ -12,15 +12,18 @@
 #
 import os
 import sys
+
 sys.path.insert(0, os.path.abspath('..'))
 
 # -- Project info setup ------------------------------------------------------
 
 from datetime import datetime
 from pathlib import Path
+
 from pkg_resources import parse_version
 
 import balsa
+
 version_ = parse_version(balsa.__version__)
 
 # -- Project information -----------------------------------------------------
@@ -43,7 +46,8 @@ release = version_.public
 extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.napoleon',
-    'sphinx.ext.githubpages'
+    'sphinx.ext.githubpages',
+    'sphinx_favicon'
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -74,28 +78,17 @@ html_logo = "_static/logo.png"
 
 html_theme_options = {
     'collapse_navigation': True,
-    "favicons": [
-        {
-            "rel": "icon",
-            "sizes": "16x16",
-            "href": "favicon-16x16.png",
-        },
-        {
-            "rel": "icon",
-            "sizes": "32x32",
-            "href": "favicon-32x32.png",
-        },
-        {
-            "rel": "apple-touch-icon",
-            "sizes": "180x180",
-            "href": "apple-touch-icon.png"
-        },
-    ],
     "icon_links": [
         {
             "name": "GitHub",
             "url": "https://github.com/wsp-sag/balsa",
-            "icon": "fab fa-github-square",
+            "icon": "fa-brands fa-square-github",
         }
     ]
 }
+
+favicons = [
+    "favicon-16x16.png",
+    "favicon-32x32.png",
+    {"rel": "apple-touch-icon", "href": "apple-touch-icon.png"}
+]
