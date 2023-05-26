@@ -1,4 +1,4 @@
-from setuptools import setup, find_packages
+from setuptools import find_packages, setup
 
 import versioneer
 
@@ -18,11 +18,11 @@ setup(
     install_requires=[
         'pandas>=0.21',
         'numpy>=1.15',
-        'numba>=0.35',
         'numexpr>=2.6'
     ],
-    python_requires='>=3.5',
+    python_requires='>=3.7',
     extras_require={
-        'plotting': 'matplotlib>=3.0'
+        'plotting': ['matplotlib>=3.0'],
+        'matrices': ['numba>=0.35', 'openmatrix']
     }
 )

@@ -15,11 +15,13 @@ requirements:
   host:
     - python
   run:
-    - python
+    - python >=3.7
     - pandas >=0.21
     - numpy >=1.15
     - numba >=0.35
     - numexpr >=2.6
+    - matplotlib >=3.0
+    - openmatrix
 
 about:
   home: https://github.com/wsp-sag/balsa
