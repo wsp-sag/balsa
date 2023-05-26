@@ -426,7 +426,7 @@ if NUMBA_LOADED:
 
         # Construct composite result tables
         if other_columns:
-            remaining_columns = set(pk_table.columns | kq_table.columns) - {cost_col, intermediate_name, avail_col}
+            remaining_columns = set(pk_table.columns.union(kq_table.columns)) - {cost_col, intermediate_name, avail_col}
         else:
             remaining_columns = set()
 
@@ -456,10 +456,10 @@ if NUMBA_LOADED:
 
             table[intermediate_name] = intermediate_result_i
             table[avail_col] = availability_i
-            table[cost_col] = raw_cost[offsets_i]
+            table[cost_col] = raw_cost
 
             # Loop through any additional columns, adding together if they exist in both tables
-            for column in remaining_columns:
+            for column in sorted(remaining_columns):
                 in_pk_table = column in pk_table
                 in_kq_table = column in kq_table
 
