@@ -1,5 +1,8 @@
+from __future__ import annotations
+
 import re
 import zipfile
+from os import PathLike
 from pathlib import Path
 from typing import Hashable, List, Tuple, Union
 
@@ -26,12 +29,12 @@ def process_emme_eng_notation_series(s: pd.Series, *, to_dtype=float) -> pd.Seri
     return values * units
 
 
-def read_nwp_base_network(nwp_fp: Union[str, Path]) -> Tuple[pd.DataFrame, pd.DataFrame]:
+def read_nwp_base_network(nwp_fp: Union[str, PathLike]) -> Tuple[pd.DataFrame, pd.DataFrame]:
     """A function to read the base network from a Network Package file (exported from Emme using the TMG Toolbox) into
     DataFrames.
 
     Args:
-        nwp_fp (Union[str, Path]): File path to the network package.
+        nwp_fp (str | PathLike): File path to the network package.
 
     Returns:
         Tuple[pd.DataFrame, pd.DataFrame]: A tuple of DataFrames containing the nodes and links
@@ -95,12 +98,12 @@ def read_nwp_base_network(nwp_fp: Union[str, Path]) -> Tuple[pd.DataFrame, pd.Da
     return nodes, links
 
 
-def read_nwp_exatts_list(nwp_fp: Union[str, Path], **kwargs) -> pd.DataFrame:
+def read_nwp_exatts_list(nwp_fp: Union[str, PathLike], **kwargs) -> pd.DataFrame:
     """A function to read the extra attributes present in a Network Package file (exported from Emme using the TMG
     Toolbox).
 
     Args:
-        nwp_fp (Union[str, Path]): File path to the network package.
+        nwp_fp (str | PathLike): File path to the network package.
         **kwargs: Any valid keyword arguments used by ``pandas.read_csv()``.
 
     Returns:
@@ -122,7 +125,7 @@ def read_nwp_exatts_list(nwp_fp: Union[str, Path], **kwargs) -> pd.DataFrame:
     return df
 
 
-def _base_read_nwp_att_data(nwp_fp: Union[str, Path], att_type: str, index_col: Union[str, List[str]],
+def _base_read_nwp_att_data(nwp_fp: Union[str, PathLike], att_type: str, index_col: Union[str, List[str]],
                             attributes: Union[str, List[str]] = None, **kwargs) -> pd.DataFrame:
     nwp_fp = Path(nwp_fp)
     if not nwp_fp.exists():
@@ -153,13 +156,13 @@ def _base_read_nwp_att_data(nwp_fp: Union[str, Path], att_type: str, index_col: 
     return df
 
 
-def read_nwp_node_attributes(nwp_fp: Union[str, Path], *, attributes: Union[str, List[str]] = None,
+def read_nwp_node_attributes(nwp_fp: Union[str, PathLike], *, attributes: Union[str, List[str]] = None,
                              **kwargs) -> pd.DataFrame:
     """A function to read node attributes from a Network Package file (exported from Emme using the TMG Toolbox).
 
     Args:
-        nwp_fp (Union[str, Path]): File path to the network package.
-        attributes (Union[str, List[str]], optional): Defaults to ``None``. Names of node attributes to extract. Note
+        nwp_fp (str | PathLike): File path to the network package.
+        attributes (str | List[str], optional): Defaults to ``None``. Names of node attributes to extract. Note
             that ``'inode'`` will be included by default.
         **kwargs: Any valid keyword arguments used by ``pandas.read_csv()``.
 
@@ -169,13 +172,13 @@ def read_nwp_node_attributes(nwp_fp: Union[str, Path], *, attributes: Union[str,
     return _base_read_nwp_att_data(nwp_fp, 'nodes', 'inode', attributes, **kwargs)
 
 
-def read_nwp_link_attributes(nwp_fp: Union[str, Path], *, attributes: Union[str, List[str]] = None,
+def read_nwp_link_attributes(nwp_fp: Union[str, PathLike], *, attributes: Union[str, List[str]] = None,
                              **kwargs) -> pd.DataFrame:
     """A function to read link attributes from a Network Package file (exported from Emme using the TMG Toolbox).
 
     Args:
-        nwp_fp (Union[str, Path]): File path to the network package.
-        attributes (Union[str, List[str]], optional): Defaults to ``None``. Names of link attributes to extract. Note
+        nwp_fp (str | PathLike): File path to the network package.
+        attributes (str | List[str], optional): Defaults to ``None``. Names of link attributes to extract. Note
             that ``'inode'`` and ``'jnode'`` will be included by default.
         **kwargs: Any valid keyword arguments used by ``pandas.read_csv()``.
 
@@ -185,14 +188,14 @@ def read_nwp_link_attributes(nwp_fp: Union[str, Path], *, attributes: Union[str,
     return _base_read_nwp_att_data(nwp_fp, 'links', ['inode', 'jnode'], attributes, **kwargs)
 
 
-def read_nwp_transit_line_attributes(nwp_fp: Union[str, Path], *, attributes: Union[str, List[str]] = None,
+def read_nwp_transit_line_attributes(nwp_fp: Union[str, PathLike], *, attributes: Union[str, List[str]] = None,
                                      **kwargs) -> pd.DataFrame:
     """A function to read transit line attributes from a Network Package file (exported from Emme using the TMG
     Toolbox).
 
     Args:
-        nwp_fp (Union[str, Path]): File path to the network package.
-        attributes (Union[str, List[str]], optional): Defaults to ``None``. Names of transit line attributes to extract.
+        nwp_fp (str | PathLike): File path to the network package.
+        attributes (str | List[str], optional): Defaults to ``None``. Names of transit line attributes to extract.
             Note that ``'line'`` will be included by default.
         **kwargs: Any valid keyword arguments used by ``pandas.read_csv()``.
 
@@ -202,12 +205,12 @@ def read_nwp_transit_line_attributes(nwp_fp: Union[str, Path], *, attributes: Un
     return _base_read_nwp_att_data(nwp_fp, 'transit_lines', 'line', attributes, **kwargs)
 
 
-def read_nwp_traffic_results(nwp_fp: Union[str, Path]) -> pd.DataFrame:
+def read_nwp_traffic_results(nwp_fp: Union[str, PathLike]) -> pd.DataFrame:
     """A function to read the traffic assignment results from a Network Package file (exported from Emme using the TMG
     Toolbox).
 
     Args:
-        nwp_fp (Union[str, Path]): File path to the network package.
+        nwp_fp (str | PathLike): File path to the network package.
 
     Returns:
         pd.DataFrame
@@ -223,12 +226,12 @@ def read_nwp_traffic_results(nwp_fp: Union[str, Path]) -> pd.DataFrame:
     return df
 
 
-def read_nwp_traffic_results_at_countpost(nwp_fp: Union[str, Path], countpost_att: str) -> pd.DataFrame:
+def read_nwp_traffic_results_at_countpost(nwp_fp: Union[str, PathLike], countpost_att: str) -> pd.DataFrame:
     """A function to read the traffic assignment results at countposts from a Network Package file (exported from Emme
     using the TMG Toolbox).
 
     Args:
-        nwp_fp (Union[str, Path]): File path to the network package.
+        nwp_fp (str | PathLike): File path to the network package.
         countpost_att (str): The name of the extra link attribute containing countpost identifiers. Results will be
             filtered using this attribute.
 
@@ -251,12 +254,12 @@ def read_nwp_traffic_results_at_countpost(nwp_fp: Union[str, Path], countpost_at
     return results
 
 
-def read_nwp_transit_network(nwp_fp: Union[str, Path]) -> Tuple[pd.DataFrame, pd.DataFrame]:
+def read_nwp_transit_network(nwp_fp: Union[str, PathLike]) -> Tuple[pd.DataFrame, pd.DataFrame]:
     """A function to read the transit network from a Network Package file (exported from Emme using the TMG Toolbox)
     into DataFrames.
 
     Args:
-        nwp_fp (Union[str, Path]): File path to the network package.
+        nwp_fp (str | PathLike): File path to the network package.
 
     Returns:
         Tuple[pd.DataFrame, pd.DataFrame]: A tuple of DataFrames containing the transt lines and segments.
@@ -313,7 +316,7 @@ def read_nwp_transit_network(nwp_fp: Union[str, Path]) -> Tuple[pd.DataFrame, pd
     return transit_lines, transit_segments
 
 
-def read_nwp_transit_result_summary(nwp_fp: Union[str, Path]) -> pd.DataFrame:
+def read_nwp_transit_result_summary(nwp_fp: Union[str, PathLike]) -> pd.DataFrame:
     """A function to read and summarize the transit assignment boardings and max volumes from a Network Package file
     (exported from Emme using the TMG Toolbox) by operator and route.
 
@@ -321,7 +324,7 @@ def read_nwp_transit_result_summary(nwp_fp: Union[str, Path]) -> pd.DataFrame:
         Transit line names in Emme must adhere to the TMG NCS16 for this function to work properly.
 
     Args:
-        nwp_fp (Union[str, Path]): File path to the network package.
+        nwp_fp (str | PathLike): File path to the network package.
 
     Returns:
         pd.DataFrame
@@ -341,7 +344,7 @@ def read_nwp_transit_result_summary(nwp_fp: Union[str, Path]) -> pd.DataFrame:
     return df
 
 
-def read_nwp_transit_station_results(nwp_fp: Union[str, Path], station_line_nodes: List[int]) -> pd.DataFrame:
+def read_nwp_transit_station_results(nwp_fp: Union[str, PathLike], station_line_nodes: List[int]) -> pd.DataFrame:
     """A function to read and summarize the transit boardings (on) and alightings (offs) at stations from a Network
     Package file (exported from Emme using the TMG Toolbox).
 
@@ -349,7 +352,7 @@ def read_nwp_transit_station_results(nwp_fp: Union[str, Path], station_line_node
         Ensure that station nodes being specified are on the transit line itself and are not station centroids.
 
     Args:
-        nwp_fp (Union[str, Path]): File path to the network package.
+        nwp_fp (str | PathLike): File path to the network package.
         station_line_nodes (List[int]): List of transit line nodes representing transit stops/stations
 
     Returns:
@@ -374,12 +377,12 @@ def read_nwp_transit_station_results(nwp_fp: Union[str, Path], station_line_node
     return station_results
 
 
-def read_nwp_transit_segment_results(nwp_fp: Union[str, Path]) -> pd.DataFrame:
+def read_nwp_transit_segment_results(nwp_fp: Union[str, PathLike]) -> pd.DataFrame:
     """A function to read and summarize the transit segment boardings, alightings, and volumes from a Network Package
     file (exported from Emme using the TMG Toolbox).
 
     Args:
-        nwp_fp (Union[str, Path]): File path to the network package.
+        nwp_fp (str | PathLike): File path to the network package.
 
     Returns:
         pd.DataFrame

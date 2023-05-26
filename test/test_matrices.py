@@ -4,7 +4,9 @@ import numpy as np
 import pandas as pd
 from pandas import testing as pdt
 
-from ...routines import matrix_balancing_1d, matrix_balancing_2d, matrix_bucket_rounding, aggregate_matrix
+from balsa.routines import (aggregate_matrix, matrix_balancing_1d,
+                            matrix_balancing_2d, matrix_bucket_rounding)
+
 
 class TestMatrixBucketRounding(unittest.TestCase):
 
@@ -12,7 +14,8 @@ class TestMatrixBucketRounding(unittest.TestCase):
         """ Test bucket rounding routine on a small matrix to various levels of rounding precision. """
         a = np.random.uniform(0, 1000, (5, 5))
         for decimal in range(-2, 6):
-            a_rnd = matrix_bucket_rounding(a, decimal)
+            a_rnd = matrix_bucket_rounding(a, decimals=decimal)
+
             self._compare_matrix_sums(a_rnd, a, decimal)
             self._compare_matrix_values(a_rnd, a, decimal)
 
@@ -23,6 +26,7 @@ class TestMatrixBucketRounding(unittest.TestCase):
         # first test, float return
         b = matrix_bucket_rounding(a, decimals=2)
         self.assertEqual(b.dtype, a.dtype, "dtype of bucket rounded matrix is not equal to dtype of input matrix")
+
         # second test, int return
         b = matrix_bucket_rounding(a, decimals=0)
         self.assertEqual(b.dtype, np.dtype('int32'), "dtype of bucket rounded matrix is not integer")
@@ -31,7 +35,8 @@ class TestMatrixBucketRounding(unittest.TestCase):
         """ Test bucket rounding routine on a large matrix to various levels of rounding precision. """
         a = np.random.uniform(0, 1000, (1000, 1000))
         for decimal in [-2, 0, 5]:
-            a_rnd = matrix_bucket_rounding(a, decimal)
+            a_rnd = matrix_bucket_rounding(a, decimals=decimal)
+
             self._compare_matrix_sums(a_rnd, a, decimal)
             self._compare_matrix_values(a_rnd, a, decimal)
 
@@ -41,21 +46,24 @@ class TestMatrixBucketRounding(unittest.TestCase):
         df = pd.DataFrame(a)
         decimals = 3
         df_rnd = matrix_bucket_rounding(df, decimals=decimals)
+
         self._compare_matrix_sums(df.values, df_rnd.values, decimals)
         self._compare_matrix_values(df.values, df_rnd.values, decimals)
         self.assertEqual(type(df_rnd), pd.DataFrame, "dtype of returned matrix is a Pandas DataFrame")
 
     def _compare_matrix_sums(self, a, b, decimal):
-        max_error = 0.5*(10.0 ** (-decimal))
+        max_error = 0.5 * (10.0 ** (-decimal))
         a_sum = np.sum(a)
         b_sum = np.sum(b)
+
         self.assertLessEqual(a_sum, b_sum + max_error, "Bucket rounded matrix is not within a small margin of error")
         self.assertGreaterEqual(a_sum, b_sum - max_error, "Bucket rounded matrix is not within a small margin of error")
 
     def _compare_matrix_values(self, a, b, decimal):
         max_error = 10.0 ** (-decimal)
-        np.testing.assert_allclose(a, b, atol=max_error, rtol=0.0, 
-                                    err_msg="Bucket rounded matrix values are not within %f" % (max_error))
+        np.testing.assert_allclose(a, b, atol=max_error, rtol=0.0,
+                                   err_msg="Bucket rounded matrix values are not within %f" % (max_error))
+
 
 class TestAggregateMatrix(unittest.TestCase):
 
@@ -191,11 +199,12 @@ class TestAggregateMatrix(unittest.TestCase):
                                  row_groups=tall_row_grouper.values, col_groups=tall_col_grouper.values)
         pdt.assert_series_equal(expected_result, test3, check_dtype=False, check_names=False)
 
+
 class TestMatrixBalancing(unittest.TestCase):
     def setUp(self):
         self._square_matrix = np.random.uniform(0, 1000, (5, 5))
         self._1darray = np.random.uniform(0, 1000, 5)
-    
+
     def test_1d_balance(self):
         axes = [0, 1]
         for ax in axes:
@@ -208,8 +217,8 @@ class TestMatrixBalancing(unittest.TestCase):
         column = np.roll(self._1darray, 2)
 
         test = matrix_balancing_2d(self._square_matrix, row, column, rel_error=0.000001)
-        pdt.assert_series_equal(pd.Series(np.sum(test[0], 1)), pd.Series(row), check_less_precise=True)
-        pdt.assert_series_equal(pd.Series(np.sum(test[0], 0)), pd.Series(column), check_less_precise=True)
+        pdt.assert_series_equal(pd.Series(np.sum(test[0], 1)), pd.Series(row), check_exact=False)
+        pdt.assert_series_equal(pd.Series(np.sum(test[0], 0)), pd.Series(column), check_exact=False)
 
     def test_2d_balance_average_total(self):
         row = self._1darray
@@ -223,14 +232,15 @@ class TestMatrixBalancing(unittest.TestCase):
         column = np.sqrt(row)
 
         test = matrix_balancing_2d(self._square_matrix, row, column, rel_error=0.000001, totals_to_use='rows')
-        pdt.assert_series_equal(pd.Series(np.sum(test[0], 1)), pd.Series(row), check_less_precise=True)
+        pdt.assert_series_equal(pd.Series(np.sum(test[0], 1)), pd.Series(row), check_exact=False)
 
     def test_2d_balance_col_total(self):
         row = self._1darray
         column = np.sqrt(row)
 
         test = matrix_balancing_2d(self._square_matrix, row, column, rel_error=0.000001, totals_to_use='columns')
-        pdt.assert_series_equal(pd.Series(np.sum(test[0], 0)), pd.Series(column), check_less_precise=True)
+        pdt.assert_series_equal(pd.Series(np.sum(test[0], 0)), pd.Series(column), check_exact=False)
+
 
 if __name__ == '__main__':
     unittest.main()

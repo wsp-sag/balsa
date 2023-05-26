@@ -1,8 +1,12 @@
-from typing import Dict, Iterable, Union
+from __future__ import annotations
+
+from os import PathLike
+from typing import Dict, Iterable, List, Tuple, Union
 
 import numpy as np
 import pandas as pd
 
+from ..general import sort_nicely
 from ..matrices import fast_unstack
 
 try:
@@ -14,102 +18,97 @@ MATRIX_TYPES = Union[pd.DataFrame, pd.Series, np.ndarray]
 
 
 if omx is not None:
-    def read_omx(file: str, matrices: Iterable[str] = None, mapping: str = None, raw: bool = False,
-                 tall: bool = False, squeeze: bool = True) -> Union[MATRIX_TYPES, Dict[str, MATRIX_TYPES]]:
+    def read_omx(src_fp: Union[str, PathLike], *, tables: Iterable[str] = None, mapping: str = None, tall: bool = False,
+                 raw: bool = False, squeeze: bool = True) -> Union[MATRIX_TYPES, Dict[str, MATRIX_TYPES]]:
         """
         Reads Open Matrix (OMX) files. An OMX file can contain multiple matrices, so this function
         typically returns a Dict.
 
         Args:
-            file: OMX file from which to read. Cannot be an open file handler.
-            matrices: List of matrices to read from the file. If None, all matrices will be read.
-            mapping: The zone number mapping to use, if known in advance. If None, and the OMX file only contains
-                one mapping, then that one is used. No mapping is read if raw is False.
-            raw: If True, matrices will be returned as raw Numpy arrays. Otherwise, Pandas objects are returned
-            tall: If True, matrices will be returned in 1D format (pd.Series if raw is False). Otherwise, a 2D object
-                is returned.
-            squeeze: If True, and the file contains exactly one matrix, return that matrix instead of a Dict.
+            src_fp (str | PathLike): OMX file from which to read. Cannot be an open file handler.
+            tables (Iterable[str], optional): List of matrices to read from the file. If None, all matrices will be
+                read.
+            mapping (str, optional): The zone number mapping to use, if known in advance.
+            tall (bool, optional) : If True, matrices will be returned in 1D format. Otherwise, a 2D object is returned.
+            raw (bool, optional): If True, matrices will be returned as raw Numpy arrays. Otherwise, Pandas objects are
+                returned
+            squeeze (bool, optional): If True, and the file contains exactly one matrix, return that matrix instead of a
+                Dict.
 
         Returns:
             The matrix, or matrices contained in the OMX file.
 
         """
-        file = str(file)
-        with omx.open_file(file, mode='r') as omx_file:
-            if mapping is None and not raw:
-                all_mappings = omx_file.list_mappings()
-                assert len(all_mappings) == 1
-                mapping = all_mappings[0]
-
-            if matrices is None:
-                matrices = sorted(omx_file.list_matrices())
-            else:
-                matrices = sorted(matrices)
+        with omx.open_file(str(src_fp), mode='r') as omx_file:
+            table_names: List[str] = sort_nicely(omx_file.list_matrices()) if tables is None else list(tables)
 
             if not raw:
-                labels = pd.Index(omx_file.mapping(mapping).keys())
+                if mapping is None:
+                    rows, columns = omx_file.shape()
+                    if rows != columns:
+                        raise NotImplementedError('Handling of non-square matrices not implemented yet')
+                    labels = pd.Index(range(rows))
+                else:
+                    zone_mapping: Dict[int, int] = omx_file.mapping(mapping)
+                    labels = pd.Index(zone_mapping.keys())
                 if tall:
                     labels = pd.MultiIndex.from_product([labels, labels], names=['o', 'd'])
 
-            return_value = {}
-            for matrix_name in matrices:
-                wrapper = omx_file[matrix_name]
-                matrix = wrapper.read()
-
+            retval = {}
+            for name in table_names:
+                matrix = np.array(omx_file[name])
                 if tall:
                     n = matrix.shape[0] * matrix.shape[1]
                     matrix.shape = n
 
                 if not raw:
-                    if tall: matrix = pd.Series(matrix, index=labels)
-                    else: matrix = pd.DataFrame(matrix, index=labels, columns=labels)
+                    if tall:
+                        matrix = pd.Series(matrix, index=labels, name=name)
+                    else:
+                        matrix = pd.DataFrame(matrix, index=labels, columns=labels)
 
-                    matrix.name = matrix_name
+                retval[name] = matrix
 
-                return_value[matrix_name] = matrix
-
-            if len(matrices) == 1 and squeeze:
-                return return_value[matrices[0]]
-            return return_value
+            if (len(retval) == 1) and squeeze:
+                return retval[table_names[0]]
+            return retval
 
 
-    def to_omx(file: str, matrices: Dict[str, MATRIX_TYPES], zone_index: pd.Index = None, title: str = '',
-               descriptions: Dict[str, str] = None, attrs: Dict[str, dict] = None, mapping: str = 'zone_numbers'):
+    def to_omx(dst_fp: Union[str, PathLike], tables: Dict[str, MATRIX_TYPES], *, zone_index: pd.Index = None,
+               title: str = '', descriptions: Dict[str, str] = None, attrs: Dict[str, Dict] = None,
+               mapping_name: str = 'zone_numbers'):
         """Creates a new (or overwrites an old) OMX file with a collection of matrices.
 
         Args:
-            file: OMX to write.
-            matrices: Collection of matrices to write. MUST be a dict, to permit the encoding of matrix metadata,
-                and must contain the same types: all Numpy arrays, all Series, or all DataFrames. Checking is done to
-                ensure that all items have the same shape and labels.
-            zone_index: Override zone labels to use. Generally only useful if writing a dict of raw Numpy arrays.
-            title: The title saved in the OMX file.
-            descriptions: A dict of descriptions (one for each given matrix), or None to not use.
-            attrs: A dict of dicts (one for each given matrix), or None to not use
-            mapping: Name of the mapping internal to the OMX file
+            dst_fp (str | PathLike): OMX to write.
+            tables (Dict[str, pd.DataFrame | pd.Series | np.ndarray]: Collection of matrices to write. MUST be a dict,
+                to permit the encoding of matrix metadata, and must contain the same types: all Numpy arrays, all
+                Series, or all DataFrames. Checking is done to ensure that all items have the same shape and labels.
+            zone_index: (pd.Index, optional): Override zone labels to use. Generally only useful if writing a dict of
+                raw Numpy arrays.
+            title (str, optional): The title saved in the OMX file.
+            descriptions (Dict[str, str], optional): A dict of descriptions (one for each given matrix).
+            attrs (Dict[str, Dict], optional): A dict of dicts (one for each given matrix).
+            mapping_name (str, optional): Name of the mapping internal to the OMX file
         """
 
-        matrices, zone_index = _prep_matrix_dict(matrices, zone_index)
+        matrices, zone_index = _prep_matrix_dict(tables, zone_index)
 
         if descriptions is None:
             descriptions = {name: '' for name in matrices.keys()}
         if attrs is None:
             attrs = {name: None for name in matrices.keys()}
 
-        file = str(file)  # Converts from Path
-        with omx.open_file(file, mode='w', title=title) as omx_file:
-            omx_file.create_mapping(mapping, zone_index.tolist())
-
+        with omx.open_file(str(dst_fp), mode='w', title=title) as omx_file:
+            omx_file.create_mapping(mapping_name, zone_index.tolist())
             for name, array in matrices.items():
                 description = descriptions[name]
                 attr = attrs[name]
-
                 omx_file.create_matrix(name, obj=np.ascontiguousarray(array), title=description, attrs=attr)
 
-        return
 
-
-    def _prep_matrix_dict(matrices, desired_zone_index):
+    def _prep_matrix_dict(matrices: Dict[str, MATRIX_TYPES],
+                          desired_zone_index: pd.Index) -> Tuple[Dict[str, np.ndarray], pd.Index]:
         collection_type = _check_types(matrices)
 
         if collection_type == 'RAW':
@@ -128,7 +127,7 @@ if omx is not None:
         return checked, zone_index
 
 
-    def _check_types(matrices):
+    def _check_types(matrices: Dict[str, MATRIX_TYPES]) -> str:
         gen = iter(matrices.values())
         first = next(gen)
 
@@ -151,7 +150,7 @@ if omx is not None:
         return item_type
 
 
-    def _check_raw_matrices(matrices):
+    def _check_raw_matrices(matrices: Dict[str, np.ndarray]) -> Tuple[Dict[str, np.ndarray], int]:
         gen = iter(matrices.items())
         name, matrix = next(gen)
 
@@ -184,7 +183,7 @@ if omx is not None:
         return retval, n
 
 
-    def _check_matrix_series(matrices):
+    def _check_matrix_series(matrices: Dict[str, pd.Series]) -> Tuple[Dict[str, np.ndarray], pd.Index]:
         gen = iter(matrices.items())
         name, matrix = next(gen)
 
@@ -194,26 +193,28 @@ if omx is not None:
         zone_index = matrix.index
         assert zone_index.equals(matrix.columns)
 
-        retval = {name: matrix.values}
+        retval = {name: matrix.to_numpy()}
         for name, matrix in gen:
             assert tall_index.equals(matrix.index)
-            matrix = fast_unstack(matrix, zone_index, zone_index).values
+            matrix = fast_unstack(matrix, zone_index, zone_index).to_numpy()
             retval[name] = matrix
+
         return retval, zone_index
 
 
-    def _check_matrix_frames(matrices):
+    def _check_matrix_frames(matrices: Dict[str, pd.DataFrame]) -> Tuple[Dict[str, np.ndarray], pd.Index]:
         gen = iter(matrices.items())
         name, matrix = next(gen)
 
         zone_index = matrix.index
         assert zone_index.equals(matrix.columns)
 
-        retval = {name: matrix.values}
+        retval = {name: matrix.to_numpy()}
         for name, matrix in gen:
             assert zone_index.equals(matrix.index)
             assert zone_index.equals(matrix.columns)
-            retval[name] = matrix.values
+            retval[name] = matrix.to_numpy()
+
         return retval, zone_index
 else:
     def read_omx(*args, **kwargs):
