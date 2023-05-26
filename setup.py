@@ -16,7 +16,7 @@ setup(
     ],
     packages=find_packages(),
     install_requires=[
-        'pandas>=0.21',
+        'pandas>=0.24',
         'numpy>=1.15',
         'numexpr>=2.6'
     ],
