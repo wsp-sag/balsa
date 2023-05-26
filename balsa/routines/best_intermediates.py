@@ -6,7 +6,7 @@ from typing import Dict, List, Tuple, Union
 
 import numpy as np
 from numpy import ndarray
-from pandas import DataFrame, Index, MultiIndex
+from pandas import DataFrame, Index, MultiIndex, Series
 
 try:
     from numba import njit
@@ -94,6 +94,68 @@ if NUMBA_LOADED:
             result_indices[p, q, :] = zones_heap
 
 
+    @njit(nogil=True, cache=True)
+    def _nbf_twopart_subset_worker(pk_costs: ndarray, kq_costs: ndarray, add_pkq_costs: ndarray,
+                                   subset_pk_costs: ndarray, result_costs: ndarray, result_indices: ndarray,
+                                   flag_array: ndarray, start: int, stop: int, n_subset: int, n_final: int):
+        """Performance-tuned Numba function to operate on its own thread"""
+        n_origins, n_intermediate = pk_costs.shape
+        n_destinations = kq_costs.shape[1]
+
+        # Allocate the sorted heap of utilities (and associated indices) once per thread
+        subset_cost_heap = np.full(shape=n_subset, fill_value=_NEG_INF)
+        subset_zones_heap = np.full(shape=n_subset, fill_value=_NULL_INDEX)
+
+        cost_heap = np.full(shape=n_final, fill_value=_NEG_INF)
+        zone_heap = np.full(shape=n_final, fill_value=_NULL_INDEX)
+
+        for offset in range(start, stop):
+            if not flag_array[offset]:
+                continue  # Skip certain ODs
+            p, q = divmod(offset, n_destinations)
+
+            # Reset the heap for this OD
+            subset_cost_heap[:] = _NEG_INF
+            subset_zones_heap[:] = _NULL_INDEX
+
+            cost_heap[:] = _NEG_INF
+            zone_heap[:] = _NULL_INDEX
+
+            # Find the superset of zones by subset cost
+            for k in range(n_intermediate):
+                if k >= n_intermediate:
+                    print("ERR", offset, p, q, k)
+                    raise AssertionError()
+
+                interim_pk_cost = subset_pk_costs[p, k]
+                interim_cost = kq_costs[k, q]
+                # This zone is not available if value is greater than zero (Given cost value should be negative now)
+                if interim_pk_cost >= 0:
+                    continue
+
+                # In general, for problems where (n_origins * n_destinations) >> k, most values will not be in the top
+                # k. So quickly check against the lowest utility in the heap to avoid calling the updater func
+                # Interim utility needs to be checked to ensure the path is a viable choice
+                if (interim_pk_cost < subset_cost_heap[0]) or (interim_cost == _NEG_INF):
+                    continue
+                _update_heap(subset_cost_heap, subset_zones_heap, interim_pk_cost, k)
+
+            # Compute the composite utility for the subset zones
+            for k in subset_zones_heap:
+                interim_cost = pk_costs[p, k] + kq_costs[k, q]
+                if add_pkq_costs is not None:
+                    interim_cost = interim_cost + add_pkq_costs[p, k, q]
+
+                # In general, for problems where (n_origins * n_destinations) >> k, most values will not be in the top
+                # k. So quickly check against the lowest utility in the heap to avoid calling the updater func
+                if (interim_cost < cost_heap[0]) or (interim_cost == _NEG_INF):
+                    continue
+                _update_heap(cost_heap, zone_heap, interim_cost, k)
+
+            result_costs[p, q, :] = cost_heap
+            result_indices[p, q, :] = zone_heap
+
+
     def _validate_access_egress_tables(pk_table: DataFrame, kq_table: DataFrame) -> Tuple[Index, Index, Index]:
 
         if pk_table.index.nlevels != 2:
@@ -122,9 +184,10 @@ if NUMBA_LOADED:
 
         Triple-index operation for two matrices, finding the most- or least-cost intermediate zones. Takes a first leg
         matrix ("pk") and a second leg matrix ("kq") to produce a combined "pq" matrix with the best intermediate "k".
-        Also works to construct multiple "pq" matrices for the top _n_ intermediate _k_ zones.
+        Also works to construct multiple "pq" matrices for the top _n_ intermediate "k" zones.
 
-        There is no restriction on the label dtypes, as long as the access and egress tables share the same _k_ index.
+        There is no restriction on the label dtypes, as long as the "pk" (leg 1) and "kq" (leg 2) tables share the same
+        "k" index.
 
         Both the input matrices must be provided in "tall" format - as Pandas Series with a 2-level MultiIndex.
         Essentially, the "pk" (leg 1) and "kq" (leg 2) tables are DataFrames with multiple matrices defined within. The
@@ -223,6 +286,136 @@ if NUMBA_LOADED:
             squeeze=squeeze, null_index=null_index
         )
 
+
+    def best_intermediate_subset_zones(pk_subset_cost: Series, pk_table: DataFrame, kq_table: DataFrame, cost_col: str,
+                                       *, n_subset: int = 1, n_final: int = 1, add_pkq_cost: ndarray = None,
+                                       flag_array: ndarray = None, maximize_subset: bool = True,
+                                       maximize_final: bool = True, null_index: int = 0, other_columns: bool = True,
+                                       intermediate_name: str = "intermediate_zone",
+                                       availability_column: str = "available", n_threads: int = 1,
+                                       squeeze: bool = True) -> Union[DataFrame, Dict[int, DataFrame]]:
+        """Numba-accelerated.
+
+        Triple-index operation for two matrices, finding the most- or least-cost intermediate zones from a subset.
+        Takes a first leg matrix ("pk") and a second leg matrix ("kq") to produce a combined "pq" matrix with the best
+        intermediate "k". Also works to construct multiple "pq" matrices for the top _n_final_ intermediate "k" zones.
+
+        There is no restriction on the label dtypes, as long as the "pk" (leg 1) and "kq" (leg 2) tables share the same
+        "k" index.
+
+        Both the input matrices must be provided in "tall" format - as Pandas Series with a 2-level MultiIndex.
+        Essentially, the "pk" (leg 1) and "kq" (leg 2) tables are DataFrames with multiple matrices defined within. The
+        output table(s) are also returned in a tall format.
+
+        When constructing the result tables, columns in the "pk" (leg 1) and "kq" (leg 2) tables are "carried forward"
+        such that the results columns will be the union of columns in the input tables. Columns in one table only will
+        be carried forward unmodified and retain their data type. Columns in both tables will be added together, and
+        thus MUST be numeric.
+
+        In the specified cost column, a value of `-inf` (or `inf` when minimizing) is respected as the sentinel value
+        for unavailable. "pk" or "kq" interchanges with this sentinel value will not be considered.
+
+        Args:
+            pk_subset_cost (pd.Series): A Series with 2-level MultiIndex containing values to use for subsetting
+            pk_table (pd.DataFrame): A DataFrame with 2-level MultiIndex of the shape ((p, k), A). Must include the
+                specified cost column
+            kq_table (pd.DataFrame): A DataFrame with 2-level MultiIndex of the shape ((k, q), E). Must include the
+                specified cost column
+            cost_col (str): Name of the column in the access and egress table to use as the cost to
+                minimize/maximize. Values of `+/- inf` are respected to indicate unavailable choices.
+            n_subset (int, optional): Defaults to ``1``. The number of intermediate ranks to subset (e.g., find the
+                _n_subset_ best intermediate zones to select the _n_final_ best intermediate zones). If n_subset <= 0,
+                it will be corrected to 1.
+            n_final (int, optional): Defaults to ``1``. The number of ranks to return (e.g., find the _n_final_ best
+                intermediate zones). If n_final <= 0, it will be corrected to 1.
+            add_pkq_cost (ndarray): A 3-dimensional numpy array containing additional two-part path ("pkq") costs to be
+                included in triple-index operation.
+            flag_array (ndarray, optional): Defaults to ``None``. An array of boolean flags indicating the "pq"
+                zone pairs to evaluate.
+            maximize_subset (bool, optional): Defaults to ``True``. If True, this function maximize the result when
+                determining the "pk" selection. If False, it minimizes it.
+            maximize_final (bool, optional): Defaults to ``True``. If True, this function maximize the result when
+                determining the "pq" selection. If False, it minimizes it.
+            null_index (int, optional): Defaults to ``0``. Fill value used if NO intermediate zone is available.
+            other_columns (bool, optional): Defaults to ``True``. If True, the result DataFrame will include all columns
+                in the "pk" and "kq" tables. The result table will be of the shape ((p, q), A | E + 3)
+            intermediate_name (str, optional): Defaults to ``'intermediate_zone'``. Name of the column in the result
+                table containing the selected intermediate zone.
+            availability_column (str, optional): Defaults to ``'available'``. Name of the column in the result table
+                containing a flag whether ANY intermediate zone was found to be available.
+            n_threads (int, optional): Defaults to ``1``. Number of threads to use.
+            squeeze (bool, optional): Defaults to ``True``. If ``n_final == 1`` and ``squeeze=True``, a single DataFrame
+                is returned. Otherwise, a dictionary of DataFrames will be returned.
+
+        Returns:
+            DataFrame: If n_final == 1 and squeeze=True. A DataFrame of the shape ((p, q), A | E + 3), containing the
+                intermediate "k" zone selected, the associated max/min cost, and a flag indicating its availability.
+                Additional columns from the "pk" (leg 1) and "kq" (leg 2) tables, indexed for the appropriately chosen
+                intermediate zone, will also be included if other_columns=True.
+            Dict[int, DataFrame]: If n_final > 1. The keys represent the ranks, so result[1] is the best intermediate
+                zone, result[2] is the second-best, etc. The value DataFrames are in the same format as if n_final == 1,
+                just with different intermediate zones chosen.
+        """
+
+        # Check inputs
+        n_subset = max(1, n_subset)
+        n_final = max(1, n_final)
+        if n_subset < n_final:
+            raise ValueError('`n_subset` must be >= `n_final`')
+        n_threads = int(np.clip(n_threads, 1, cpu_count()))
+
+        origin_zones, intermediate_zones, destination_zones = _validate_access_egress_tables(pk_table, kq_table)
+        if not pk_subset_cost.index.equals(pk_table.index):
+            raise RuntimeError('`pk_subset_cost` and `pk_table` have incompatible indices')
+
+        # Set up the raw data
+        n_origins, n_intermediate, n_destinations = len(origin_zones), len(intermediate_zones), len(destination_zones)
+        pk_subset_cost = pk_subset_cost.to_numpy().reshape([n_origins, n_intermediate]).astype(np.float64)
+        if not maximize_subset:  # Invert the cost to use code set to maximize
+            pk_subset_cost *= -1
+        pk_cost = pk_table[cost_col].to_numpy().reshape([n_origins, n_intermediate]).astype(np.float64)
+        kq_cost = kq_table[cost_col].to_numpy().reshape([n_intermediate, n_destinations]).astype(np.float64)
+        if not maximize_final:  # Invert the cost to use code set to maximize
+            pk_cost *= -1
+            kq_cost *= -1
+
+        result_cost = np.zeros(shape=(n_origins, n_destinations, n_final), dtype=np.float64)
+        result_indices = np.zeros(shape=(n_origins, n_destinations, n_final), dtype=np.int16)
+
+        if add_pkq_cost is not None:
+            if add_pkq_cost.shape != (n_origins, n_intermediate, n_destinations):
+                raise RuntimeError('Shape of `add_pkq_cost` does not match the number of origin, intermediate, and '
+                                   'destination zones found in `pk_table` and `kq_table`')
+            add_pkq_cost = add_pkq_cost.astype(np.float64)
+
+        if flag_array is None:
+            flag_array = np.full(n_origins * n_destinations, fill_value=True)
+        else:
+            if not len(flag_array) == (n_origins * n_destinations):
+                raise RuntimeError('Length of `flag_array` incompatible with size of `pk_table` and `kq_table`')
+            flag_array = flag_array.astype(np.bool_)
+
+        # Run the accelerated function
+        breaks = _get_breaks(n_origins * n_destinations, n_threads)
+        threads = np.empty(n_threads, dtype='O')
+        for i, (start, stop) in enumerate(breaks):
+            t = Thread(
+                target=_nbf_twopart_subset_worker,
+                args=[pk_cost, kq_cost, add_pkq_cost, pk_subset_cost, result_cost, result_indices, flag_array, start,
+                      stop, n_subset, n_final]
+            )
+            t.start()
+            threads[i] = t
+        for t in threads:
+            t.join()
+
+        return _combine_tables(
+            pk_table, kq_table, result_cost, result_indices, flag_array, origin_zones, intermediate_zones,
+            destination_zones, cost_col, availability_column, intermediate_name, other_columns=other_columns,
+            squeeze=squeeze, null_index=null_index
+        )
+
+
     def _combine_tables(pk_table: DataFrame, kq_table: DataFrame, result_cost: ndarray, result_indices: ndarray,
                         flag_array: ndarray, origin_zones: Index, intermediate_zones: Index, destination_zones: Index,
                         cost_col: str, avail_col: str, intermediate_name: str, *, other_columns: bool = True,
@@ -297,4 +490,8 @@ if NUMBA_LOADED:
         return tables
 else:
     def best_intermediate_zones(*args, **kwargs):
+        raise ModuleNotFoundError('Please install Numba to run this function')
+
+
+    def best_intermediate_subset_zones(*args, **kwargs):
         raise ModuleNotFoundError('Please install Numba to run this function')
