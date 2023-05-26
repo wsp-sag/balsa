@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from io import FileIO
 from pathlib import Path
 from typing import Iterable, Union
@@ -15,7 +17,7 @@ def _infer_fortran_zones(n_words):
     return n
 
 
-def read_fortran_rectangle(file: Union[str, FileIO, Path], n_columns: int,
+def read_fortran_rectangle(file: Union[str, FileIO, Path], n_columns: int, *,
                            zones: Union[int, Iterable[int], pd.Index] = None, tall: bool = False,
                            reindex_rows: bool = False, fill_value: Union[int, float] = None
                            ) -> Union[np.ndarray, pd.DataFrame, pd.Series]:
@@ -27,9 +29,9 @@ def read_fortran_rectangle(file: Union[str, FileIO, Path], n_columns: int,
     present must be known, since the format does not self-specify.
 
     Args:
-        file(Union[str, FileIO, Path]): The file to read.
+        file(str | FileIO | Path): The file to read.
         n_columns (int): The number of columns in the matrix.
-        zones (Union[int, Iterable[int], pandas.Index], optional): Defaults to ``None``. An Index or Iterable will be
+        zones (int | Iterable[int] | pandas.Index, optional): Defaults to ``None``. An Index or Iterable will be
             interpreted as the zone labels for the matrix rows and columns; returning a DataFrame or Series (depending
             on `tall`). If an integer is provided, the returned ndarray will be truncated to this 'number of zones'.
         tall (bool, optional): Defaults to ``False``. If true, a 'tall' version of the matrix will be returned.
@@ -82,7 +84,7 @@ def read_fortran_rectangle(file: Union[str, FileIO, Path], n_columns: int,
         return matrix
 
 
-def read_fortran_square(file: Union[str, FileIO, Path], zones: Union[int, Iterable[int], pd.Index] = None,
+def read_fortran_square(file: Union[str, FileIO, Path], *, zones: Union[int, Iterable[int], pd.Index] = None,
                         tall: bool = False) -> Union[np.ndarray, pd.DataFrame, pd.Series]:
     """Reads a FORTRAN-friendly .bin file (a.k.a. 'simple binary format') which is known to be square.
 
@@ -91,8 +93,8 @@ def read_fortran_square(file: Union[str, FileIO, Path], zones: Union[int, Iterab
     present must be known, since the format does not self-specify. This method can infer the shape if it is square.
 
     Args:
-        file (Union[str, FileIO, Path]): The file to read.
-        zones (int, Union[pandas.Index, Iterable[int]], optional): Defaults to ``None``. An Index or Iterable will be
+        file (str | FileIO | Path): The file to read.
+        zones (int | pandas.Index | Iterable[int], optional): Defaults to ``None``. An Index or Iterable will be
             interpreted as the zone labels for the matrix rows and columns; returning a DataFrame or Series (depending
             on ``tall``). If an integer is provided, the returned ndarray will be truncated to this 'number of zones'.
             Otherwise, the returned ndarray will be size to the maximum number of zone dimensioned by the Emmebank.
@@ -136,14 +138,14 @@ def read_fortran_square(file: Union[str, FileIO, Path], zones: Union[int, Iterab
         return matrix.stack() if tall else matrix
 
 
-def to_fortran(matrix: Union[np.ndarray, pd.DataFrame, pd.Series], file: Union[str, FileIO], n_columns: int = None,
-               min_index: int = 1, force_square: bool = True):
+def to_fortran(matrix: Union[np.ndarray, pd.DataFrame, pd.Series], file: Union[str, FileIO, Path], *,
+               n_columns: int = None, min_index: int = 1, force_square: bool = True):
     """Writes a FORTRAN-friendly .bin file (a.k.a. 'simple binary format'), in a square format.
 
     Args:
-        matrix (Union[pandas.DataFrame, pandas.Series, numpy.ndarray]): The matrix to write to disk. If a Series is
+        matrix (pandas.DataFrame | pandas.Series | numpy.ndarray): The matrix to write to disk. If a Series is
             given, it MUST have a MultiIndex with exactly 2 levels to unstack.
-        file (Union[str, FileIO]): The path or file handler to write to.
+        file (str | FileIO | Path): The path or file handler to write to.
         n_columns (int, optional): Defaults to ``None``. Specifies a desired "width" of the matrix file. For example,
             ``n_columns=4000`` on a 3500x3500 matrix will pad the width with 500 extra columns containing 0. If ``None``
             is provided or the value is <= the width of the given matrix, no padding will be performed.

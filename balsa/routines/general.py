@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import re
 from keyword import kwlist
 from typing import Dict, Iterable, List, Union
@@ -5,7 +7,7 @@ from typing import Dict, Iterable, List, Union
 from pandas import DataFrame, Index, MultiIndex, Series
 
 
-def reindex_series(series: Series, target_series: Series, source_levels: List[int] = None,
+def reindex_series(series: Series, target_series: Series, *, source_levels: List[int] = None,
                    target_levels: List[int] = None, fill_value: Union[int, float] = None) -> Series:
     # Make shallow copies of the source and target series in case their indexes need to be changed
     series = series.copy(deep=False)
@@ -35,7 +37,7 @@ def align_categories(iterable: Union[Series, DataFrame]):
         The resulting categories will be lex-sorted (based on the ``sorted()`` builtin)
 
     Args:
-        iterable (Union[pandas.Series, pandas.DataFrame]): Any iterable of Series or DataFrame objects (anything that is
+        iterable (pandas.Series | pandas.DataFrame): Any iterable of Series or DataFrame objects (anything that is
             acceptable to ``pandas.concat()``)
     """
     iterable_type = None
@@ -100,14 +102,14 @@ def _align_frame_categories(frames: DataFrame, column_categories: Dict[str, set]
             s.cat.reorder_categories(sorted_categories, inplace=True)
 
 
-def sum_df_sequence(seq: Iterable[DataFrame], fill_value: Union[int, float] = 0) -> DataFrame:
+def sum_df_sequence(seq: Iterable[DataFrame], *, fill_value: Union[int, float] = 0) -> DataFrame:
     """Sums over a sequence of DataFrames, even if they have different indexes or columns, filling in 0 (or a value of
     your choice) for missing rows or columns. Useful when you have a sequence of DataFrames which are supposed to have
     the same indexes and columns but might be missing a few values.
 
     Args:
         seq (Iterable[pandas.DataFrame]): Any iterable of DataFrame type, ordered or unordered.
-        fill_value (Union[int, float], optional): Defaults to ``0``. The value to use for missing cells.
+        fill_value (int | float, optional): Defaults to ``0``. The value to use for missing cells.
 
     Returns:
         pandas.DataFrame: The sum over all items in seq.

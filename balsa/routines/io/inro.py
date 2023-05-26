@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from io import FileIO
 from pathlib import Path
 from typing import Iterable, List, Union
@@ -8,13 +10,13 @@ import pandas as pd
 from .common import coerce_matrix, open_file
 
 
-def read_mdf(file: Union[str, FileIO, Path], raw: bool = False, tall: bool = False
+def read_mdf(file: Union[str, FileIO, Path], *, raw: bool = False, tall: bool = False
              ) -> Union[np.ndarray, pd.DataFrame, pd.Series]:
     """Reads Emme's official matrix "binary serialization" format, created using ``inro.emme.matrix.MatrixData.save()``.
     There is no official extension for this type of file; '.mdf' is recommended. '.emxd' is also sometimes encountered.
 
     Args:
-        file (Union[str, FileIO, Path]): The file to read.
+        file (str | FileIO | Path): The file to read.
         raw (bool, optional): Defaults to ``False``. If ``True``, returns an unlabelled ndarray. Otherwise, a DataFrame
             will be returned.
         tall (bool, optional): Defaults to ``False``. If ``True``, a 1D data structure will be returned. If
@@ -64,9 +66,9 @@ def to_mdf(matrix: Union[pd.DataFrame, pd.Series], file: Union[str, FileIO, Path
     ``inro.emme.matrix.MatrixData.load()``. There is no official extension for this type of file; '.mdf' is recommended.
 
     Args:
-        matrix (Union[pandas.DataFrame, panda.Series]): The matrix to write to disk. If a Series is given, it MUST have
+        matrix (pandas.DataFrame | panda.Series): The matrix to write to disk. If a Series is given, it MUST have
             a MultiIndex with exactly 2 levels to unstack.
-        file (Union[str, File, Path]): The path or file handler to write to.
+        file (str | FileIO | Path): The path or file handler to write to.
     """
     if isinstance(matrix, pd.Series):
         row_index = matrix.index.get_level_values(0).unique()
@@ -89,11 +91,11 @@ def to_mdf(matrix: Union[pd.DataFrame, pd.Series], file: Union[str, FileIO, Path
         data.tofile(writer)
 
 
-def peek_mdf(file: Union[str, FileIO, Path], as_index: bool = True) -> Union[List[List[int]], List[pd.Index]]:
+def peek_mdf(file: Union[str, FileIO, Path], *, as_index: bool = True) -> Union[List[List[int]], List[pd.Index]]:
     """Partially opens an MDF file to get the zone system of its rows and its columns.
 
     Args:
-        file (Union[str, FileIO, Path]): The file to read.
+        file (str | FileIO | Path): The file to read.
         as_index (bool, optional): Defaults to ``True``. Set to ``True`` to return a pandas.Index object rather than
             List[int]
 
@@ -120,15 +122,15 @@ def peek_mdf(file: Union[str, FileIO, Path], as_index: bool = True) -> Union[Lis
         return [pd.Index(zones) for zones in index_list]
 
 
-def read_emx(file: Union[str, FileIO, Path], zones: Union[int, Iterable[int], pd.Index] = None,
+def read_emx(file: Union[str, FileIO, Path], *, zones: Union[int, Iterable[int], pd.Index] = None,
              tall: bool = False) -> Union[np.ndarray, pd.DataFrame, pd.Series]:
     """Reads an "internal" Emme matrix (found in `<Emme Project>/Database/emmemat`); with an '.emx' extension. This data
     format does not contain information about zones. Its size is determined by the dimensions of the Emmebank
     (``Emmebank.dimensions['centroids']``), regardless of the number of zones actually used in all scenarios.
 
     Args:
-        file (Union[str, File, Path]): The file to read.
-        zones (Union[int, Iterable[int], pandas.Index], optional): Defaults to ``None``. An Index or Iterable will be
+        file (str | File | Path): The file to read.
+        zones (int | Iterable[int] | pandas.Index, optional): Defaults to ``None``. An Index or Iterable will be
             interpreted as the zone labels for the matrix rows and columns; returning a DataFrame or Series (depending
             on ``tall``). If an integer is provided, the returned ndarray will be truncated to this 'number of zones'.
             Otherwise, the returned ndarray will be size to the maximum number of zone dimensioned by the Emmebank.
@@ -193,9 +195,9 @@ def to_emx(matrix: Union[pd.DataFrame, pd.Series, np.ndarray], file: Union[str, 
     number of zones that the Emmebank is dimensioned for must be known in order for the file to be written correctly.
 
     Args:
-        matrix (Union[pandas.DataFrame, pandas.Series, numpy.ndarray]): The matrix to write to disk. If a Series is
+        matrix (pandas.DataFrame | pandas.Series | numpy.ndarray): The matrix to write to disk. If a Series is
             given, it MUST have a MultiIndex with exactly 2 levels to unstack.
-        file (Union[basestring, File]): The path or file handler to write to.
+        file (str | FileIO | Path): The path or file handler to write to.
         emmebank_zones (int): The number of zones the target Emmebank is dimensioned for.
     """
     assert emmebank_zones > 0

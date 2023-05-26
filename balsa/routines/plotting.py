@@ -1,4 +1,6 @@
-from pathlib import Path
+from __future__ import annotations
+
+from os import PathLike
 from typing import Callable, Dict, List, Tuple, Union
 
 import numpy as np
@@ -8,9 +10,10 @@ from matplotlib.axes import Axes
 from matplotlib.ticker import FuncFormatter
 
 
-def convergence_boxplot(targets: pd.DataFrame, results: pd.DataFrame, filter_func: Callable[[pd.Series], pd.Series],
+def convergence_boxplot(targets: pd.DataFrame, results: pd.DataFrame, filter_func: Callable[[pd.Series], pd.Series], *,
                         adjust_target: bool = True, percentage: bool = True, band: Tuple[float, float] = None,
-                        simple_labels: bool = True, ax: Axes = None, fp: Path = None, title: str = None) -> Axes:
+                        simple_labels: bool = True, ax: Axes = None, fp: Union[str, PathLike] = None,
+                        title: str = None) -> Axes:
     """Measures convergence of constrained location-choice models (such as work-location choice). Can be used to
     produce multiple box plots for different sub-sets of zones, usually based on size.
 
@@ -23,7 +26,7 @@ def convergence_boxplot(targets: pd.DataFrame, results: pd.DataFrame, filter_fun
         band (Tuple[float, float], optional):
         simple_labels (bool, optional):
         ax (Axes, optional):
-        fp (Path, optional):
+        fp (str | PathLike, optional):
         title (str, optional):
 
     Returns:
@@ -97,8 +100,8 @@ def convergence_boxplot(targets: pd.DataFrame, results: pd.DataFrame, filter_fun
         return ax
 
 
-def location_summary(model: pd.DataFrame, target: pd.DataFrame, ensemble_names: pd.Series, title: str = '',
-                     fp: Path = None, dpi: int = 150, district_name: str = 'Ensemble') -> Axes:
+def location_summary(model: pd.DataFrame, target: pd.DataFrame, ensemble_names: pd.Series, *, title: str = '',
+                     fp: Union[str, PathLike] = None, dpi: int = 150, district_name: str = 'Ensemble') -> Axes:
     """Creates a compound plot showing total attractions to specified locations
 
     Args:
@@ -169,7 +172,7 @@ def location_summary(model: pd.DataFrame, target: pd.DataFrame, ensemble_names: 
     return ax
 
 
-def trumpet_diagram(counts: pd.Series, model_volume: pd.Series, categories: Union[pd.Series, List[pd.Series]] = None,
+def trumpet_diagram(counts: pd.Series, model_volume: pd.Series, *, categories: Union[pd.Series, List[pd.Series]] = None,
                     category_colours: Dict[Union[str, tuple], str] = None,
                     category_markers: Dict[Union[str, tuple], str] = None, label_format: str = None, title: str = '',
                     y_bounds: Tuple[float, float] = (-2, 2), ax: Axes = None, x_label: str = "Count volume",

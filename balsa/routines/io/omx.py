@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import Dict, Iterable, Union
 
 import numpy as np
@@ -14,7 +16,7 @@ MATRIX_TYPES = Union[pd.DataFrame, pd.Series, np.ndarray]
 
 
 if omx is not None:
-    def read_omx(file: str, matrices: Iterable[str] = None, mapping: str = None, raw: bool = False,
+    def read_omx(file: str, *, matrices: Iterable[str] = None, mapping: str = None, raw: bool = False,
                  tall: bool = False, squeeze: bool = True) -> Union[MATRIX_TYPES, Dict[str, MATRIX_TYPES]]:
         """
         Reads Open Matrix (OMX) files. An OMX file can contain multiple matrices, so this function
@@ -73,7 +75,7 @@ if omx is not None:
             return return_value
 
 
-    def to_omx(file: str, matrices: Dict[str, MATRIX_TYPES], zone_index: pd.Index = None, title: str = '',
+    def to_omx(file: str, matrices: Dict[str, MATRIX_TYPES], *, zone_index: pd.Index = None, title: str = '',
                descriptions: Dict[str, str] = None, attrs: Dict[str, dict] = None, mapping: str = 'zone_numbers'):
         """Creates a new (or overwrites an old) OMX file with a collection of matrices.
 

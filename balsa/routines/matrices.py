@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from multiprocessing import cpu_count
 from typing import Callable, Iterable, List, Tuple, Union
 from warnings import warn
@@ -36,13 +38,13 @@ def matrix_balancing_1d(m: np.ndarray, a: np.ndarray, axis: int) -> np.ndarray:
     return _balance(m, a, axis)
 
 
-def matrix_balancing_2d(m: Union[np.ndarray, pd.DataFrame], a: np.ndarray, b: np.ndarray, totals_to_use: str = 'raise',
-                        max_iterations: int = 1000, rel_error: float = 0.0001,
+def matrix_balancing_2d(m: Union[np.ndarray, pd.DataFrame], a: np.ndarray, b: np.ndarray, *,
+                        totals_to_use: str = 'raise', max_iterations: int = 1000, rel_error: float = 0.0001,
                         n_procs: int = 1) -> Tuple[Union[np.ndarray, pd.DataFrame], float, int]:
     """Balances a two-dimensional matrix using iterative proportional fitting.
 
     Args:
-        m (Union[numpy.ndarray, pandas.DataFrame]): The matrix (a 2-dimensional ndarray) to be balanced. If a DataFrame
+        m (numpy.ndarray | pandas.DataFrame): The matrix (a 2-dimensional ndarray) to be balanced. If a DataFrame
             is supplied, the output will be returned as a DataFrame.
         a (numpy.ndarray): The row totals (a 1-dimensional ndarray) to use for balancing
         b (numpy.ndarray): The column totals (a 1-dimensional ndarray) to use for balancing
@@ -57,7 +59,7 @@ def matrix_balancing_2d(m: Union[np.ndarray, pd.DataFrame], a: np.ndarray, b: np
         n_procs (int, optional): Defaults to ``1``. Number of processors for parallel computation. (Not used)
 
     Return:
-        Tuple[Union[numpy.ndarray, pandas.DataFrame], float, int]: The balanced matrix, residual, and n_iterations
+        Tuple[numpy.ndarray | pandas.DataFrame, float, int]: The balanced matrix, residual, and n_iterations
     """
     max_iterations = int(max_iterations)
     n_procs = int(n_procs)
@@ -171,16 +173,17 @@ if NUMBA_LOADED:
         return b.reshape(a_.shape)
 
 
-    def matrix_bucket_rounding(m: Union[np.ndarray, pd.DataFrame], decimals: int = 0) -> Union[np.ndarray, pd.DataFrame]:
+    def matrix_bucket_rounding(m: Union[np.ndarray, pd.DataFrame], *,
+                               decimals: int = 0) -> Union[np.ndarray, pd.DataFrame]:
         """Bucket rounds to the given number of decimals.
 
         Args:
-            m (Union[numpy.ndarray, pandas.DataFrame]): The matrix to be rounded
+            m (numpy.ndarray | pandas.DataFrame): The matrix to be rounded
             decimals (int, optional): Defaults to ``0``. Number of decimal places to round to. If decimals is negative, it
                 specifies the number of positions to the left of the decimal point.
 
         Return:
-            Union[numpy.ndarray, pandas.DataFrame]: The rounded matrix
+            numpy.ndarray | pandas.DataFrame: The rounded matrix
         """
 
         # Test if matrix is Pandas DataFrame
@@ -281,23 +284,23 @@ def split_zone_in_matrix(base_matrix: pd.DataFrame, old_zone: int, new_zones: Li
     return new_matrix
 
 
-def aggregate_matrix(matrix: Union[pd.DataFrame, pd.Series], groups: Union[pd.Series, np.ndarray] = None,
+def aggregate_matrix(matrix: Union[pd.DataFrame, pd.Series], *, groups: Union[pd.Series, np.ndarray] = None,
                      row_groups: Union[pd.Series, np.ndarray] = None, col_groups: Union[pd.Series, np.ndarray] = None,
                      aggfunc: Callable[[Iterable[Union[int, float]]], Union[int, float]] = np.sum
                      ) -> Union[pd.DataFrame, pd.Series]:
     """Aggregates a matrix based on mappings provided for each axis, using a specified aggregation function.
 
     Args:
-        matrix (Union[pandas.DataFrame, pandas.Series]): Matrix data to aggregate. DataFrames and Series with 2-level
+        matrix (pandas.DataFrame | pandas.Series): Matrix data to aggregate. DataFrames and Series with 2-level
             indices are supported
-        groups (Union[pandas.Series, numpy.ndarray], optional): Syntactic sugar to specify both row_groups and
+        groups (pandas.Series | numpy.ndarray, optional): Syntactic sugar to specify both row_groups and
             col_groups to use the same grouping series.
-        row_groups (Union[pandas.Series, numpy.ndarray], optional): Groups for the rows. If aggregating a DataFrame,
+        row_groups (pandas.Series | numpy.ndarray, optional): Groups for the rows. If aggregating a DataFrame,
             this must match the index of the matrix. For a "tall" matrix, this series can match either the "full" index
             of the series, or it can match the first level of the matrix (it would be the same as if aggregating a
             DataFrame). Alternatively, an array can be provided, but it must be the same length as the DataFrame's
             index, or the full length of the Series.
-        col_groups (Union[pandas.Series, numpy.ndarray], optional): Groups for the columns. If aggregating a DataFrame,
+        col_groups (pandas.Series | numpy.ndarray, optional): Groups for the columns. If aggregating a DataFrame,
             this must match the columns of the matrix. For a "tall" matrix, this series can match either the "full"
             index of the series, or it can match the second level of the matrix (it would be the same as if aggregating
             a DataFrame). Alternatively, an array can be provided, but it must be the same length as the DataFrame's
@@ -428,7 +431,7 @@ def _aggregate_series(matrix, row_aggregator, col_aggregator, aggfunc):
     return matrix.groupby([row_aggregator, col_aggregator]).aggregate(aggfunc)
 
 
-def fast_stack(frame: pd.DataFrame, multi_index: pd.MultiIndex, deep_copy: bool = True) -> pd.Series:
+def fast_stack(frame: pd.DataFrame, multi_index: pd.MultiIndex, *, deep_copy: bool = True) -> pd.Series:
     """Performs the same action as ``DataFrame.stack()``, but provides better performance when the target stacked index
     is known beforehand. Useful in converting a lot of matrices from "wide" to "tall" format. The inverse of
     ``fast_unstack()``.
@@ -461,7 +464,7 @@ def fast_stack(frame: pd.DataFrame, multi_index: pd.MultiIndex, deep_copy: bool 
     return pd.Series(array, index=multi_index)
 
 
-def fast_unstack(series: pd.Series, index: pd.Index, columns: pd.Index, deep_copy: bool = True) -> pd.DataFrame:
+def fast_unstack(series: pd.Series, index: pd.Index, columns: pd.Index, *, deep_copy: bool = True) -> pd.DataFrame:
     """Performs the same action as ``DataFrame.unstack()``, but provides better performance when the target unstacked
     index and columns are known beforehand. Useful in converting a lot of matrices from "tall" to "wide" format. The
     inverse of ``fast_stack()``.
@@ -510,7 +513,7 @@ def _check_disaggregation_input(mapping: pd.Series, proportions: pd.Series) -> n
     return proportions.values / parent_totals
 
 
-def disaggregate_matrix(matrix: pd.DataFrame, mapping: pd.Series = None, proportions: pd.Series = None,
+def disaggregate_matrix(matrix: pd.DataFrame, *, mapping: pd.Series = None, proportions: pd.Series = None,
                         row_mapping: pd.Series = None, row_proportions: pd.Series = None, col_mapping: pd.Series = None,
                         col_proportions: pd.Series = None) -> pd.DataFrame:
     """ Split multiple rows and columns in a matrix all at once. The cells in the matrix MUST be numeric, but the row

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from contextlib import contextmanager
 from io import FileIO
 from pathlib import Path
@@ -7,12 +9,12 @@ import numpy as np
 import pandas as pd
 
 
-def coerce_matrix(matrix: Union[np.ndarray, pd.DataFrame, pd.Series], allow_raw: bool = True,
+def coerce_matrix(matrix: Union[np.ndarray, pd.DataFrame, pd.Series], *, allow_raw: bool = True,
                   force_square: bool = True) -> np.ndarray:
     """Infers a NumPy array from given input
 
     Args:
-        matrix (Union[numpy.ndarray, pandas.DataFrame, pandas.Series]):
+        matrix (numpy.ndarray | pandas.DataFrame | pandas.Series):
         allow_raw (bool, optional): Defaults to ``True``.
         force_square (bool, optional): Defaults to ``True``.
 
@@ -42,7 +44,7 @@ def coerce_matrix(matrix: Union[np.ndarray, pd.DataFrame, pd.Series], allow_raw:
     return matrix
 
 
-def expand_array(a: np.ndarray, n: np.ndarray, axis: int = None) -> np.ndarray:
+def expand_array(a: np.ndarray, n: np.ndarray, *, axis: int = None) -> np.ndarray:
     """Expands an array across all dimensions by a set amount
 
     Args:
@@ -76,7 +78,7 @@ def open_file(file_handle: Union[str, Path, FileIO], **kwargs):
     ``pathlib.Path``, or an already-opened handler.
 
     Args:
-        file_handle (Union[str, Path, FileIO]): The item to be opened or is already open.
+        file_handle (str | Path | FileIO): The item to be opened or is already open.
         **kwargs: Keyword args passed to ``open()``. Usually mode='w'.
 
     Yields:
