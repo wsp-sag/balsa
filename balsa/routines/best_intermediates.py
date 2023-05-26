@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from multiprocessing import cpu_count
 from threading import Thread
 from typing import Dict, List, Tuple, Union
@@ -35,7 +37,7 @@ if NUMBA_LOADED:
         return slices
 
 
-    @njit
+    @njit(cache=True)
     def _update_heap(utilities: ndarray, zones: ndarray, new_u: float, new_zone: int):
         """Inserts a value into a sorted array, maintaining sort order, and the number of items in that array. The array
         is sorted lowest-to-highest"""
@@ -55,7 +57,7 @@ if NUMBA_LOADED:
         zones[i - 1] = new_zone
 
 
-    @njit(nogil=True)
+    @njit(cache=True, nogil=True)
     def _nbf_twopart_worker(access_utils: ndarray, egress_utils: ndarray, result_utils: ndarray,
                             result_stations: ndarray, start: int, stop: int, k: int):
         """Performance-tuned NBF to operate on its own thread"""
@@ -93,8 +95,10 @@ if NUMBA_LOADED:
 
     def _validate_access_egress_tables(access_table: DataFrame, egress_table: DataFrame) -> Tuple[Index, Index, Index]:
 
-        assert access_table.index.nlevels == 2, "Access table index must have two levels"
-        assert egress_table.index.nlevels == 2, "Egress table index must have two levels"
+        if access_table.index.nlevels != 2:
+            raise RuntimeError("Access table index must have two levels")
+        if egress_table.index.nlevels != 2:
+            raise RuntimeError("Egress table index must have two levels")
 
         # Take the unique index of each level, as Pandas can return more items than is present, if the frame is a slice
         origin_zones: Index = access_table.index.unique(level=0)
@@ -102,16 +106,16 @@ if NUMBA_LOADED:
         destination_zones: Index = egress_table.index.unique(level=1)
 
         # Check that the access and egress tables have compatible indices
-        assert intermediate_zones.equals(egress_table.index.unique(level=0)), \
-            "Access index level 2 and egress index level 1 must be the same"
+        if not intermediate_zones.equals(egress_table.index.unique(level=0)):
+            raise RuntimeError("Access index level 2 and egress index level 1 must be the same")
 
         return origin_zones, intermediate_zones, destination_zones
 
 
-    def best_intermediate_zones(access_table: DataFrame, egress_table: DataFrame, cost_column: str, k: int = 1,
-                                n_threads: int = None, squeeze=True, other_columns=True,
-                                intermediate_name: str = "intermediate_zone", maximize=True,
-                                availability_column: str = "available", null_index=0
+    def best_intermediate_zones(access_table: DataFrame, egress_table: DataFrame, cost_column: str, *, k: int = 1,
+                                n_threads: int = None, squeeze: bool = True, other_columns: bool = True,
+                                intermediate_name: str = "intermediate_zone", maximize: bool = True,
+                                availability_column: str = "available", null_index: int = 0
                                 ) -> Union[DataFrame, Dict[int, DataFrame]]:
         """Numba-accelerated.
 
