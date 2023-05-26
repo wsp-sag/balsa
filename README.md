@@ -14,12 +14,12 @@ Balsa documentation is available [here](https://wsp-sag.github.io/balsa/)
 ## Key features
 
 - I/O routines to convert from binary matrix formats (INRO, OMX, and more) to Pandas DataFrames and Series
-- Matrix operations such as balancing, dis/aggregation, and bucket rounding
+- Matrix operations such as balancing, dis/aggregation, triple-indexing, and bucket rounding
 - Plotting functions such a Trip Length Frequency Distributions
 - Pretty Logging utilities for use in program applications
 - and more!
 
-Balsa is compatible with Python 3.5+
+Balsa is compatible with Python 3.7+
 
 ## Installation
 
