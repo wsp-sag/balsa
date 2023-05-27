@@ -7,13 +7,20 @@ from warnings import warn
 import numexpr as ne
 import numpy as np
 import pandas as pd
+from pandas.errors import PerformanceWarning
 
 try:
-    import numba as nb
-    NUMBA_LOADED = True
+    from numba import njit, prange
 except ImportError:
-    nb = None
-    NUMBA_LOADED = False
+    def njit(*args, **kwargs):
+
+        def decorator(func):
+            warn(f'Numba not found. `{func.__name__}` will fall back to using Python, but will run substantially '
+                 f'slower', category=PerformanceWarning)
+            return func
+
+        return decorator
+    prange = range
 
 EPS = 1.0e-7
 
@@ -159,57 +166,53 @@ def _calc_error(m, a, b):
     return row_sum + col_sum
 
 
-if NUMBA_LOADED:
-    @nb.njit(nb.float64[:, :](nb.float64[:, :], nb.int64), cache=False, parallel=True)
-    def _nbf_bucket_round(a_, decimals=0):
-        a = a_.ravel()
-        b = np.copy(a)
+@njit(cache=False, parallel=True)
+def _nbf_bucket_round(a_, decimals=0):
+    a = a_.ravel()
+    b = np.copy(a)
 
-        residual = 0
-        for i in nb.prange(0, len(b)):
-            b[i] = np.round(a[i] + residual, decimals)
-            residual += a[i] - b[i]
+    residual = 0
+    for i in prange(0, len(b)):
+        b[i] = np.round(a[i] + residual, decimals)
+        residual += a[i] - b[i]
 
-        return b.reshape(a_.shape)
+    return b.reshape(a_.shape)
 
 
-    def matrix_bucket_rounding(m: Union[np.ndarray, pd.DataFrame], *,
-                               decimals: int = 0) -> Union[np.ndarray, pd.DataFrame]:
-        """Bucket rounds to the given number of decimals.
+def matrix_bucket_rounding(m: Union[np.ndarray, pd.DataFrame], *,
+                           decimals: int = 0) -> Union[np.ndarray, pd.DataFrame]:
+    """Bucket rounds to the given number of decimals.
 
-        Args:
-            m (numpy.ndarray | pandas.DataFrame): The matrix to be rounded
-            decimals (int, optional): Defaults to ``0``. Number of decimal places to round to. If decimals is negative, it
-                specifies the number of positions to the left of the decimal point.
+    Args:
+        m (numpy.ndarray | pandas.DataFrame): The matrix to be rounded
+        decimals (int, optional): Defaults to ``0``. Number of decimal places to round to. If decimals is negative, it
+            specifies the number of positions to the left of the decimal point.
 
-        Return:
-            numpy.ndarray | pandas.DataFrame: The rounded matrix
-        """
+    Return:
+        numpy.ndarray | pandas.DataFrame: The rounded matrix
+    """
 
-        # Test if matrix is Pandas DataFrame
-        data_type = ''
-        m_pd = None
-        if isinstance(m, pd.DataFrame):
-            data_type = 'pd'
-            m_pd = m
-            m = m_pd.values
+    # Test if matrix is Pandas DataFrame
+    data_type = ''
+    m_pd = None
+    if isinstance(m, pd.DataFrame):
+        data_type = 'pd'
+        m_pd = m
+        m = m_pd.values
 
-        decimals = int(decimals)
+    decimals = int(decimals)
 
-        # I really can't think of a way to vectorize bucket rounding, so here goes the slow for loop
-        b = _nbf_bucket_round(m, decimals)
+    # I really can't think of a way to vectorize bucket rounding, so here goes the slow for loop
+    b = _nbf_bucket_round(m, decimals)
 
-        if decimals <= 0:
-            b = b.astype(np.int32)
+    if decimals <= 0:
+        b = b.astype(np.int32)
 
-        if data_type == 'pd':
-            new_df = pd.DataFrame(b.reshape(m.shape), index=m_pd.index, columns=m_pd.columns)
-            return new_df
-        else:
-            return b.reshape(m.shape)
-else:
-    def matrix_bucket_rounding(*args, **kwargs):
-        raise ModuleNotFoundError('Please install Numba to run this function')
+    if data_type == 'pd':
+        new_df = pd.DataFrame(b.reshape(m.shape), index=m_pd.index, columns=m_pd.columns)
+        return new_df
+    else:
+        return b.reshape(m.shape)
 
 
 def split_zone_in_matrix(base_matrix: pd.DataFrame, old_zone: int, new_zones: List[int],
