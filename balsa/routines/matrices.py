@@ -7,7 +7,6 @@ from warnings import warn
 import numexpr as ne
 import numpy as np
 import pandas as pd
-from pandas.errors import PerformanceWarning
 
 try:
     from numba import njit, prange
@@ -15,8 +14,6 @@ except ImportError:
     def njit(*args, **kwargs):
 
         def decorator(func):
-            warn(f'Numba not found. `{func.__name__}` will fall back to using Python, but will run substantially '
-                 f'slower', category=PerformanceWarning)
             return func
 
         return decorator

@@ -3,12 +3,10 @@ from __future__ import annotations
 from multiprocessing import cpu_count
 from threading import Thread
 from typing import Dict, List, Tuple, Union
-from warnings import warn
 
 import numpy as np
 import pandas as pd
 from pandas.api.types import is_categorical_dtype
-from pandas.errors import PerformanceWarning
 
 try:
     from numba import njit
@@ -16,8 +14,6 @@ except ImportError:
     def njit(*args, **kwargs):
 
         def decorator(func):
-            warn(f'Numba not found. `{func.__name__}` will fall back to using Python, but will run substantially '
-                 f'slower', category=PerformanceWarning)
             return func
 
         return decorator
