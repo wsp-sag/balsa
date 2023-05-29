@@ -183,7 +183,7 @@ def _validate_pk_kq_tables(pk_table: pd.DataFrame, kq_table: pd.DataFrame) -> Tu
 def best_intermediate_zones(pk_table: pd.DataFrame, kq_table: pd.DataFrame, cost_col: str, *,
                             n: int = 1, add_pkq_cost: NDArray = None, flag_array: NDArray = None,
                             maximize: bool = True, null_index: int = 0, other_columns: bool = True,
-                            intermediate_name: str = "intermediate_zone", availability_column: str = "available",
+                            intermediate_name: str = "intermediate_zone", availability_name: str = "available",
                             n_threads: int = 1, squeeze: bool = True) -> Union[pd.DataFrame, Dict[int, pd.DataFrame]]:
     """Numba-accelerated.
 
@@ -226,7 +226,7 @@ def best_intermediate_zones(pk_table: pd.DataFrame, kq_table: pd.DataFrame, cost
             in the "pk" and "kq" tables. The result table will be of the shape ((p, q), A | E + 3)
         intermediate_name (str, optional): Defaults to ``'intermediate_zone'``. Name of the column in the result
             table containing the selected intermediate zone.
-        availability_column (str, optional): Defaults to ``'available'``. Name of the column in the result table
+        availability_name (str, optional): Defaults to ``'available'``. Name of the column in the result table
             containing a flag whether ANY intermediate zone was found to be available.
         n_threads (int, optional): Defaults to ``1``. Number of threads to use.
         squeeze (bool, optional): Defaults to ``True``. If ``n == 1`` and ``squeeze=True``, a single DataFrame is
@@ -287,7 +287,7 @@ def best_intermediate_zones(pk_table: pd.DataFrame, kq_table: pd.DataFrame, cost
 
     return _combine_tables(
         pk_table, kq_table, result_cost, result_indices, flag_array, origin_zones, intermediate_zones,
-        destination_zones, cost_col, availability_column, intermediate_name, other_columns=other_columns,
+        destination_zones, cost_col, availability_name, intermediate_name, other_columns=other_columns,
         squeeze=squeeze, null_index=null_index
     )
 
