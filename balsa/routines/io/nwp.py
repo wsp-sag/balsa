@@ -292,15 +292,14 @@ def read_nwp_transit_network(nwp_fp: Union[str, PathLike]) -> Tuple[pd.DataFrame
 
     # Create transit segment dataframe
     transit_segments = pd.DataFrame(transit_segments, columns=['line'] + seg_cols)
-    transit_segments['jnode'] = transit_segments.groupby('line')['inode'].shift(-1)
+    transit_segments['inode'] = transit_segments['inode'].astype(np.int64)
+    transit_segments['jnode'] = transit_segments.groupby('line')['inode'].shift(-1).fillna(0).astype(np.int64)
     transit_segments['seg_seq'] = (transit_segments.groupby('line').cumcount() + 1).astype(int)
     transit_segments['loop'] = (transit_segments.groupby(['line', 'inode', 'jnode'])['seg_seq'].cumcount() + 1).astype(int)
     transit_segments.dropna(inplace=True)  # remove rows without dwt, ttf, us1, us2, us3 data (i.e. the padded rows)
     transit_segments = transit_segments[['line', 'inode', 'jnode', 'seg_seq', 'loop', 'dwt', 'ttf', 'us1', 'us2', 'us3']].copy()
-    transit_segments['inode'] = transit_segments['inode'].astype(np.int64)
-    transit_segments['jnode'] = transit_segments['jnode'].astype(np.int64)
     transit_segments['dwt'] = transit_segments['dwt'].str.replace('dwt=', '', regex=False)
-    transit_segments['ttf'] = transit_segments['ttf'].str.replace('ttf=', '', regex=False).astype(int)
+    transit_segments['ttf'] = transit_segments['ttf'].str.replace('ttf=', '', regex=False).astype(np.int16)
     transit_segments['us1'] = transit_segments['us1'].str.replace('us1=', '', regex=False).astype(float)
     transit_segments['us2'] = transit_segments['us2'].str.replace('us2=', '', regex=False).astype(float)
     transit_segments['us3'] = transit_segments['us3'].str.replace('us3=', '', regex=False).astype(float)
