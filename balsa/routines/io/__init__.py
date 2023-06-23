@@ -8,5 +8,5 @@ from .nwp import (read_nwp_base_network, read_nwp_exatts_list,
                   read_nwp_transit_line_attributes, read_nwp_transit_network,
                   read_nwp_transit_result_summary,
                   read_nwp_transit_segment_results,
-                  read_nwp_transit_station_results)
+                  read_nwp_transit_station_results, read_nwp_transit_vehicles)
 from .omx import read_omx, to_omx
