@@ -411,3 +411,42 @@ def read_nwp_transit_segment_results(nwp_fp: Union[str, PathLike]) -> pd.DataFra
     segments = segments[['line', 'inode', 'jnode', 'seg_seq', 'loop', 'boardings', 'alightings', 'volume']].copy()
 
     return segments
+
+
+def read_nwp_transit_vehicles(nwp_fp: Union[str, PathLike]) -> pd.DataFrame:
+    """A function to read the transit vehicles from a Network Package file (exported from Emme using the TMG Toolbox)
+    into DataFrames.
+
+    Args:
+        nwp_fp (str | PathLike): File path to the network package.
+
+    Returns:
+        pd.DataFrame: DataFrame containing the transit vehicles.
+    """
+    nwp_fp = Path(nwp_fp)
+    if not nwp_fp.exists():
+        raise FileNotFoundError(f'File `{nwp_fp.as_posix()}` not found.')
+
+    with zipfile.ZipFile(nwp_fp) as zf:
+        # Get header
+        header = None
+        for i, line in enumerate(zf.open('vehicles.202'), start=1):
+            line = line.strip().decode('utf-8')
+            if line.startswith('c'):
+                continue  # Skip comment lines
+            if line.startswith('t vehicles'):
+                header = i
+
+        # Read data
+        data_types = {
+            'id': int, 'description': str, 'mode': str, 'fleet_size': int, 'seated_capacity': float,
+            'total_capacity': float, 'cost_time_coeff': float, 'cost_distance_coeff': float, 'energy_time_coeff': float,
+            'energy_distance_coeff': float, 'auto_equivalent': float
+        }
+        vehicles = pd.read_csv(
+            zf.open('vehicles.202'), index_col='id', usecols=data_types.keys(), dtype=data_types, skiprows=header,
+            quotechar="'", delim_whitespace=True
+        )
+        vehicles.index.name = 'veh_id'
+
+    return vehicles
