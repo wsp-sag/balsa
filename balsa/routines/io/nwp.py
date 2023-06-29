@@ -336,8 +336,14 @@ def read_nwp_transit_result_summary(nwp_fp: Union[str, PathLike]) -> pd.DataFram
         data_types = {'line': str, 'transit_boardings': float, 'transit_volume': float}
         df = pd.read_csv(zf.open('segment_results.csv'), usecols=data_types.keys(), dtype=data_types)
         df['operator'] = (df['line'].str[:2]).str.replace(r'\d+', '', regex=True)
-        df['route'] = df['line'].str.replace(r'\D', '', regex=True).astype(int)
-        df = df.groupby(['operator', 'route']).agg({'transit_boardings': 'sum', 'transit_volume': 'max'})
+        df['route'] = df['line'].str.replace(r'\D', '', regex=True).str.lstrip('0')  # Isolate for route number, if applicable
+        mask = df['route'] == ''
+        for row in df[mask].itertuples(name='Pandas'):  # If no route number, assume route number based on TMG NCS convention
+            df.loc[row.Index, 'route'] = row.line[len(row.operator):-1]
+        df['route'] = df['route'].str.zfill(df['route'].str.len().max())  # Pad with 0s for groupby sorting purposes
+        df = df.groupby(['operator', 'route'], as_index=False).agg({'transit_boardings': 'sum', 'transit_volume': 'max'})
+        df['route'] = df['route'].str.lstrip('0')  # Remove 0s padding
+        df.set_index(['operator', 'route'], inplace=True)
         df.rename(columns={'transit_boardings': 'boardings', 'transit_volume': 'max_volume'}, inplace=True)
 
     return df
