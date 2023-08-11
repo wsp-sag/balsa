@@ -22,6 +22,18 @@ EMME_ENG_UNITS = {
 }
 
 
+def parse_tmg_ncs_line_id(s: pd.Series) -> Tuple[pd.Series, pd.Series]:
+    """A function to parse line IDs based on TMG Network Coding Standard conventions. Returns pandas Series objects
+    corresponding to the parsed operator and route IDs"""
+    operator = s.str[:2].str.replace(r'\d+', '', regex=True)
+
+    route = s.str.replace(r'\D', '', regex=True).str.lstrip('0')  # Isolate for route number, if applicable
+    for idx, _ in route[route == ''].items():  # If no route number, assume route id based on TMG NCS convention
+        route.loc[idx] = s.loc[idx][len(operator.loc[idx]):-1]
+
+    return operator, route
+
+
 def process_emme_eng_notation_series(s: pd.Series, *, to_dtype=float) -> pd.Series:  # TODO: create generic version...
     """A function to convert Pandas Series containing values in Emme's engineering notation"""
     values = s.str.replace(r'\D+', '.', regex=True).astype(to_dtype)
@@ -271,7 +283,7 @@ def read_nwp_transit_network(nwp_fp: Union[str, PathLike]) -> Tuple[pd.DataFrame
     # Parse through transit line transaction file
     seg_cols = ['inode', 'dwt', 'ttf', 'us1', 'us2', 'us3']
     transit_lines = []
-    transit_segments = []
+    transit_segs = []
     current_tline = None
     with zipfile.ZipFile(nwp_fp) as zf:
         for line in zf.open('transit.221'):
@@ -288,21 +300,21 @@ def read_nwp_transit_network(nwp_fp: Union[str, PathLike]) -> Tuple[pd.DataFrame
                 if len(parts) < len(seg_cols):
                     parts = parts + [np.nan] * (len(seg_cols) - len(parts))  # row needed for node... pad with NaNs
                 parts.insert(0, current_tline)
-                transit_segments.append(parts)
+                transit_segs.append(parts)
 
     # Create transit segment dataframe
-    transit_segments = pd.DataFrame(transit_segments, columns=['line'] + seg_cols)
-    transit_segments['inode'] = transit_segments['inode'].astype(np.int64)
-    transit_segments['jnode'] = transit_segments.groupby('line')['inode'].shift(-1).fillna(0).astype(np.int64)
-    transit_segments['seg_seq'] = (transit_segments.groupby('line').cumcount() + 1).astype(int)
-    transit_segments['loop'] = (transit_segments.groupby(['line', 'inode', 'jnode'])['seg_seq'].cumcount() + 1).astype(int)
-    transit_segments.dropna(inplace=True)  # remove rows without dwt, ttf, us1, us2, us3 data (i.e. the padded rows)
-    transit_segments = transit_segments[['line', 'inode', 'jnode', 'seg_seq', 'loop', 'dwt', 'ttf', 'us1', 'us2', 'us3']].copy()
-    transit_segments['dwt'] = transit_segments['dwt'].str.replace('dwt=', '', regex=False)
-    transit_segments['ttf'] = transit_segments['ttf'].str.replace('ttf=', '', regex=False).astype(np.int16)
-    transit_segments['us1'] = transit_segments['us1'].str.replace('us1=', '', regex=False).astype(float)
-    transit_segments['us2'] = transit_segments['us2'].str.replace('us2=', '', regex=False).astype(float)
-    transit_segments['us3'] = transit_segments['us3'].str.replace('us3=', '', regex=False).astype(float)
+    transit_segs = pd.DataFrame(transit_segs, columns=['line'] + seg_cols)
+    transit_segs['inode'] = transit_segs['inode'].astype(np.int64)
+    transit_segs['jnode'] = transit_segs.groupby('line')['inode'].shift(-1).fillna(0).astype(np.int64)
+    transit_segs['seg_seq'] = (transit_segs.groupby('line').cumcount() + 1).astype(int)
+    transit_segs['loop'] = (transit_segs.groupby(['line', 'inode', 'jnode'])['seg_seq'].cumcount() + 1).astype(int)
+    transit_segs.dropna(inplace=True)  # remove rows without dwt, ttf, us1, us2, us3 data (i.e. the padded rows)
+    transit_segs = transit_segs[['line', 'inode', 'jnode', 'seg_seq', 'loop', 'dwt', 'ttf', 'us1', 'us2', 'us3']].copy()
+    transit_segs['dwt'] = transit_segs['dwt'].str.replace('dwt=', '', regex=False)
+    transit_segs['ttf'] = transit_segs['ttf'].str.replace('ttf=', '', regex=False).astype(np.int16)
+    transit_segs['us1'] = transit_segs['us1'].str.replace('us1=', '', regex=False).astype(float)
+    transit_segs['us2'] = transit_segs['us2'].str.replace('us2=', '', regex=False).astype(float)
+    transit_segs['us3'] = transit_segs['us3'].str.replace('us3=', '', regex=False).astype(float)
 
     # Create transit lines dataframe
     columns = ['line', 'mode', 'veh', 'headway', 'speed', 'description', 'data1', 'data2', 'data3']
@@ -312,18 +324,17 @@ def read_nwp_transit_network(nwp_fp: Union[str, PathLike]) -> Tuple[pd.DataFrame
     }
     transit_lines = pd.DataFrame(transit_lines, columns=columns).astype(data_types)
 
-    return transit_lines, transit_segments
+    return transit_lines, transit_segs
 
 
-def read_nwp_transit_result_summary(nwp_fp: Union[str, PathLike]) -> pd.DataFrame:
+def read_nwp_transit_result_summary(nwp_fp: Union[str, PathLike], *, parse_line_id: bool = True) -> pd.DataFrame:
     """A function to read and summarize the transit assignment boardings and max volumes from a Network Package file
     (exported from Emme using the TMG Toolbox) by operator and route.
 
-    Note:
-        Transit line names in Emme must adhere to the TMG NCS16 for this function to work properly.
-
     Args:
         nwp_fp (str | PathLike): File path to the network package.
+        parse_line_id (bool, optional): Defaults to ``True``. Option to parse operator and route IDs from line IDs.
+            Please note that transit line IDs must adhere to the TMG NCS16 for this option to work properly.
 
     Returns:
         pd.DataFrame
@@ -335,16 +346,16 @@ def read_nwp_transit_result_summary(nwp_fp: Union[str, PathLike]) -> pd.DataFram
     with zipfile.ZipFile(nwp_fp) as zf:
         data_types = {'line': str, 'transit_boardings': float, 'transit_volume': float}
         df = pd.read_csv(zf.open('segment_results.csv'), usecols=data_types.keys(), dtype=data_types)
-        df['operator'] = (df['line'].str[:2]).str.replace(r'\d+', '', regex=True)
-        df['route'] = df['line'].str.replace(r'\D', '', regex=True).str.lstrip('0')  # Isolate for route number, if applicable
-        mask = df['route'] == ''
-        for row in df[mask].itertuples(name='Pandas'):  # If no route number, assume route number based on TMG NCS convention
-            df.loc[row.Index, 'route'] = row.line[len(row.operator):-1]
-        df['route'] = df['route'].str.zfill(df['route'].str.len().max())  # Pad with 0s for groupby sorting purposes
-        df = df.groupby(['operator', 'route'], as_index=False).agg({'transit_boardings': 'sum', 'transit_volume': 'max'})
-        df['route'] = df['route'].str.lstrip('0')  # Remove 0s padding
-        df.set_index(['operator', 'route'], inplace=True)
-        df.rename(columns={'transit_boardings': 'boardings', 'transit_volume': 'max_volume'}, inplace=True)
+        if parse_line_id:
+            operator, route = parse_tmg_ncs_line_id(df['line'])
+            df['operator'] = operator
+            df['route'] = route.str.zfill(route.str.len().max())  # Pad with 0s for groupby sorting purposes
+            df = df.groupby(['operator', 'route'], as_index=False).agg({'transit_boardings': 'sum', 'transit_volume': 'sum'})
+            df['route'] = df['route'].str.lstrip('0')  # Remove 0s padding
+            df.set_index(['operator', 'route'], inplace=True)
+        else:
+            df.set_index('line', inplace=True)
+        df.rename(columns={'transit_boardings': 'boardings', 'transit_volume': 'total_volume'}, inplace=True)
 
     return df
 
