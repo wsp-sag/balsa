@@ -2,7 +2,7 @@
 IO Utilities
 ============
 
-Routines for reading and writing demand modelling files, particularly matrices and TMG Toolbox network packages.
+Routines for reading and writing demand modelling files, particularly matrices and TMGToolbox network packages.
 
 Matrices
 --------
@@ -37,6 +37,8 @@ Fortran format
 
 Network Packages (NWP)
 ----------------------
+
+For more information on the TMGToolbox Network Package format, please visit https://tmg.utoronto.ca/doc/1.6/tmgtoolbox/input_output/ExportNetworkPackage.html
 
 .. automodule:: balsa.routines.io.nwp
    :members:
