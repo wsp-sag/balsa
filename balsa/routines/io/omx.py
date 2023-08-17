@@ -39,7 +39,8 @@ if omx is not None:
             The matrix, or matrices contained in the OMX file.
 
         """
-        with omx.open_file(str(src_fp), mode='r') as omx_file:
+        omx_file = omx.open_file(str(src_fp), mode='r')
+        try:
             table_names: List[str] = sort_nicely(omx_file.list_matrices()) if tables is None else list(tables)
 
             if not raw:
@@ -72,6 +73,8 @@ if omx is not None:
             if (len(retval) == 1) and squeeze:
                 return retval[table_names[0]]
             return retval
+        finally:
+            omx_file.close()
 
 
     def to_omx(dst_fp: Union[str, PathLike], tables: Dict[str, MATRIX_TYPES], *, zone_index: pd.Index = None,
@@ -99,12 +102,15 @@ if omx is not None:
         if attrs is None:
             attrs = {name: None for name in matrices.keys()}
 
-        with omx.open_file(str(dst_fp), mode='w', title=title) as omx_file:
+        omx_file = omx.open_file(str(dst_fp), mode='w', title=title)
+        try:
             omx_file.create_mapping(mapping_name, zone_index.tolist())
             for name, array in matrices.items():
                 description = descriptions[name]
                 attr = attrs[name]
                 omx_file.create_matrix(name, obj=np.ascontiguousarray(array), title=description, attrs=attr)
+        finally:
+            omx_file.close()
 
 
     def _prep_matrix_dict(matrices: Dict[str, MATRIX_TYPES],
