@@ -266,12 +266,15 @@ def read_nwp_traffic_results_at_countpost(nwp_fp: Union[str, PathLike], countpos
     return results
 
 
-def read_nwp_transit_network(nwp_fp: Union[str, PathLike]) -> Tuple[pd.DataFrame, pd.DataFrame]:
+def read_nwp_transit_network(nwp_fp: Union[str, PathLike], *,
+                             parse_line_id: bool = False) -> Tuple[pd.DataFrame, pd.DataFrame]:
     """A function to read the transit network from a Network Package file (exported from Emme using the TMG Toolbox)
     into DataFrames.
 
     Args:
         nwp_fp (str | PathLike): File path to the network package.
+        parse_line_id (bool, optional): Defaults to ``False``. Option to parse operator and route IDs from line IDs.
+            Please note that transit line IDs must adhere to the TMG NCS16 for this option to work properly.
 
     Returns:
         Tuple[pd.DataFrame, pd.DataFrame]: A tuple of DataFrames containing the transt lines and segments.
@@ -323,17 +326,22 @@ def read_nwp_transit_network(nwp_fp: Union[str, PathLike]) -> Tuple[pd.DataFrame
         'data2': float, 'data3': float
     }
     transit_lines = pd.DataFrame(transit_lines, columns=columns).astype(data_types)
+    transit_lines = transit_lines.set_index(['line', 'description']).reset_index()
+    if parse_line_id:
+        operator, route = parse_tmg_ncs_line_id(transit_lines['line'])
+        transit_lines.insert(1, 'operator', operator)
+        transit_lines.insert(2, 'route', route)
 
     return transit_lines, transit_segs
 
 
-def read_nwp_transit_result_summary(nwp_fp: Union[str, PathLike], *, parse_line_id: bool = True) -> pd.DataFrame:
+def read_nwp_transit_result_summary(nwp_fp: Union[str, PathLike], *, parse_line_id: bool = False) -> pd.DataFrame:
     """A function to read and summarize the transit assignment boardings and max volumes from a Network Package file
     (exported from Emme using the TMG Toolbox) by operator and route.
 
     Args:
         nwp_fp (str | PathLike): File path to the network package.
-        parse_line_id (bool, optional): Defaults to ``True``. Option to parse operator and route IDs from line IDs.
+        parse_line_id (bool, optional): Defaults to ``False``. Option to parse operator and route IDs from line IDs.
             Please note that transit line IDs must adhere to the TMG NCS16 for this option to work properly.
 
     Returns:
