@@ -1,1 +1,2 @@
-balsa/_version.py export-subst
+# SCM syntax highlighting
+pixi.lock linguist-language=YAML linguist-generated=true
