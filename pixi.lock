@@ -6744,8 +6744,8 @@ packages:
   timestamp: 1733130678956
 - pypi: .
   name: wsp-balsa
-  version: 1.4.3.dev5+g2a7cf85.d20241220
-  sha256: 40e607a4bd13a629bba2cd242a136a9d3add8cacd466723aa04de158367d39f3
+  version: 1.4.3.dev9+g7783717.d20241220
+  sha256: 195b55421bda11e8d41ff4256ccfb426fc442eaefbe74067e6cdaa5e750b6939
   requires_dist:
   - pandas>=0.24
   - numpy>=1.21
