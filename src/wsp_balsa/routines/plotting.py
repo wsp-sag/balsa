@@ -109,7 +109,7 @@ def location_summary(model: pd.DataFrame, target: pd.DataFrame, ensemble_names: 
         target (pandas.DataFrame):
         ensemble_names (pandas.Series):
         title (str, optional):
-        fp (Path, optional):
+        fp (str | PathLike, optional):
         dpi (int, optional):
         district_name (str, optional):
 
@@ -184,13 +184,13 @@ def trumpet_diagram(counts: pd.Series, model_volume: pd.Series, *, categories: U
         counts (pandas.Series): Target counts. Each item represents a different count location. Index does not need to
             be unique.
         model_volume (pandas.Series): Modelled volumes for each location. The index must match the counts Series.
-        categories (Union[pandas.Series, List[pandas.Series]], optional): Defaults to ``None``. Optional classification
+        categories (pandas.Series | List[pandas.Series], optional): Defaults to ``None``. Optional classification
             of each count location. Must match the index of the count Series. Can be provided as a List of Series (which
             all must match the count index) to enable tuple-based categorization.
-        category_colours (Dict[Union[str, tuple], str], optional): Defaults to ``None``. Mapping of each category to a
+        category_colours (Dict[str | tuple, str], optional): Defaults to ``None``. Mapping of each category to a
             colour, specified as a hex string. Only used when categories are provided. Missing categories revert to
             ``None``, using the default colour for the style.
-        category_markers (Dict[Union[str, tuple], str], optional): Defaults to ``None``. Mapping of each category to a
+        category_markers (Dict[str | tuple, str], optional): Defaults to ``None``. Mapping of each category to a
             matplotlib marker string (see https://matplotlib.org/api/markers_api.html for options). Only used when
             categories are provided. Missing categories revert to ``None``, using the default marker for the style.
         label_format (str, optional): Defaults to ``None``. Used to convert category values (especially tuples) into

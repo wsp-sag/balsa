@@ -6,6 +6,7 @@ from typing import Dict, List, Tuple, Union
 
 import numpy as np
 import pandas as pd
+from numpy.typing import NDArray
 from pandas.api.types import is_categorical_dtype
 
 try:
@@ -17,11 +18,6 @@ except ImportError:
             return func
 
         return decorator
-
-try:
-    from numpy.typing import NDArray
-except ImportError:
-    NDArray = np.ndarray
 
 _NULL_INDEX = -1
 _NEG_INF = -np.inf

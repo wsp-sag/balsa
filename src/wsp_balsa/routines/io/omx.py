@@ -5,6 +5,7 @@ from typing import Dict, Iterable, List, Tuple, Union
 
 import numpy as np
 import pandas as pd
+from numpy.typing import NDArray
 
 from ..general import sort_nicely
 from ..matrices import fast_unstack
@@ -14,7 +15,7 @@ try:
 except ImportError:
     omx = None
 
-MATRIX_TYPES = Union[pd.DataFrame, pd.Series, np.ndarray]
+MATRIX_TYPES = Union[pd.DataFrame, pd.Series, NDArray]
 
 
 if omx is not None:

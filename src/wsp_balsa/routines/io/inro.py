@@ -6,12 +6,13 @@ from typing import Iterable, List, Union
 
 import numpy as np
 import pandas as pd
+from numpy.typing import NDArray
 
 from .common import coerce_matrix, open_file
 
 
 def read_mdf(file: Union[str, FileIO, Path], *, raw: bool = False, tall: bool = False
-             ) -> Union[np.ndarray, pd.DataFrame, pd.Series]:
+             ) -> Union[NDArray, pd.DataFrame, pd.Series]:
     """Reads Emme's official matrix "binary serialization" format, created using ``inro.emme.matrix.MatrixData.save()``.
     There is no official extension for this type of file; '.mdf' is recommended. '.emxd' is also sometimes encountered.
 
@@ -23,7 +24,7 @@ def read_mdf(file: Union[str, FileIO, Path], *, raw: bool = False, tall: bool = 
             ``raw=False``, a Series will be returned, otherwise a 1D ndarray.
 
     Returns:
-        numpy.ndarray, pandas.DataFrame, or pandas.Series: The matrix stored in the file.
+        NDArray, pandas.DataFrame, or pandas.Series: The matrix stored in the file.
     """
     with open_file(file, mode='rb') as file_handler:
         magic, version, dtype_index, ndim = np.fromfile(file_handler, np.uint32, count=4)
@@ -123,7 +124,7 @@ def peek_mdf(file: Union[str, FileIO, Path], *, as_index: bool = True) -> Union[
 
 
 def read_emx(file: Union[str, FileIO, Path], *, zones: Union[int, Iterable[int], pd.Index] = None,
-             tall: bool = False) -> Union[np.ndarray, pd.DataFrame, pd.Series]:
+             tall: bool = False) -> Union[NDArray, pd.DataFrame, pd.Series]:
     """Reads an "internal" Emme matrix (found in `<Emme Project>/Database/emmemat`); with an '.emx' extension. This data
     format does not contain information about zones. Its size is determined by the dimensions of the Emmebank
     (``Emmebank.dimensions['centroids']``), regardless of the number of zones actually used in all scenarios.
@@ -138,7 +139,7 @@ def read_emx(file: Union[str, FileIO, Path], *, zones: Union[int, Iterable[int],
             is provided, a Series will be returned, otherwise a 1D ndarray.
 
     Returns:
-        numpy.ndarray, pandas.DataFrame, or pandas.Series.
+        NDArray, pandas.DataFrame, or pandas.Series.
 
     Examples:
         For a project with 20 zones:
@@ -190,7 +191,7 @@ def read_emx(file: Union[str, FileIO, Path], *, zones: Union[int, Iterable[int],
         return matrix.stack() if tall else matrix
 
 
-def to_emx(matrix: Union[pd.DataFrame, pd.Series, np.ndarray], file: Union[str, FileIO, Path], emmebank_zones: int):
+def to_emx(matrix: Union[pd.DataFrame, pd.Series, NDArray], file: Union[str, FileIO, Path], emmebank_zones: int):
     """Writes an "internal" Emme matrix (found in `<Emme Project>/Database/emmemat`); with an '.emx' extension. The
     number of zones that the Emmebank is dimensioned for must be known in order for the file to be written correctly.
 

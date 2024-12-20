@@ -1,30 +1,29 @@
 from __future__ import annotations
 
-from typing import Any, Dict, Iterable, Tuple, Union
+from typing import Any, Dict, Tuple, Union
 
 import numexpr as ne
 import numpy as np
 import pandas as pd
+from numpy.typing import ArrayLike, NDArray
 
 
-def tlfd(values: Union[np.ndarray, pd.Series], *, bin_start: int = 0, bin_end: int = 200, bin_step: int = 2,
-         weights: Union[np.ndarray, pd.Series] = None, intrazonal: Union[np.ndarray, pd.Series] = None,
-         label_type: str = 'MULTI', include_top: bool = False) -> pd.Series:
+def tlfd(values: ArrayLike, *, bin_start: int = 0, bin_end: int = 200, bin_step: int = 2, weights: ArrayLike = None,
+         intrazonal: ArrayLike = None, label_type: str = 'MULTI', include_top: bool = False) -> pd.Series:
     """Generates a Trip Length Frequency Distribution (i.e. a histogram) from given data. Produces a "pretty" Pandas
     object suitable for charting.
 
     Args:
-        values (numpy.ndarray | pandas.Series): A vector of trip lengths, with a length  of "N". Can be provided
-            from a table of trips, or from a matrix (in "tall" format).
+        values (ArrayLike): A vector of trip lengths, with a length  of "N". Can be provided from a table of trips, or
+            from a matrix (in "tall" format).
         bin_start (int, optional): Defaults is ``0``. The minimum bin value, in the same units as ``values``.
         bin_end (int, optional): Defaults to ``200``. The maximum bin value, in the same units as ``values``. Values
             over this limit are either ignored, or counted under a separate category (see ``include_top``)
         bin_step (int, optional): Default is ``2``. The size of each bin, in the same unit as ``values``.
-        weights (numpy.ndarray | pandas.Series, optional): Defaults to ``None``. A vector of weights to use of
-            length "N", to produce a weighted histogram.
-        intrazonal (numpy.ndarray | pandas.Series, optional): Defaults to ``None``. A boolean vector indicating
-            which values are considered "intrazonal". When specified, prepends an ``intrazonal`` category to the front
-            of the histogram.
+        weights (ArrayLike, optional): Defaults to ``None``. A vector of weights to use of length "N", to produce a
+            weighted histogram.
+        intrazonal (ArrayLike, optional): Defaults to ``None``. A boolean vector indicating which values are considered
+            "intrazonal". When specified, prepends an ``intrazonal`` category to the front of the histogram.
         label_type (str, optional): Defaults to ``'MULTI'``. The format of the returned index. Options are:
             - ``MULTI``: The returned index will be a 2-level MultiIndex ['from', 'to'];
             - ``TEXT``: The returned index will be text-based: "0 to 2";
@@ -150,13 +149,10 @@ def _check_vectors(description: str, *vectors):
     return common_index, retval
 
 
-def distance_matrix(x0: Union[np.ndarray, pd.Series], y0: Union[np.ndarray, pd.Series], *,
-                    labels0: Union[Iterable, pd.Index] = None, tall: bool = False,
-                    x1: Union[np.ndarray, pd.Series] = None, y1: Union[np.ndarray, pd.Series] = None,
-                    labels1: Union[np.ndarray, pd.Series] = None, method: str = 'EUCLIDEAN',
-                    **kwargs) -> Union[pd.Series, pd.DataFrame, np.ndarray]:
-    """
-    Fastest method of computing a distance matrix from vectors of coordinates, using the NumExpr package. Supports
+def distance_matrix(x0: ArrayLike, y0: ArrayLike, *, labels0: ArrayLike = None, tall: bool = False,
+                    x1: ArrayLike = None, y1: ArrayLike = None, labels1: ArrayLike = None, method: str = 'EUCLIDEAN',
+                    **kwargs) -> Union[pd.Series, pd.DataFrame, NDArray]:
+    """Fastest method of computing a distance matrix from vectors of coordinates, using the NumExpr package. Supports
     several equations for computing distances.
 
     Accepts two or four vectors of x-y coordinates. If only two vectors are provided (x0, y0), the result will be the
@@ -164,17 +160,15 @@ def distance_matrix(x0: Union[np.ndarray, pd.Series], y0: Union[np.ndarray, pd.S
     will be the 2D product of the first and second vector (vector0 * vector1).
 
     Args:
-        x0 (numpy.ndarray | pandas.Series): Vector of x-coordinates, of length N0. Can be a Series to specify
-            labels.
-        y0 (numpy.ndarray | pandas.Series): Vector of y-coordinates, of length N0. Can be a Series to specify
-            labels.
-        labels0 (pandas.Index-like, optional): Defaults to ``None``. Override set of labels to use if x0 and y0 are both
-            raw Numpy arrays
-        x1 (numpy.ndarray | pandas.Series, optional): Defaults to ``None``. A second vector of x-coordinates, of
-            length N1. Can be a Series to specify labels
-        y1 (numpy.ndarray | pandas.Series, optional): Defaults to ``None``. A second vector of y-coordinates, of
-            length N1. Can be a Series to specify labels
-        labels1 (pandas.Index-like): Override set of labels to use if x1 and y1 are both raw Numpy arrays
+        x0 (ArrayLike): Vector of x-coordinates, of length N0. Can be a Series to specify labels.
+        y0 (ArrayLike): Vector of y-coordinates, of length N0. Can be a Series to specify labels.
+        labels0 (ArrayLike, optional): Defaults to ``None``. Override set of labels to use if x0 and y0 are both raw
+            Numpy arrays
+        x1 (ArrayLike, optional): Defaults to ``None``. A second vector of x-coordinates, of length N1. Can be a Series
+            to specify labels
+        y1 (ArrayLike, optional): Defaults to ``None``. A second vector of y-coordinates, of length N1. Can be a Series
+            to specify labels
+        labels1 (ArrayLike): Override set of labels to use if x1 and y1 are both raw Numpy arrays
         tall (bool, optional): Defaults to ``False``. If True, returns a vector whose shape is N0 x N1. Otherwise,
             returns a matrix whose shape is (N0, N1).
         method (str, optional): Defaults to ``'EUCLIDEAN'``. Specifies the method by which to compute distance. Valid
@@ -193,7 +187,7 @@ def distance_matrix(x0: Union[np.ndarray, pd.Series], y0: Union[np.ndarray, pd.S
             Factor to convert from km to other units when using Haversine distance
 
     Returns:
-        pandas.Series, pandas.DataFrame or numpy.ndarray:
+        pandas.Series, pandas.DataFrame or NDArray:
             A *Series* will be returned when ``tall=True``, and labels can be inferred and will always have 2-level
             MultiIndex. A *DataFrame* will be returned when ``tall=False`` and labels can be inferred. A *ndarray* will
             be returned when labels could not be inferred; if ``tall=True`` the array will be 1-dimensional, with shape
@@ -255,18 +249,17 @@ def distance_matrix(x0: Union[np.ndarray, pd.Series], y0: Union[np.ndarray, pd.S
     return pd.DataFrame(raw_matrix, index=labels0, columns=labels1)
 
 
-def distance_array(x0: Union[np.ndarray, pd.Series], y0: Union[np.ndarray, pd.Series],
-                   x1: Union[np.ndarray, pd.Series], y1: Union[np.ndarray, pd.Series], *, method: str = 'euclidean',
-                   **kwargs) -> Union[np.ndarray, pd.Series]:
+def distance_array(x0: ArrayLike, y0: ArrayLike, x1: ArrayLike, y1: ArrayLike, *, method: str = 'euclidean',
+                   **kwargs) -> Union[NDArray, pd.Series]:
     """
     Fast method to compute distance between 2 (x, y) points, represented by 4 separate arrays, using the NumExpr
     package. Supports several equations for computing distances
 
     Args:
-        x0 (numpy.ndarray | pandas.Series): X or Lon coordinate of first point
-        y0 (numpy.ndarray | pandas.Series): Y or Lat coordinate of first point
-        x1 (numpy.ndarray | pandas.Series): X or Lon coordinate of second point
-        y1 (numpy.ndarray | pandas.Series): Y or Lat coordinate of second point
+        x0 (ArrayLike): X or Lon coordinate of first point
+        y0 (ArrayLike): Y or Lat coordinate of first point
+        x1 (ArrayLike): X or Lon coordinate of second point
+        y1 (ArrayLike): Y or Lat coordinate of second point
         method (str, optional): Defaults to ``'EUCLIDEAN'``. Specifies the method by which to compute distance. Valid
             options are:
             ``'EUCLIDEAN'``: Computes straight-line, 'as-the-crow flies' distance.
@@ -283,7 +276,7 @@ def distance_array(x0: Union[np.ndarray, pd.Series], y0: Union[np.ndarray, pd.Se
             Factor to convert from km to other units when using Haversine distance
 
     Returns:
-        numpy.ndarray or pandas.Series:
+        NDArray or pandas.Series:
             Distance from the vectors of first points to the vectors of second points. A Series is returned when one or
             more coordinate arrays are given as a Series object
     """
@@ -306,7 +299,7 @@ def distance_array(x0: Union[np.ndarray, pd.Series], y0: Union[np.ndarray, pd.Se
     return result_array
 
 
-def indexers_for_map_matrix(row_labels: pd.Series, col_labels: pd.Series, superset: pd.Index,
+def indexers_for_map_matrix(row_labels: pd.Index, col_labels: pd.Index, superset: pd.Index,
                             check: bool = True) -> Tuple[np.ndarray, np.ndarray]:
     if check:
         assert np.all(row_labels.isin(superset))
@@ -320,7 +313,7 @@ def indexers_for_map_matrix(row_labels: pd.Series, col_labels: pd.Series, supers
 
 def map_to_matrix(values: pd.Series, super_labels: pd.Index, fill_value: float = 0,
                   row_col_labels: Tuple[pd.Series, pd.Series] = None,
-                  row_col_offsets: Tuple[np.ndarray, np.ndarray] = None, out: Union[pd.DataFrame, np.ndarray] = None,
+                  row_col_offsets: Tuple[NDArray, NDArray] = None, out: Union[pd.DataFrame, NDArray] = None,
                   grouper_func: str = 'sum', out_operand: str = '+') -> pd.DataFrame:
 
     # TODO: Check that `values` dtype is numeric, or at least, add-able

@@ -7,19 +7,20 @@ from typing import Union
 
 import numpy as np
 import pandas as pd
+from numpy.typing import NDArray
 
 
-def coerce_matrix(matrix: Union[np.ndarray, pd.DataFrame, pd.Series], *, allow_raw: bool = True,
-                  force_square: bool = True) -> np.ndarray:
+def coerce_matrix(matrix: Union[NDArray, pd.DataFrame, pd.Series], *, allow_raw: bool = True,
+                  force_square: bool = True) -> NDArray:
     """Infers a NumPy array from given input
 
     Args:
-        matrix (numpy.ndarray | pandas.DataFrame | pandas.Series):
+        matrix (NDArray | pandas.DataFrame | pandas.Series):
         allow_raw (bool, optional): Defaults to ``True``.
         force_square (bool, optional): Defaults to ``True``.
 
     Returns:
-        numpy.ndarray: A 2D ndarray of type float32
+        NDArray: A 2D ndarray of type float32
     """
     if isinstance(matrix, pd.DataFrame):
         if force_square:
@@ -44,16 +45,16 @@ def coerce_matrix(matrix: Union[np.ndarray, pd.DataFrame, pd.Series], *, allow_r
     return matrix
 
 
-def expand_array(a: np.ndarray, n: np.ndarray, *, axis: int = None) -> np.ndarray:
+def expand_array(a: NDArray, n: NDArray, *, axis: int = None) -> NDArray:
     """Expands an array across all dimensions by a set amount
 
     Args:
-        a (numpy.ndarray): The array to expand
-        n (numpy.ndarray): The (non-negative) number of items to expand by.
+        a (NDArray): The array to expand
+        n (NDArray): The (non-negative) number of items to expand by.
         axis (int, optional): Defaults to ``None``. The axis to expand along, or None to expand along all axes.
 
     Returns:
-        numpy.ndarray: The expanded array
+        NDArray: The expanded array
     """
 
     if axis is None:

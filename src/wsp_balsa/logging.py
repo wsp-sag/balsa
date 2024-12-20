@@ -209,7 +209,7 @@ def log_to_file(file_name: Union[str, PathLike], name: str, *, append: bool = Fa
     old file handlers would stick around and get written to.
 
     Args:
-        file_name (Union[str, PathLike]): The filepath of the log file to write to
+        file_name (str | PathLike): The filepath of the log file to write to
         name (str): The name of the logger to write log records from
         append (bool, optional): Defaults to ``False``. Option to append new log records to an existing log file
         raw_ascii (bool, optional): Defaults to ``False``. Ensures log file only contains valid ASCII characters

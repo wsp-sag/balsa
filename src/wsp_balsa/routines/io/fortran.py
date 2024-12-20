@@ -6,6 +6,7 @@ from typing import Iterable, Union
 
 import numpy as np
 import pandas as pd
+from numpy.typing import NDArray
 
 from .common import coerce_matrix, expand_array, open_file
 
@@ -20,7 +21,7 @@ def _infer_fortran_zones(n_words):
 def read_fortran_rectangle(file: Union[str, FileIO, Path], n_columns: int, *,
                            zones: Union[int, Iterable[int], pd.Index] = None, tall: bool = False,
                            reindex_rows: bool = False, fill_value: Union[int, float] = None
-                           ) -> Union[np.ndarray, pd.DataFrame, pd.Series]:
+                           ) -> Union[NDArray, pd.DataFrame, pd.Series]:
     """Reads a FORTRAN-friendly .bin file (a.k.a. 'simple binary format') which is known to NOT be square. Also works
     with square matrices.
 
@@ -40,7 +41,7 @@ def read_fortran_rectangle(file: Union[str, FileIO, Path], n_columns: int, *,
         fill_value (optional): Defaults to ``None``. The value to pass to ``pandas.reindex()``
 
     Returns:
-        numpy.ndarray, pandas.DataFrame or pandas.Series
+        NDArray, pandas.DataFrame or pandas.Series
 
     Raises:
         AssertionError: if the shape is not valid.
@@ -85,7 +86,7 @@ def read_fortran_rectangle(file: Union[str, FileIO, Path], n_columns: int, *,
 
 
 def read_fortran_square(file: Union[str, FileIO, Path], *, zones: Union[int, Iterable[int], pd.Index] = None,
-                        tall: bool = False) -> Union[np.ndarray, pd.DataFrame, pd.Series]:
+                        tall: bool = False) -> Union[NDArray, pd.DataFrame, pd.Series]:
     """Reads a FORTRAN-friendly .bin file (a.k.a. 'simple binary format') which is known to be square.
 
     This file format is an array of 4-bytes, where each row is prefaced by an integer referring to the 1-based
@@ -102,7 +103,7 @@ def read_fortran_square(file: Union[str, FileIO, Path], *, zones: Union[int, Ite
             is provided, a Series will be returned, otherwise a 1D ndarray.
 
     Returns:
-        numpy.ndarray, pandas.DataFrame, or pandas.Series
+        NDArray, pandas.DataFrame, or pandas.Series
     """
     with open_file(file, mode='rb') as reader:
         floats = np.fromfile(reader, dtype=np.float32)
@@ -138,12 +139,12 @@ def read_fortran_square(file: Union[str, FileIO, Path], *, zones: Union[int, Ite
         return matrix.stack() if tall else matrix
 
 
-def to_fortran(matrix: Union[np.ndarray, pd.DataFrame, pd.Series], file: Union[str, FileIO, Path], *,
+def to_fortran(matrix: Union[NDArray, pd.DataFrame, pd.Series], file: Union[str, FileIO, Path], *,
                n_columns: int = None, min_index: int = 1, force_square: bool = True):
     """Writes a FORTRAN-friendly .bin file (a.k.a. 'simple binary format'), in a square format.
 
     Args:
-        matrix (pandas.DataFrame | pandas.Series | numpy.ndarray): The matrix to write to disk. If a Series is
+        matrix (pandas.DataFrame | pandas.Series | NDArray): The matrix to write to disk. If a Series is
             given, it MUST have a MultiIndex with exactly 2 levels to unstack.
         file (str | FileIO | Path): The path or file handler to write to.
         n_columns (int, optional): Defaults to ``None``. Specifies a desired "width" of the matrix file. For example,

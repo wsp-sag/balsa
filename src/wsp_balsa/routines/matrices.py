@@ -7,6 +7,7 @@ from warnings import warn
 import numexpr as ne
 import numpy as np
 import pandas as pd
+from numpy.typing import NDArray
 
 try:
     from numba import njit, prange
@@ -18,11 +19,6 @@ except ImportError:
 
         return decorator
     prange = range
-
-try:
-    from numpy.typing import NDArray
-except ImportError:
-    NDArray = np.ndarray
 
 EPS = 1.0e-7
 
