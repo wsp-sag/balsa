@@ -4,8 +4,8 @@ import numpy as np
 import pandas as pd
 from pandas import testing as pdt
 
-from balsa.routines import (aggregate_matrix, matrix_balancing_1d,
-                            matrix_balancing_2d, matrix_bucket_rounding)
+from wsp_balsa.routines import (aggregate_matrix, matrix_balancing_1d,
+                                matrix_balancing_2d, matrix_bucket_rounding)
 
 
 class TestMatrixBucketRounding(unittest.TestCase):

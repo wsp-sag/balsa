@@ -4,8 +4,8 @@ import numpy as np
 import pandas as pd
 from pandas import testing as pdt
 
-from balsa.routines.best_intermediates import (best_intermediate_subset_zones,
-                                               best_intermediate_zones)
+from wsp_balsa.routines.best_intermediates import (
+    best_intermediate_subset_zones, best_intermediate_zones)
 
 
 class TestBestIntermediates(unittest.TestCase):
